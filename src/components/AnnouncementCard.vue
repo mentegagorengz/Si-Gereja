@@ -22,7 +22,7 @@
             return require(`@/assets/icons/${this.icon}`)
             } catch (err) {
             console.warn('❗ Gagal load icon:', this.icon)
-            return 'https://via.placeholder.com/32'
+            return require(`@/assets/icons/cross.png`)
             }
         }
     }
@@ -34,11 +34,11 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    border: 2px solid #ccc; /* Stroke 2px sesuai permintaan */
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 12px;
-    background: #fff;
-    margin-bottom: 12px;
+    background: #41442A;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   }
   
   .announcement-icon {
@@ -55,12 +55,13 @@
   .judul {
     font-weight: bold;
     font-size: 14px;
+    color: #fff;
     margin: 0;
   }
   
   .desc {
     font-size: 12px;
-    color: #333;
+    color: #fff;
     margin: 0;
     margin-top: 6px;
   }

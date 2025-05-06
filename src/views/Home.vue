@@ -57,19 +57,20 @@ export default {
     AnnouncementCard
   },
   data() {
+    const savedUser = JSON.parse(localStorage.getItem("user")) || {}
     return {
-      namaUser: 'Christy',
+      namaUser: savedUser.nama || 'Jemaat',
       streakCount: 11,
       ayatGambar: ayatImg,
       announcementList: [
         {
-          title: 'Happy Birthday, Kak Rini!',
+          title: 'Happy Birthday, Kak Irene!',
           desc: '09 Agustus – Tuhan berkati selalu!',
-          icon: 'birthday.png'
+          icon: 'cake.png'
         },
         {
-          title: 'Ibadah Kaum Bapak',
-          desc: 'Pukul 19.00 WITA – Aula Lt. 2',
+          title: 'Ibadah PELPRAP',
+          desc: 'Pukul 17.00 WITA – Gedung Gereja',
           icon: 'ibadah.png'
         }
       ]

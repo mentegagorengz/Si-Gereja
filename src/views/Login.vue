@@ -74,12 +74,6 @@ export default {
       this.errorNama = ''
       this.errorPassword = ''
 
-      // Dummy data
-      const dummyUser = {
-        nama: 'christy potabuga',
-        password: 'christy123' 
-      }
-
       // Validasi input kosong
       if (!this.nama) {
         this.errorNama = 'Nama harus diisi'
@@ -91,14 +85,21 @@ export default {
         return
       }
 
+      const savedUser = JSON.parse(localStorage.getItem('user'))
+
+      if (!savedUser) {
+        this.errorNama = 'Akun belum terdaftar'
+        return
+      }
+
       // Validasi nama
-      if (this.nama.toLowerCase !== dummyUser.nama.toLowerCase) {
+      if (this.nama.trim().toLowerCase() !== savedUser.nama.trim().toLowerCase()) {
         this.errorNama = 'Nama tidak ditemukan'
         return
       }
       
       // Validasi Password
-      if (this.password !== dummyUser.password) {
+      if (this.password !== savedUser.password) {
         this.errorPassword = 'Password tidak sesuai'
         return
       }

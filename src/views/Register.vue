@@ -136,8 +136,18 @@ export default {
       }
 
       this.errorMsg = '';
-      console.log('Register sukses:', this.nama, this.tanggalLahir, this.status, this.sektor);
-      // Lanjutkan ke proses registrasi...
+
+      // ✅ Simpan data ke localStorage
+      const userData = {
+        nama: this.nama,
+        tanggalLahir: this.tanggalLahir,
+        status: this.status,
+        sektor: this.sektor,
+        password: this.password
+      }
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      // ✅ Arahkan ke halaman sukses
       this.$router.push('/success-register');
     },
     goBack() {
@@ -154,6 +164,7 @@ export default {
   }
 }
 </script>
+
 
 <style scoped>
 .register-container {

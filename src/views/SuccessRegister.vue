@@ -30,7 +30,7 @@
     flex-direction: column;
     justify-content: space-between;
     min-height: 100vh;
-    background-color: white;
+    background-color: #fcfcf7;
     padding: 64px 16px;
     box-sizing: border-box;
   }
