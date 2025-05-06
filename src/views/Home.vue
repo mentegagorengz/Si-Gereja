@@ -60,7 +60,7 @@ export default {
     const savedUser = JSON.parse(localStorage.getItem("user")) || {}
     return {
       namaUser: savedUser.nama || 'Jemaat',
-      streakCount: 11,
+      streakCount: 0,
       ayatGambar: ayatImg,
       announcementList: [
         {
@@ -74,6 +74,38 @@ export default {
           icon: 'ibadah.png'
         }
       ]
+    }
+  },
+  mounted() {
+    this.checkstreak()
+  },
+  methods: {
+    checkstreak() {
+      const today = new Date().toDateString()
+      const saved = JSON.parse(localStorage.getItem('streakData')) || {}
+
+      if (saved.lastLoginDate === today) {
+        //sudah login hari ini
+        this.streakCount = saved.streakCount || 1
+      } else {
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yesterdayStr = yesterday.toDateString()
+
+        if (saved.lastLoginDate === yesterdayStr) {
+          //login setiap hari
+          this.streakCount = (saved.streakCount || 0) + 1
+        } else {
+          //lewat sehari, reset streak
+          this.streakCount = 1
+        }
+
+        //simpan update ke localstorage
+        localStorage.setItem('streakdata', JSON.stringify({
+          lastLoginDate: today,
+          streakCount: this.streakCount  
+        }))
+      }
     }
   }
 }
