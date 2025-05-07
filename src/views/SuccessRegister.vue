@@ -9,13 +9,18 @@
           Tuhan Yesus Memberkati
         </p>
       </div>
-      <button class="next-button" @click="goToHome">Lanjutkan</button>
+      <ButtonPrimary @click="goToHome">Lanjutkan</ButtonPrimary>
     </div>
   </template>
   
   <script>
+  import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
+
   export default {
     name: 'SuccessRegister',
+    components: {
+      ButtonPrimary
+    },
     methods: {
       goToHome() {
         this.$router.push('/home')
@@ -42,6 +47,12 @@
     text-align: center;
     gap: 24px;
   }
+
+  .button-wrapper {
+    display: flex;
+    justify-content: center; /* Ini akan memusatkan button */
+    width: 100%;
+  }
   
   .logo-img {
     width: 100px;
@@ -62,24 +73,6 @@
     font-size: 14px;
     line-height: 1.6;
     color: black;
-  }
-  
-  .next-button {
-    width: 100%;
-    padding: 16px;
-    background-color: #41442A;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-family: 'Inter';
-    font-weight: bold;
-    position: fixed;
-    bottom: 64px;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-    max-width: 360px;
   }
   </style>
   

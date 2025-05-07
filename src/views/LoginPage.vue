@@ -16,22 +16,13 @@
             />
 
             <!-- Input Password -->
-            <div class="form-group">
-              <label for="password">Password</label>
-              <div class="password-box">
-                <input
-                  :type="lihatPassword ? 'text' : 'password'"
-                  v-model="password"
-                  placeholder="Masukan password Anda"
-                />
-                
-                <!-- Icon Eye -->
-                <Eye v-if="!lihatPassword" @click="togglePassword" class="icon-eye" />
-                <EyeOff v-else @click="togglePassword" class="icon-eye" />
-              </div>
-              <p v-if="errorPassword" class="error-text">{{ errorPassword }}</p>
-            </div>
-                      
+            <PasswordInput
+              id="password"
+              label="Password"
+              placeholder="Masukan password Anda"
+              v-model="password"
+              :error="errorPassword"
+            />
 
             <!-- Link Buat Akun -->
             <p class="signup-text">
@@ -40,34 +31,31 @@
             </p>
 
             <!-- Tombol Login -->
-            <button @click="login">Masuk</button>
+            <ButtonPrimary @click="login">Masuk</ButtonPrimary>
         </div>
 </template>
 
 <script>
-import { Eye, EyeOff } from 'lucide-vue-next'
 import FormInput from '@/components/common/FormInput.vue'
+import PasswordInput from '@/components/common/PasswordInput.vue'
+import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
 
 export default {
   name: 'LoginPage',
   components: {
-    Eye,
-    EyeOff,
-    FormInput
+    FormInput,
+    PasswordInput,
+    ButtonPrimary
   },
   data() {
     return {
       nama: '',
       password: '',
-      lihatPassword: false,
       errorNama: '',
       errorPassword: ''
     }
   },
   methods: {
-    togglePassword() {
-      this.lihatPassword = !this.lihatPassword
-    },
     login() {
       // Reset error
       this.errorNama = ''
@@ -139,80 +127,6 @@ export default {
   font-weight: 600;
 }
 
-label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 6px;
-  font-family: 'Inter';
-  font-size: 14px;
-}
-
-input {
-    width: 100%;
-    height: 44px;
-    padding: 12px;
-    font-size: 14px;
-    font-family: 'Inter';
-    border: 2px solid #41442A;
-    border-radius: 6px;
-    background-color: #fcfcf7;
-    box-sizing: border-box;
-  }
-
-.password-box {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    max-width: 360px;
-    height: 44px;
-    border: 2px solid #41442A;
-    background-color: #fcfcf7;
-    border-radius: 6px;
-    padding: 0 12px;
-    box-sizing: border-box;
-  }
-  
-.password-box input {
-    flex: 1;
-    height: 100%;
-    font-size: 14px;
-    font-family: 'Inter';
-    line-height: 44px; /* INI PENTING */
-    border: none;
-    background: transparent;
-    outline: none;
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
-  }
-
-.password-box input::placeholder {
-    color: #777;
-    opacity: 1; /* biar warnanya kelihatan jelas */
-  }
-
-.icon-eye {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-    color: #777;
-    cursor: pointer;
-  }
-  
-.form-group {
-    width: 100%;
-    max-width: 360px;
-    margin-bottom: 16px;
-  }
-
-.error-text {
-  color: red;
-  font-size: 12px;
-  margin-top: 4px;
-  margin-bottom: 0;
-  font-family: 'Inter';
-}
-
 .signup-text {
     font-size: 14px;
     margin-top: 32px; /* dari password */
@@ -224,20 +138,5 @@ input {
   font-weight: bold;
   color: black;
   text-decoration: underline;
-}
-
-button {
-  width: 100%;
-  max-width: 360px;
-  padding: 12px;
-  background-color: #41442A;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: bold;
-  font-family: 'Inter';
-  cursor: pointer;
-  margin-top: 0;
 }
 </style>

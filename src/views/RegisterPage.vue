@@ -2,26 +2,16 @@
   <div class="register-container">
     <div class="form-wrapper">
       <!-- Header with Back Icon -->
-      <div class="form-header">
-        <div class="form-header-inner">
-          <button class="back-button" @click="goBack" aria-label="Kembali">
-            <ChevronLeft class="icon-back" />
-          </button>
-          <h2 class="register-title">Registrasi MyRajawali</h2>
-        </div>
-      </div>
+      <HeaderWithBack title="Registrasi MyRajawali" />
 
       <!-- Nama -->
-      <div class="form-group">
-        <label for="name">Nama</label>
-        <input
-          id="name"
-          v-model="nama"
-          type="text"
-          placeholder="Ketik nama Anda"
-          :class="{ 'filled': nama !== '' }"
-        />
-      </div>
+      <FormInput
+        id="register-name"
+        label="Nama"
+        placeholder="Ketik nama lengkap Anda"
+        v-model="nama"
+        :error="namaError"
+      />
 
       <!-- Tanggal Lahir -->
       <div class="form-group">
@@ -38,19 +28,14 @@
       </div>
 
       <!-- Status -->
-      <div class="form-group">
-        <label for="status">Status</label>
-        <select
-          id="status"
-          v-model="status"
-          required
-        >
-          <option disabled value="">Pilih salah satu</option>
-          <option>Menikah</option>
-          <option>Single</option>
-          <option>Janda/Duda</option>
-        </select>
-      </div>
+      <SelectDropdown
+        id="status"
+        label="Status"
+        placeholder="Pilih salah satu"
+        :options="statusOptions"
+        v-model="status"
+        :error="statusError"
+      />
 
       <!-- Sektor -->
       <div class="form-group">
@@ -62,34 +47,28 @@
       </div>
 
       <!-- Password -->
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input 
-          id="password"
-          v-model="password"
-          type="password"
-          placeholder="Masukan kata sandi Anda"
-          :class="{ 'filled': password !== '' }"
-        />
-      </div>
+      <PasswordInput
+        id="password"
+        label="Password"
+        placeholder="Masukan kata sandi Anda"
+        v-model="password"
+        :error="passwordError"
+      />
 
       <!-- Konfirmasi Password -->
-      <div class="form-group">
-        <label for="confirmPassword">Konfirmasi Password</label>
-        <input 
-          id="confirmPassword"
-          v-model="confirmPassword"
-          type="password"
-          placeholder="Konfirmasi kata sandi Anda"
-          :class="{ 'filled': confirmPassword !== '' }"
-        />
-      </div>
+      <PasswordInput
+        id="confirmPassword"
+        label="Konfirmasi Password"
+        placeholder="Konfirmasi kata sandi Anda"
+        v-model="confirmPassword"
+        :error="confirmPasswordError"
+      />
 
       <!-- Warning -->
       <p v-if="errorMsg" class="warning-text">{{ errorMsg }}</p>
 
       <!-- Tombol Registrasi -->
-      <button @click="register">Registrasi Akun</button>
+      <ButtonPrimary @click="register">Registrasi Akun</ButtonPrimary>
     </div>
   </div>
 </template>
@@ -97,47 +76,91 @@
 <script>
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import { ChevronLeft } from 'lucide-vue-next'
+import FormInput from '@/components/common/FormInput.vue'
+import PasswordInput from '@/components/common/PasswordInput.vue'
+import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
+import SelectDropdown from '@/components/common/SelectDropdown.vue'
+import HeaderWithBack from '@/components/layout/HeaderWithBack.vue'
 
 export default {
   name: 'RegisterPage',
   components: {
     VueDatePicker,
-    ChevronLeft
+    FormInput,
+    PasswordInput,
+    ButtonPrimary,
+    SelectDropdown,
+    HeaderWithBack
   },
   data() {
     return {
+      // Data fields
       nama: '',
       tanggalLahir: '',
       status: '',
       sektor: '',
       password: '',
       confirmPassword: '',
-      errorMsg: ''
+      
+      // Error messages
+      namaError: '',
+      passwordError: '',
+      confirmPasswordError: '',
+      errorMsg: '',
+
+      // Options untuk dropdown
+      statusOptions: ['Menikah', 'Single', 'Janda/Duda']
     }
   },
   methods: {
     register() {
-      if (
-        !this.nama ||
-        !this.tanggalLahir ||
-        !this.status ||
-        !this.sektor ||
-        !this.password ||
-        !this.confirmPassword
-      ) {
-        this.errorMsg = 'Semua field wajib diisi.';
-        return;
+      // Reset semua error
+      this.namaError = ''
+      this.passwordError = ''
+      this.confirmPasswordError = ''
+      this.errorMsg = ''
+
+      // Validasi semua field
+      let isValid = true
+
+      if (!this.nama) {
+        this.namaError = 'Nama wajib diisi'
+        isValid = false
+      }
+      
+      if (!this.tanggalLahir) {
+        this.errorMsg = 'Semua field wajib diisi.'
+        isValid = false
       }
 
+      if (!this.status) {
+        this.errorMsg = 'Semua field wajib diisi.'
+        isValid = false
+      }
+
+      if (!this.sektor) {
+        this.errorMsg = 'Semua field wajib diisi.'
+        isValid = false
+      }
+      
+      if (!this.password) {
+        this.passwordError = 'Password wajib diisi'
+        isValid = false
+      }
+
+      if (!this.confirmPassword) {
+        this.confirmPasswordError = 'Konfirmasi password wajib diisi'
+        isValid = false
+      }
+      
       if (this.password !== this.confirmPassword) {
-        this.errorMsg = 'Password dan konfirmasi password tidak sama.';
-        return;
+        this.confirmPasswordError = 'Password dan konfirmasi password tidak sama'
+        isValid = false
       }
 
-      this.errorMsg = '';
+      if (!isValid) return
 
-      // ✅ Simpan data ke localStorage
+      // Jika valid, simpan data ke localStorage
       const userData = {
         nama: this.nama,
         tanggalLahir: this.tanggalLahir,
@@ -145,14 +168,12 @@ export default {
         sektor: this.sektor,
         password: this.password
       }
-      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("user", JSON.stringify(userData))
 
-      // ✅ Arahkan ke halaman sukses
-      this.$router.push('/success-register');
+      // Arahkan ke halaman sukses
+      this.$router.push('/success-register')
     },
-    goBack() {
-      this.$router.go(-1)
-    },
+
     formatDate(date) {
       if (!date) return ''
       const d = new Date(date)
@@ -164,8 +185,7 @@ export default {
   }
 }
 </script>
-
-
+      
 <style scoped>
 .register-container {
   width: 100%;
@@ -340,20 +360,5 @@ input:not(:placeholder-shown) {
   margin-top: -10px;
   margin-bottom: 12px;
   font-family: 'Inter';
-}
-
-button {
-  width: 100%;
-  max-width: 360px;
-  padding: 12px;
-  background-color: #41442A;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-family: 'Inter';
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: auto;
 }
 </style>
