@@ -7,17 +7,14 @@
             <h2 class="welcome-text">Welcome to MyRajawali</h2>
 
             <!-- Input Nama -->
-            <div class="form-group">
-              <label for="name">Nama</label>
-              <input 
-                id="name"
-                v-model="nama"
-                type="text"
-                placeholder="Ketik nama Anda"
-              />
-              <p v-if="errorNama" class="error-text">{{ errorNama }}</p>
-            </div>
-          
+            <FormInput
+             id="name"
+             label="Nama"
+             placeholder="Ketik nama Anda"
+             v-model="nama"
+             :error="errorNama"
+            />
+
             <!-- Input Password -->
             <div class="form-group">
               <label for="password">Password</label>
@@ -49,12 +46,14 @@
 
 <script>
 import { Eye, EyeOff } from 'lucide-vue-next'
+import FormInput from '@/components/common/FormInput.vue'
 
 export default {
   name: 'LoginPage',
   components: {
     Eye,
-    EyeOff
+    EyeOff,
+    FormInput
   },
   data() {
     return {
@@ -110,7 +109,6 @@ export default {
   }
 }
 </script>
-
 
 <style scoped>
 .login-container {
