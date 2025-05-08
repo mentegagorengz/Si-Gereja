@@ -1,4 +1,3 @@
-// src/stores/userStore.js
 import { defineStore } from 'pinia'
 
 export const useUserStore = defineStore('user', {
@@ -6,25 +5,16 @@ export const useUserStore = defineStore('user', {
     return {
       user: JSON.parse(localStorage.getItem('user')) || {
         nama: 'Jemaat',
-        tanggalLahir: '',
-        status: '',
-        sektor: '',
-        password: ''
       }
     }
   },
   
   getters: {
-    isLoggedIn: (state) => !!state.user.nama && state.user.nama !== 'Jemaat',
-    namaUser: (state) => state.user.nama || 'Jemaat'
+    namaUser: (state) => state.user.nama || 'Jemaat',
+    isLoggedIn: (state) => !!state.user.nama && state.user.nama !== 'Jemaat'
   },
   
   actions: {
-    registerUser(userData) {
-      this.user = userData
-      localStorage.setItem('user', JSON.stringify(userData))
-    },
-    
     login(nama, password) {
       const savedUser = JSON.parse(localStorage.getItem('user'))
       
@@ -44,15 +34,13 @@ export const useUserStore = defineStore('user', {
       return { success: true }
     },
     
+    registerUser(userData) {
+      this.user = userData
+      localStorage.setItem('user', JSON.stringify(userData))
+    },
+
     logout() {
-      this.user = {
-        nama: 'Jemaat',
-        tanggalLahir: '',
-        status: '',
-        sektor: '',
-        password: ''
-      }
-      // Opsional: localStorage.removeItem('user')
+      this.user = { nama: 'Jemaat' }
     }
   }
 })

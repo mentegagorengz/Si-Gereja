@@ -37,7 +37,6 @@
 
 <script>
 import { useUserStore } from '@/stores/userStore'
-import { useStreakStore } from '@/stores/streakStore'
 import FormInput from '@/components/common/FormInput.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
@@ -87,9 +86,28 @@ export default {
         return
       }
       
-      // Jika login berhasil, periksa streak
-      const streakStore = useStreakStore()
-      streakStore.checkStreak()
+      // Jika login berhasil, lanjutkan dengan streak check menggunakan localStorage biasa
+      const today = new Date().toDateString()
+      const saved = JSON.parse(localStorage.getItem('streakData')) || {}
+      
+      let newStreakCount = 1
+      
+      if (saved.lastLoginDate === today) {
+        newStreakCount = saved.streakCount || 1
+      } else {
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yesterdayStr = yesterday.toDateString()
+        
+        if (saved.lastLoginDate === yesterdayStr) {
+          newStreakCount = (saved.streakCount || 0) + 1
+        }
+      }
+      
+      localStorage.setItem('streakData', JSON.stringify({
+        lastLoginDate: today,
+        streakCount: newStreakCount
+      }))
 
       // Jika valid
       this.$router.push('/home')

@@ -10,12 +10,16 @@
 
       <!-- Menu Fitur -->
       <div class="feature-grid">
-        <FeatureBox 
-          v-for="feature in featureList" 
+        <FeatureBox
+          v-for="feature in featureList"
           :key="feature.name"
-          :name="feature.name" 
+          :name="feature.name"
+          :iconName="feature.icon"
         />
       </div>
+
+      <!-- Title untuk Announcement -->
+      <h2 class="section-title">Announcement</h2>
 
       <!-- Announcement Cards -->
       <AnnouncementCard
@@ -33,42 +37,86 @@
 </template>
 
 <script>
+import HeaderHome from '@/components/layout/HeaderHome.vue'
+import DailyVerse from '@/components/DailyVerse.vue'
 import FeatureBox from '@/components/FeatureBox.vue'
 import BottomNavbar from '@/components/BottomNavbar.vue'
 import AnnouncementCard from '@/components/AnnouncementCard.vue'
-import HeaderHome from '@/components/layout/HeaderHome.vue'
-import DailyVerse from '@/components/DailyVerse.vue'
 import { useUserStore } from '@/stores/userStore'
-import { useStreakStore } from '@/stores/streakStore'
-import { useContentStore } from '@/stores/contentStore'
+import ayatImg from '@/assets/Ayat.png'
 
 export default {
   name: 'HomePage',
   components: {
+    HeaderHome,
+    DailyVerse,
     FeatureBox,
     BottomNavbar,
-    AnnouncementCard,
-    HeaderHome,
-    DailyVerse
+    AnnouncementCard
   },
   data() {
-    // Gunakan store untuk mendapatkan data
     const userStore = useUserStore()
-    const streakStore = useStreakStore()
-    const contentStore = useContentStore()
+
+    const savedStreak = JSON.parse(localStorage.getItem('streakData')) || { streakCount: 0 };
+    
 
     return {
       namaUser: userStore.namaUser,
-      streakCount: streakStore.currentStreak,
-      ayatGambar: contentStore.ayatHarian.gambar,
-      features: contentStore.features,
-      announcements: contentStore.announcements
+      streakCount: savedStreak.streakCount,
+      ayatGambar: ayatImg,
+      featureList: [
+        { name: "News", icon: "news.png" },
+        { name: "Jadwal", icon: "jadwal.png" },
+        { name: "Giving", icon: "giving.png" },
+        { name: "Alkitab Setahun", icon: "alkitab.png" },
+        { name: "Renungan", icon: "renungan.png" },
+        { name: "Prayer Request", icon: "prayer.png" }
+      ],
+      announcementList: [
+        {
+          title: 'Happy Birthday, Kak Irene!',
+          desc: '09 Agustus – Tuhan berkati selalu!',
+          icon: 'cake.png'
+        },
+        {
+          title: 'Ibadah PELPRAP',
+          desc: 'Pukul 17.00 WITA – Gedung Gereja',
+          icon: 'ibadah.png'
+        }
+      ]
     }
   },
   mounted() {
-    // Cek streak hanya sekali saat halaman dimuat
-    const streakStore = useStreakStore()
-    this.streakCount = streakStore.checkStreak()
+    this.checkStreak()
+  },
+  methods: {
+    checkStreak() {
+      const today = new Date().toDateString()
+      const saved = JSON.parse(localStorage.getItem('streakData')) || {}
+
+      if (saved.lastLoginDate === today) {
+        //sudah login hari ini
+        this.streakCount = saved.streakCount || 1
+      } else {
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yesterdayStr = yesterday.toDateString()
+
+        if (saved.lastLoginDate === yesterdayStr) {
+          //login setiap hari
+          this.streakCount = (saved.streakCount || 0) + 1
+        } else {
+          //lewat sehari, reset streak
+          this.streakCount = 1
+        }
+
+        //simpan update ke localstorage
+        localStorage.setItem('streakData', JSON.stringify({
+          lastLoginDate: today,
+          streakCount: this.streakCount
+        }))
+      }
+    }
   }
 }
 </script>
@@ -89,49 +137,21 @@ export default {
   margin: 0 auto;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.greeting {
-  font-size: 16px;
-  font-family: 'Inter';
-  font-weight: 600;
-}
-
-.streak {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.icon-flame {
-  width: 20px;
-  height: 20px;
-  color: #41442A;
-}
-
-.verse-wrapper {
-  width: calc(100% + 32px); /* 100% + 16px kiri + 16px kanan */
-  margin-left: -16px;
-  margin-right: -16px;
-}
-
-.ayat-full {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
   text-align: center;
   margin: 24px 0;
+}
+
+.section-title {
+  font-family: 'Inter';
+  font-size: 18px;
+  font-weight: 600;
+  color: #41442A;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  text-align: left;
+  width: 100%;
 }
 </style>
