@@ -3,27 +3,18 @@
     <div class="home-wrapper">
 
       <!-- Header: Greeting + Streak -->
-      <div class="header">
-        <p class="greeting">Halo, {{ namaUser }}!</p>
-        <div class="streak">
-          <span>{{ streakCount }}</span>
-          <Flame class="icon-flame" />
-        </div>
-      </div>
+      <HeaderHome :namaUser="namaUser" :streakCount="streakCount" />
 
       <!-- Ayat Hari Ini -->
-      <div class="verse-wrapper">
-        <img :src="ayatGambar" alt="Ayat Hari Ini" class="ayat-full" />
-      </div>
+      <DailyVerse :ayatGambar="ayatGambar" />
 
       <!-- Menu Fitur -->
       <div class="feature-grid">
-        <FeatureBox name="News" />
-        <FeatureBox name="Jadwal" />
-        <FeatureBox name="Giving" />
-        <FeatureBox name="Alkitab Setahun" />
-        <FeatureBox name="Renungan" />
-        <FeatureBox name="Prayer Request" />
+        <FeatureBox 
+          v-for="feature in featureList" 
+          :key="feature.name"
+          :name="feature.name" 
+        />
       </div>
 
       <!-- Announcement Cards -->
@@ -42,71 +33,42 @@
 </template>
 
 <script>
-import { Flame } from 'lucide-vue-next'
 import FeatureBox from '@/components/FeatureBox.vue'
 import BottomNavbar from '@/components/BottomNavbar.vue'
 import AnnouncementCard from '@/components/AnnouncementCard.vue'
-import ayatImg from '@/assets/Ayat.png'
+import HeaderHome from '@/components/layout/HeaderHome.vue'
+import DailyVerse from '@/components/DailyVerse.vue'
+import { useUserStore } from '@/stores/userStore'
+import { useStreakStore } from '@/stores/streakStore'
+import { useContentStore } from '@/stores/contentStore'
 
 export default {
   name: 'HomePage',
   components: {
-    Flame,
     FeatureBox,
     BottomNavbar,
-    AnnouncementCard
+    AnnouncementCard,
+    HeaderHome,
+    DailyVerse
   },
   data() {
-    const savedUser = JSON.parse(localStorage.getItem("user")) || {}
+    // Gunakan store untuk mendapatkan data
+    const userStore = useUserStore()
+    const streakStore = useStreakStore()
+    const contentStore = useContentStore()
+
     return {
-      namaUser: savedUser.nama || 'Jemaat',
-      streakCount: 0,
-      ayatGambar: ayatImg,
-      announcementList: [
-        {
-          title: 'Happy Birthday, Kak Irene!',
-          desc: '09 Agustus – Tuhan berkati selalu!',
-          icon: 'cake.png'
-        },
-        {
-          title: 'Ibadah PELPRAP',
-          desc: 'Pukul 17.00 WITA – Gedung Gereja',
-          icon: 'ibadah.png'
-        }
-      ]
+      namaUser: userStore.namaUser,
+      streakCount: streakStore.currentStreak,
+      ayatGambar: contentStore.ayatHarian.gambar,
+      features: contentStore.features,
+      announcements: contentStore.announcements
     }
   },
   mounted() {
-    this.checkstreak()
-  },
-  methods: {
-    checkstreak() {
-      const today = new Date().toDateString()
-      const saved = JSON.parse(localStorage.getItem('streakData')) || {}
-
-      if (saved.lastLoginDate === today) {
-        //sudah login hari ini
-        this.streakCount = saved.streakCount || 1
-      } else {
-        const yesterday = new Date()
-        yesterday.setDate(yesterday.getDate() - 1)
-        const yesterdayStr = yesterday.toDateString()
-
-        if (saved.lastLoginDate === yesterdayStr) {
-          //login setiap hari
-          this.streakCount = (saved.streakCount || 0) + 1
-        } else {
-          //lewat sehari, reset streak
-          this.streakCount = 1
-        }
-
-        //simpan update ke localstorage
-        localStorage.setItem('streakdata', JSON.stringify({
-          lastLoginDate: today,
-          streakCount: this.streakCount  
-        }))
-      }
-    }
+    // Cek streak hanya sekali saat halaman dimuat
+    const streakStore = useStreakStore()
+    this.streakCount = streakStore.checkStreak()
   }
 }
 </script>

@@ -74,6 +74,7 @@
 </template>
 
 <script>
+import { useUserStore } from '@/stores/userStore'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import FormInput from '@/components/common/FormInput.vue'
@@ -160,18 +161,22 @@ export default {
 
       if (!isValid) return
 
-      // Jika valid, simpan data ke localStorage
-      const userData = {
+      // Gunakan userStore untuk register
+      const userStore = useUserStore()
+      userStore.registerUser({
         nama: this.nama,
         tanggalLahir: this.tanggalLahir,
         status: this.status,
         sektor: this.sektor,
         password: this.password
-      }
-      localStorage.setItem("user", JSON.stringify(userData))
+      })
 
       // Arahkan ke halaman sukses
       this.$router.push('/success-register')
+    },
+
+    goBack() {
+      this.$router.go(-1)
     },
 
     formatDate(date) {

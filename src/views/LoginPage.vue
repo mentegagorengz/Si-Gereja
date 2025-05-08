@@ -36,6 +36,8 @@
 </template>
 
 <script>
+import { useUserStore } from '@/stores/userStore'
+import { useStreakStore } from '@/stores/streakStore'
 import FormInput from '@/components/common/FormInput.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
@@ -72,24 +74,22 @@ export default {
         return
       }
 
-      const savedUser = JSON.parse(localStorage.getItem('user'))
+      // Gunakan userStore untuk login
+      const userStore = useUserStore()
+      const result = userStore.login(this.nama, this.password)
 
-      if (!savedUser) {
-        this.errorNama = 'Akun belum terdaftar'
-        return
-      }
-
-      // Validasi nama
-      if (this.nama.trim().toLowerCase() !== savedUser.nama.trim().toLowerCase()) {
-        this.errorNama = 'Nama tidak ditemukan'
+      if (!result.success) {
+        if (result.message.includes('Nama')) {
+          this.errorNama = result.message
+        } else {
+          this.errorPassword = result.message
+        }
         return
       }
       
-      // Validasi Password
-      if (this.password !== savedUser.password) {
-        this.errorPassword = 'Password tidak sesuai'
-        return
-      }
+      // Jika login berhasil, periksa streak
+      const streakStore = useStreakStore()
+      streakStore.checkStreak()
 
       // Jika valid
       this.$router.push('/home')
