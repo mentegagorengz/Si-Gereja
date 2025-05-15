@@ -74,7 +74,7 @@
 </template>
 
 <script>
-import { useUserStore } from '@/stores/userStore'
+import { registerJemaat, saveUserToLocalStorage } from '@/services/auth'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import FormInput from '@/components/common/FormInput.vue'
@@ -114,8 +114,9 @@ export default {
     }
   },
   methods: {
-    register() {
-      // Reset semua error
+    async register() {
+      try {
+        // Reset semua error
       this.namaError = ''
       this.passwordError = ''
       this.confirmPasswordError = ''
@@ -161,22 +162,30 @@ export default {
 
       if (!isValid) return
 
-      // Gunakan userStore untuk register
-      const userStore = useUserStore()
-      userStore.registerUser({
+      // Data untuk registrasi
+      const userData = {
         nama: this.nama,
         tanggalLahir: this.tanggalLahir,
         status: this.status,
         sektor: this.sektor,
-        password: this.password
-      })
+        password: this.password 
+      };
+
+      const user = await registerJemaat(userData);
+      saveUserToLocalStorage(user);
 
       // Arahkan ke halaman sukses
       this.$router.push('/success-register')
-    },
-
-    goBack() {
-      this.$router.go(-1)
+      } catch (error) {
+        // Tangani pesan error dari Firebase
+        if (error.message.includes('Nama')) {
+          this.namaError = error.message
+        } else if (error.message.includes('Password')) {
+          this.passwordError = error.message
+        } else {
+          this.errorMsg = error.message
+        }
+      }
     },
 
     formatDate(date) {

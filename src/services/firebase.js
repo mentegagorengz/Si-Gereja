@@ -5,12 +5,13 @@ import { getFirestore } from 'firebase/firestore'
 
 // Konfigurasi Firebase - ganti dengan config proyekmu sendiri!
 const firebaseConfig = {
-  apiKey: "GANTI_DENGAN_API_KEY_KAMU",
-  authDomain: "myrajawali.firebaseapp.com",
-  projectId: "myrajawali",
-  storageBucket: "myrajawali.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:a1b2c3d4e5f6g7h8i9j0"
+  apiKey: "AIzaSyBtGgShLr_s_qgq0GhOEPmh5VfwZUJDHeY",
+  authDomain: "myrajawali-app.firebaseapp.com",
+  projectId: "myrajawali-app",
+  storageBucket: "myrajawali-app.firebasestorage.app",
+  messagingSenderId: "414682263250",
+  appId: "1:414682263250:web:34750949198ce982da470b",
+  measurementId: "G-527RS6C1S5"
 };
 
 // Initialize Firebase

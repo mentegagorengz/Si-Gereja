@@ -44,6 +44,7 @@ import BottomNavbar from '@/components/BottomNavbar.vue'
 import AnnouncementCard from '@/components/AnnouncementCard.vue'
 import { useUserStore } from '@/stores/userStore'
 import ayatImg from '@/assets/Ayat.png'
+import { getUserFromLocalStorage } from '@/services/auth'
 
 export default {
   name: 'HomePage',
@@ -55,14 +56,9 @@ export default {
     AnnouncementCard
   },
   data() {
-    const userStore = useUserStore()
-
-    const savedStreak = JSON.parse(localStorage.getItem('streakData')) || { streakCount: 0 };
-    
-
     return {
-      namaUser: userStore.namaUser,
-      streakCount: savedStreak.streakCount,
+      namaUser: 'Jemaat',
+      streakCount: 0,
       ayatGambar: ayatImg,
       featureList: [
         { name: "News", icon: "news.png" },
@@ -86,10 +82,29 @@ export default {
       ]
     }
   },
-  mounted() {
+  created() {
+    // Lebih baik dipanggil di created untuk memastikan data tersedia sebelum render
+    this.loadUserData()
     this.checkStreak()
   },
   methods: {
+    loadUserData() {
+      // Prioritaskan data dari store dulu
+      const userStore = useUserStore()
+
+      if (userStore.namaUser) {
+        this.namaUser = userStore.namaUser
+      } else {
+        // Jika tidak ada di store, coba ambil dari localStorage
+        const savedUser = getUserFromLocalStorage()
+        if (savedUser && savedUser.nama) {
+          this.namaUser = savedUser.nama
+          // Update store juga agar konsisten
+          userStore.setUser(savedUser)
+        }
+      }
+    },
+
     checkStreak() {
       const today = new Date().toDateString()
       const saved = JSON.parse(localStorage.getItem('streakData')) || {}

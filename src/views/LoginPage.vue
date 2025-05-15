@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import { useUserStore } from '@/stores/userStore'
+import { loginJemaat, saveUserToLocalStorage } from '@/services/auth'
 import FormInput from '@/components/common/FormInput.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
@@ -57,8 +57,9 @@ export default {
     }
   },
   methods: {
-    login() {
-      // Reset error
+    async login() {
+      try {
+        // Reset error
       this.errorNama = ''
       this.errorPassword = ''
 
@@ -73,20 +74,30 @@ export default {
         return
       }
 
-      // Gunakan userStore untuk login
-      const userStore = useUserStore()
-      const result = userStore.login(this.nama, this.password)
-
-      if (!result.success) {
-        if (result.message.includes('Nama')) {
-          this.errorNama = result.message
-        } else {
-          this.errorPassword = result.message
-        }
-        return
-      }
+      // Login dengan Firestore
+      const user = await loginJemaat(this.nama, this.password);
       
-      // Jika login berhasil, lanjutkan dengan streak check menggunakan localStorage biasa
+      // Simpan data ke localStorage untuk session
+      saveUserToLocalStorage(user);
+
+      // Update streak data setelah login berhasil
+      this.updateStreakData()
+      
+      // Jika valid
+      this.$router.push('/home');
+      } catch (error) {
+        if (error.message.includes('Nama')) {
+          this.errorNama = error.message;
+        } else if (error.message.includes('Password')) {
+          this.errorPassword = error.message;
+        } else {
+          this.errorNama = error.message;
+        }
+      }
+  },
+      
+    // Update streak
+    updateStreakData() {
       const today = new Date().toDateString()
       const saved = JSON.parse(localStorage.getItem('streakData')) || {}
       
