@@ -1,46 +1,39 @@
-import { defineStore } from 'pinia'
+import { defineStore } from 'pinia';
 
 export const useUserStore = defineStore('user', {
-  state: () => {
-    return {
-      user: JSON.parse(localStorage.getItem('user')) || {
-        nama: 'Jemaat',
+  state: () => ({
+    user: null,
+    isLoggedIn: false
+  }),
+  
+  actions: {
+    login(userData) {
+      this.user = userData;
+      this.isLoggedIn = true;
+      
+      // Simpan juga di localStorage untuk persistence
+      localStorage.setItem('user', JSON.stringify(userData));
+    },
+    
+    logout() {
+      this.user = null;
+      this.isLoggedIn = false;
+      localStorage.removeItem('user');
+    },
+    
+    // Check if user is logged in when app starts
+    checkLoginStatus() {
+      const savedUser = JSON.parse(localStorage.getItem('user'));
+      if (savedUser) {
+        this.user = savedUser;
+        this.isLoggedIn = true;
       }
     }
   },
   
   getters: {
-    namaUser: (state) => state.user.nama || 'Jemaat',
-    isLoggedIn: (state) => !!state.user.nama && state.user.nama !== 'Jemaat'
-  },
-  
-  actions: {
-    login(nama, password) {
-      const savedUser = JSON.parse(localStorage.getItem('user'))
-      
-      if (!savedUser) {
-        return { success: false, message: 'Akun belum terdaftar' }
-      }
-      
-      if (nama.trim().toLowerCase() !== savedUser.nama.trim().toLowerCase()) {
-        return { success: false, message: 'Nama tidak ditemukan' }
-      }
-      
-      if (password !== savedUser.password) {
-        return { success: false, message: 'Password tidak sesuai' }
-      }
-      
-      this.user = savedUser
-      return { success: true }
-    },
-    
-    registerUser(userData) {
-      this.user = userData
-      localStorage.setItem('user', JSON.stringify(userData))
-    },
-
-    logout() {
-      this.user = { nama: 'Jemaat' }
-    }
+    namaUser: (state) => state.user?.nama || 'Jemaat',
+    sektorUser: (state) => state.user?.sektor || '',
+    statusUser: (state) => state.user?.status || '',
   }
-})
+});

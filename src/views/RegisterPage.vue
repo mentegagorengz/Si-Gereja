@@ -74,7 +74,7 @@
 </template>
 
 <script>
-import { registerJemaat, saveUserToLocalStorage } from '@/services/auth'
+import { registerJemaat, checkJemaatExists } from '@/services/auth'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import FormInput from '@/components/common/FormInput.vue'
@@ -110,69 +110,61 @@ export default {
       errorMsg: '',
 
       // Options untuk dropdown
-      statusOptions: ['Menikah', 'Single', 'Janda/Duda']
+      statusOptions: ['Menikah', 'Single', 'Janda/Duda'],
+
+      namaExists: false
     }
   },
   methods: {
-    async register() {
+    async checkNama() {
+      if (!this.nama) return;
+      
       try {
-        // Reset semua error
-      this.namaError = ''
-      this.passwordError = ''
-      this.confirmPasswordError = ''
-      this.errorMsg = ''
-
-      // Validasi semua field
-      let isValid = true
-
-      if (!this.nama) {
-        this.namaError = 'Nama wajib diisi'
-        isValid = false
+        const exists = await checkJemaatExists(this.nama);
+        this.namaExists = exists;
+        
+        if (!exists) {
+          this.errorMsg = "Nama anda belum terdaftar, segera hubungi gembala/admin";
+        } else {
+          this.errorMsg = "";
+        }
+      } catch (error) {
+        console.error("Error checking nama:", error);
       }
-      
-      if (!this.tanggalLahir) {
-        this.errorMsg = 'Semua field wajib diisi.'
-        isValid = false
-      }
-
-      if (!this.status) {
-        this.errorMsg = 'Semua field wajib diisi.'
-        isValid = false
-      }
-
-      if (!this.sektor) {
-        this.errorMsg = 'Semua field wajib diisi.'
-        isValid = false
-      }
-      
-      if (!this.password) {
-        this.passwordError = 'Password wajib diisi'
-        isValid = false
+    },
+    async register() {
+      if (
+        !this.nama ||
+        !this.tanggalLahir ||
+        !this.status ||
+        !this.sektor ||
+        !this.password ||
+        !this.confirmPassword
+      ) {
+        this.errorMsg = 'Semua field wajib diisi.';
+        return;
       }
 
-      if (!this.confirmPassword) {
-        this.confirmPasswordError = 'Konfirmasi password wajib diisi'
-        isValid = false
-      }
-      
       if (this.password !== this.confirmPassword) {
-        this.confirmPasswordError = 'Password dan konfirmasi password tidak sama'
-        isValid = false
+        this.errorMsg = 'Password dan konfirmasi password tidak sama.';
+        return;
+      }
+      
+      if (!this.namaExists) {
+        this.errorMsg = 'Nama anda belum terdaftar, segera hubungi gembala/admin';
+        return;
       }
 
-      if (!isValid) return
-
-      // Data untuk registrasi
-      const userData = {
-        nama: this.nama,
-        tanggalLahir: this.tanggalLahir,
-        status: this.status,
-        sektor: this.sektor,
-        password: this.password 
-      };
-
-      const user = await registerJemaat(userData);
-      saveUserToLocalStorage(user);
+      try {
+        // Data tambahan jemaat
+        const userData = {
+          tanggalLahir: this.tanggalLahir,
+          status: this.status,
+          sektor: this.sektor
+        };
+        
+        // Register jemaat
+        await registerJemaat(this.nama, this.password, userData);
 
       // Arahkan ke halaman sukses
       this.$router.push('/success-register')

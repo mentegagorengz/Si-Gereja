@@ -36,10 +36,11 @@
 </template>
 
 <script>
-import { loginJemaat, saveUserToLocalStorage } from '@/services/auth'
+import { loginJemaat } from '@/services/auth'
 import FormInput from '@/components/common/FormInput.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
+import { useUserStore } from '@/stores/userStore';
 
 export default {
   name: 'LoginPage',
@@ -74,11 +75,12 @@ export default {
         return
       }
 
-      // Login dengan Firestore
-      const user = await loginJemaat(this.nama, this.password);
+      // Login dengan custom auth
+      const userData = await loginJemaat(this.nama, this.password);
       
-      // Simpan data ke localStorage untuk session
-      saveUserToLocalStorage(user);
+      // Jika menggunakan pinia:
+      const userStore = useUserStore();
+      userStore.login(userData);
 
       // Update streak data setelah login berhasil
       this.updateStreakData()

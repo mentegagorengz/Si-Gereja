@@ -1,93 +1,118 @@
-import { db } from './firebase'
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { db } from './firebase';
+import { 
+  collection, doc, getDoc, updateDoc, 
+  query, where, getDocs 
+} from 'firebase/firestore';
+import { sha256 } from 'crypto-js'; // Tambahkan library ini untuk enkripsi password
 
-// Cek apakah nama jemaat terdaftar di database
-export const checkNamaExists = async (nama) => {
+// Fungsi untuk mencari jemaat berdasarkan nama
+export async function checkJemaatExists(nama) {
   try {
-    const jemaatRef = collection(db, 'jemaat')
-    const q = query(jemaatRef, where('nama', '==', nama))
-    const querySnapshot = await getDocs(q)
+    // Query untuk mencari dokumen jemaat dengan nama tertentu
+    const jemaatRef = collection(db, "jemaat");
+    const q = query(jemaatRef, where("nama", "==", nama));
+    const querySnapshot = await getDocs(q);
     
-    return !querySnapshot.empty
+    return !querySnapshot.empty; // Return true jika ditemukan
   } catch (error) {
-    console.error('Error checking name:', error)
-    throw error
+    console.error("Error checking jemaat:", error);
+    throw error;
   }
 }
 
-// Register jemaat dengan data lengkap
-export const registerJemaat = async (userData) => {
+// Fungsi untuk mendapatkan ID dokumen berdasarkan nama
+export async function getJemaatDocId(nama) {
   try {
-    // Cek apakah nama sudah ada di database
-    const jemaatRef = collection(db, 'jemaat')
-    const q = query(jemaatRef, where('nama', '==', userData.nama))
-    const querySnapshot = await getDocs(q)
+    const jemaatRef = collection(db, "jemaat");
+    const q = query(jemaatRef, where("nama", "==", nama));
+    const querySnapshot = await getDocs(q);
     
     if (querySnapshot.empty) {
-      throw new Error('Nama anda belum terdaftar, segera hubungi gembala/admin')
+      throw new Error("Nama tidak ditemukan");
     }
-
-    // Update data jemaat yang sudah ada
-    const jemaatDoc = querySnapshot.docs[0]
-    const jemaatId = jemaatDoc.id
     
-    await updateDoc(doc(db, 'jemaat', jemaatId), {
-      password: userData.password,
+    // Return ID dokumen jemaat
+    return querySnapshot.docs[0].id;
+  } catch (error) {
+    console.error("Error getting jemaat doc ID:", error);
+    throw error;
+  }
+}
+
+// Fungsi untuk registrasi jemaat
+export async function registerJemaat(nama, password, userData) {
+  try {
+    // Cari ID dokumen jemaat berdasarkan nama
+    const docId = await getJemaatDocId(nama);
+    
+    // Dapatkan data jemaat
+    const jemaatRef = doc(db, "jemaat", docId);
+    const jemaatDoc = await getDoc(jemaatRef);
+    
+    if (!jemaatDoc.exists()) {
+      throw new Error("Nama anda belum terdaftar, segera hubungi gembala/admin");
+    }
+    
+    const jemaatData = jemaatDoc.data();
+    
+    // Cek apakah sudah terdaftar
+    if (jemaatData.isRegistered) {
+      throw new Error("Akun dengan nama ini sudah terdaftar");
+    }
+    
+    // Enkripsi password
+    const encryptedPassword = sha256(password).toString();
+    
+    // Update data jemaat
+    await updateDoc(jemaatRef, {
+      password: encryptedPassword,
+      isRegistered: true,
       tanggalLahir: userData.tanggalLahir,
       status: userData.status,
-      sektor: userData.sektor,
-      isRegistered: true
-    })
-
-    return { ...userData, id: jemaatId }
+      sektor: userData.sektor
+    });
+    
+    return true;
   } catch (error) {
-    console.error('Error registering:', error)
-    throw error
+    console.error("Error registering jemaat:", error);
+    throw error;
   }
 }
 
-// Login jemaat dengan nama dan password
-export const loginJemaat = async (nama, password) => {
+// Fungsi untuk login
+export async function loginJemaat(nama, password) {
   try {
-    const jemaatRef = collection(db, 'jemaat')
-    const q = query(jemaatRef, where('nama', '==', nama))
-    const querySnapshot = await getDocs(q)
+    // Cari jemaat berdasarkan nama
+    const jemaatRef = collection(db, "jemaat");
+    const q = query(jemaatRef, where("nama", "==", nama));
+    const querySnapshot = await getDocs(q);
     
     if (querySnapshot.empty) {
-      throw new Error('Nama tidak ditemukan')
+      throw new Error("Nama tidak ditemukan");
     }
-
-    const jemaatData = querySnapshot.docs[0].data()
-    const jemaatId = querySnapshot.docs[0].id
     
+    const jemaatDoc = querySnapshot.docs[0];
+    const jemaatData = jemaatDoc.data();
+    
+    // Cek apakah sudah terdaftar
     if (!jemaatData.isRegistered) {
-      throw new Error('Akun belum teregistrasi. Silakan register terlebih dahulu.')
+      throw new Error("Akun belum terdaftar. Silakan registrasi terlebih dahulu.");
     }
     
-    if (jemaatData.password !== password) {
-      throw new Error('Password tidak sesuai')
+    // Verifikasi password
+    const encryptedPassword = sha256(password).toString();
+    
+    if (jemaatData.password !== encryptedPassword) {
+      throw new Error("Password tidak sesuai");
     }
     
-    return { ...jemaatData, id: jemaatId }
+    // Return data jemaat
+    return {
+      id: jemaatDoc.id,
+      ...jemaatData
+    };
   } catch (error) {
-    console.error('Error logging in:', error)
-    throw error
+    console.error("Error login jemaat:", error);
+    throw error;
   }
-}
-
-// Simpan data login ke localStorage
-export const saveUserToLocalStorage = (userData) => {
-  localStorage.setItem('user', JSON.stringify(userData))
-}
-
-// Ambil data user dari localStorage
-export const getUserFromLocalStorage = () => {
-  const userData = localStorage.getItem('user')
-  return userData ? JSON.parse(userData) : null
-}
-
-// Logout
-export const logoutUser = () => {
-  localStorage.removeItem('user')
-  return true
 }
