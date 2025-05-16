@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { getCurrentJemaat } from '../services/auth';
 
 // Import halaman-halaman
 import LoginPage from '../views/LoginPage.vue'
@@ -34,6 +35,31 @@ const routes = [
     component: FirebaseTestPage
   }
 ]
+
+// Tambahkan route guard
+router.beforeEach((to, from, next) => {
+  // Daftar route yang membutuhkan autentikasi
+  const requiresAuth = ['/home'];
+  
+  // Daftar route untuk user yang sudah login
+  const redirectIfLoggedIn = ['/', '/register', '/success-register'];
+  
+  // Cek apakah user sudah login
+  const currentUser = getCurrentJemaat();
+  
+  // Jika route membutuhkan autentikasi dan user belum login
+  if (requiresAuth.includes(to.path) && !currentUser) {
+    next('/');
+  } 
+  // Jika user sudah login dan mencoba mengakses halaman login/register
+  else if (currentUser && redirectIfLoggedIn.includes(to.path)) {
+    next('/home');
+  } 
+  // Selain itu, lanjutkan saja
+  else {
+    next();
+  }
+});
 
 const router = createRouter({
   history: createWebHistory(),

@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { loginJemaat, logoutJemaat, getCurrentJemaat } from '@/services/auth';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -7,23 +8,25 @@ export const useUserStore = defineStore('user', {
   }),
   
   actions: {
-    login(userData) {
+    async login(nama, password) {
+      const userData = await loginJemaat(nama, password);
       this.user = userData;
       this.isLoggedIn = true;
       
       // Simpan juga di localStorage untuk persistence
       localStorage.setItem('user', JSON.stringify(userData));
+      return userData;
     },
     
     logout() {
+      logoutJemaat();
       this.user = null;
       this.isLoggedIn = false;
-      localStorage.removeItem('user');
     },
     
     // Check if user is logged in when app starts
     checkLoginStatus() {
-      const savedUser = JSON.parse(localStorage.getItem('user'));
+      const savedUser = getCurrentJemaat();
       if (savedUser) {
         this.user = savedUser;
         this.isLoggedIn = true;

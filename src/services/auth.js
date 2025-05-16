@@ -116,3 +116,16 @@ export async function loginJemaat(nama, password) {
     throw error;
   }
 }
+
+// Fungsi untuk logout
+export async function logoutJemaat() {
+  // Hapus data dari localStorage
+  localStorage.removeItem('user');
+  return true;
+}
+
+
+// Fungsi untuk mendapatkan data jemaat yang sedang login
+export async function getCurrentJemaat() {
+  return JSON.parse(localStorage.getItem('user'));
+}
