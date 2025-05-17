@@ -124,7 +124,6 @@ export async function logoutJemaat() {
   return true;
 }
 
-
 // Fungsi untuk mendapatkan data jemaat yang sedang login
 export async function getCurrentJemaat() {
   return JSON.parse(localStorage.getItem('user'));

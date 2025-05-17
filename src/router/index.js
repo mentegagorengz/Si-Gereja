@@ -36,6 +36,11 @@ const routes = [
   }
 ]
 
+const router = createRouter({
+  history: createWebHistory(),
+  routes
+})
+
 // Tambahkan route guard
 router.beforeEach((to, from, next) => {
   // Daftar route yang membutuhkan autentikasi
@@ -60,10 +65,5 @@ router.beforeEach((to, from, next) => {
     next();
   }
 });
-
-const router = createRouter({
-  history: createWebHistory(),
-  routes
-})
 
 export default router
