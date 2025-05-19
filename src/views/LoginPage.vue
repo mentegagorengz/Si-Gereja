@@ -78,14 +78,11 @@ export default {
       // Login dengan custom auth
       const userData = await loginJemaat(this.nama, this.password);
       
-      // Jika menggunakan pinia:
       const userStore = useUserStore();
       userStore.login(userData);
 
-      // Update streak data setelah login berhasil
       this.updateStreakData()
       
-      // Jika valid
       this.$router.push('/home');
       } catch (error) {
         if (error.message.includes('Nama')) {
@@ -160,8 +157,8 @@ export default {
 
 .signup-text {
     font-size: 14px;
-    margin-top: 32px; /* dari password */
-    margin-bottom: 63px; /* ke tombol */
+    margin-top: 32px;
+    margin-bottom: 63px;
     text-align: center;
   }
 

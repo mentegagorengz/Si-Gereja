@@ -83,23 +83,19 @@ export default {
     }
   },
   created() {
-    // Lebih baik dipanggil di created untuk memastikan data tersedia sebelum render
     this.loadUserData()
     this.checkStreak()
   },
   methods: {
     loadUserData() {
-      // Prioritaskan data dari store dulu
       const userStore = useUserStore()
 
       if (userStore.namaUser) {
         this.namaUser = userStore.namaUser
       } else {
-        // Jika tidak ada di store, coba ambil dari localStorage
         const savedUser = getUserFromLocalStorage()
         if (savedUser && savedUser.nama) {
           this.namaUser = savedUser.nama
-          // Update store juga agar konsisten
           userStore.setUser(savedUser)
         }
       }
@@ -110,7 +106,6 @@ export default {
       const saved = JSON.parse(localStorage.getItem('streakData')) || {}
 
       if (saved.lastLoginDate === today) {
-        //sudah login hari ini
         this.streakCount = saved.streakCount || 1
       } else {
         const yesterday = new Date()
@@ -118,14 +113,11 @@ export default {
         const yesterdayStr = yesterday.toDateString()
 
         if (saved.lastLoginDate === yesterdayStr) {
-          //login setiap hari
           this.streakCount = (saved.streakCount || 0) + 1
         } else {
-          //lewat sehari, reset streak
           this.streakCount = 1
         }
 
-        //simpan update ke localstorage
         localStorage.setItem('streakData', JSON.stringify({
           lastLoginDate: today,
           streakCount: this.streakCount

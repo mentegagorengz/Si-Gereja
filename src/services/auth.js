@@ -3,24 +3,21 @@ import {
   collection, doc, getDoc, updateDoc, 
   query, where, getDocs 
 } from 'firebase/firestore';
-import { sha256 } from 'crypto-js'; // Tambahkan library ini untuk enkripsi password
+import { sha256 } from 'crypto-js';
 
-// Fungsi untuk mencari jemaat berdasarkan nama
 export async function checkJemaatExists(nama) {
   try {
-    // Query untuk mencari dokumen jemaat dengan nama tertentu
     const jemaatRef = collection(db, "jemaat");
     const q = query(jemaatRef, where("nama", "==", nama));
     const querySnapshot = await getDocs(q);
     
-    return !querySnapshot.empty; // Return true jika ditemukan
+    return !querySnapshot.empty;
   } catch (error) {
     console.error("Error checking jemaat:", error);
     throw error;
   }
 }
 
-// Fungsi untuk mendapatkan ID dokumen berdasarkan nama
 export async function getJemaatDocId(nama) {
   try {
     const jemaatRef = collection(db, "jemaat");
@@ -31,7 +28,6 @@ export async function getJemaatDocId(nama) {
       throw new Error("Nama tidak ditemukan");
     }
     
-    // Return ID dokumen jemaat
     return querySnapshot.docs[0].id;
   } catch (error) {
     console.error("Error getting jemaat doc ID:", error);
@@ -39,13 +35,10 @@ export async function getJemaatDocId(nama) {
   }
 }
 
-// Fungsi untuk registrasi jemaat
 export async function registerJemaat(nama, password, userData) {
   try {
-    // Cari ID dokumen jemaat berdasarkan nama
     const docId = await getJemaatDocId(nama);
     
-    // Dapatkan data jemaat
     const jemaatRef = doc(db, "jemaat", docId);
     const jemaatDoc = await getDoc(jemaatRef);
     
@@ -55,12 +48,10 @@ export async function registerJemaat(nama, password, userData) {
     
     const jemaatData = jemaatDoc.data();
     
-    // Cek apakah sudah terdaftar
     if (jemaatData.isRegistered) {
       throw new Error("Akun dengan nama ini sudah terdaftar");
     }
     
-    // Enkripsi password
     const encryptedPassword = sha256(password).toString();
     
     // Update data jemaat
@@ -82,7 +73,6 @@ export async function registerJemaat(nama, password, userData) {
 // Fungsi untuk login
 export async function loginJemaat(nama, password) {
   try {
-    // Cari jemaat berdasarkan nama
     const jemaatRef = collection(db, "jemaat");
     const q = query(jemaatRef, where("nama", "==", nama));
     const querySnapshot = await getDocs(q);
@@ -119,7 +109,6 @@ export async function loginJemaat(nama, password) {
 
 // Fungsi untuk logout
 export async function logoutJemaat() {
-  // Hapus data dari localStorage
   localStorage.removeItem('user');
   return true;
 }

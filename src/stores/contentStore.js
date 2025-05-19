@@ -1,6 +1,5 @@
-// src/stores/contentStore.js
 import { defineStore } from 'pinia'
-import ayatImg from '@/assets/Ayat.png' // Pastikan path benar
+import ayatImg from '@/assets/Ayat.png'
 
 export const useContentStore = defineStore('content', {
   state: () => {

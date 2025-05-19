@@ -13,7 +13,6 @@ export const useUserStore = defineStore('user', {
       this.user = userData;
       this.isLoggedIn = true;
       
-      // Simpan juga di localStorage untuk persistence
       localStorage.setItem('user', JSON.stringify(userData));
       return userData;
     },
@@ -24,7 +23,6 @@ export const useUserStore = defineStore('user', {
       this.isLoggedIn = false;
     },
     
-    // Check if user is logged in when app starts
     checkLoginStatus() {
       const savedUser = getCurrentJemaat();
       if (savedUser) {

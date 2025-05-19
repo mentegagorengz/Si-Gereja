@@ -18,7 +18,7 @@
 
 <style scoped>
 .verse-wrapper {
-  width: calc(100% + 32px); /* 100% + 16px kiri + 16px kanan */
+  width: calc(100% + 32px);
   margin-left: -16px;
   margin-right: -16px;
 }

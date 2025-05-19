@@ -30,7 +30,6 @@ export default {
   },
   methods: {
     getCardClass(title) {
-      // Menentukan warna berdasarkan jenis pengumuman
       if (title.toLowerCase().includes('birthday')) {
         return 'birthday-card'
       } else if (title.toLowerCase().includes('ibadah')) {
@@ -95,7 +94,6 @@ export default {
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* Variasi warna untuk jenis pengumuman berbeda */
 .birthday-card {
   background: linear-gradient(135deg, #41442A, #738045);
 }

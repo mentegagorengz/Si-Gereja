@@ -18,7 +18,7 @@
       },
         iconName: {
         type: String,
-        default: '' // nama file icon, misalnya "news.png"
+        default: ''
       }
     },
     computed: {
@@ -27,7 +27,6 @@
       },
       iconSrc() {
         try {
-          // Mencoba memuat icon dari assets/icons
           return require(`@/assets/icons/${this.iconName}`)
         } catch (err) {
           console.warn(`❗ Gagal memuat icon: ${this.iconName}`, err)
@@ -62,11 +61,11 @@
     font-weight: bold;
     font-size: 20px;
     color: rgb(32, 32, 32);
-    overflow: hidden; /* Untuk gambar yang mungkin lebih besar */
+    overflow: hidden;
   }  
   
   .feature-icon {
-    width: 40px; /* Sesuaikan ukuran sesuai kebutuhan */
+    width: 40px;
     height: auto;
     object-fit: contain;
   }

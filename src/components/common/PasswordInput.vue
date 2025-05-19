@@ -10,7 +10,6 @@
           :placeholder="placeholder"
         />
         
-        <!-- Icon Eye -->
         <Eye v-if="!showPassword" @click="togglePassword" class="icon-eye" />
         <EyeOff v-else @click="togglePassword" class="icon-eye" />
       </div>

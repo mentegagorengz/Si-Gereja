@@ -50,7 +50,7 @@
 
   .button-wrapper {
     display: flex;
-    justify-content: center; /* Ini akan memusatkan button */
+    justify-content: center;
     width: 100%;
   }
   

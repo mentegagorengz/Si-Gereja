@@ -34,13 +34,13 @@ const route = useRoute()
   right: 0;
   height: 64px;
   background-color: #fcfcf7;
-  border-top: 1px solid #f0f0f0; /* Border yang lebih halus */
+  border-top: 1px solid #f0f0f0;
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 999;
-  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1); /* Shadow di bagian atas navbar */
-  transition: box-shadow 0.3s ease; /* Animasi untuk shadow */
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
 }
 
 .nav-item {
@@ -52,30 +52,27 @@ const route = useRoute()
   height: 64px;
   text-align: center;
   font-size: 12px;
-  color: #777; /* Warna abu-abu untuk yang tidak aktif */
+  color: #777;
   font-family: 'Inter';
   text-decoration: none;
   gap: 4px;
-  transition: all 0.3s ease; /* Tambahkan animasi halus */
+  transition: all 0.3s ease;
 }
 
 .icon {
   width: 20px;
   height: 20px;
-  color: #777; /* Warna abu-abu untuk icon yang tidak aktif */
-  transition: all 0.3s ease; /* Animasi perubahan warna */
+  color: #777;
+  transition: all 0.3s ease;
 }
 
 .icon-active {
-  color: #41442A; /* Warna hijau untuk icon yang aktif */
-  transform: scale(1.2); /* Memperbesar icon yang aktif */
+  color: #41442A;
+  transform: scale(1.2);
 }
 
 .text-active {
-  color: #41442A; /* Warna hijau untuk text yang aktif */
+  color: #41442A;
   font-weight: bold;
 }
-
-/* Hapus .router-link-exact-active karena kita sudah menangani
-   status aktif dengan kondisi di template */
 </style>

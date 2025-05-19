@@ -49,8 +49,6 @@
       options: {
         type: Array,
         required: true,
-        // options bisa berupa array sederhana ['Opsi1', 'Opsi2'] 
-        // atau array objek [{label: 'Opsi 1', value: 'opsi1'}, ...]
       },
       modelValue: {
         type: [String, Number],
@@ -104,10 +102,10 @@
     background-color: #fcfcf7;
     box-sizing: border-box;
     color: #777;
-    appearance: none; /* Menghilangkan tampilan default dropdown */
+    appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    padding-right: 36px; /* Ruang untuk icon */
+    padding-right: 36px;
     cursor: pointer;
   }
   
@@ -132,7 +130,7 @@
     width: 20px;
     height: 20px;
     color: #41442A;
-    pointer-events: none; /* Agar icon tidak menghalangi klik pada select */
+    pointer-events: none;
   }
   
   .error-text {
@@ -149,22 +147,17 @@
     cursor: not-allowed;
   }
 
-    /* Style tambahan untuk mengubah warna font pada option */
-    /* Perlu ditambahkan ::v-deep untuk CSS scoped */
     :deep(option) {
-    color: #41442A !important; /* Mengubah warna teks options menjadi warna utama aplikasi */
+    color: #41442A !important;
         font-family: 'Inter';
     }
   
-  /* Mengubah warna option saat di-hover */
   :deep(option:hover) {
     background-color: #f0f0e8;
   }
 
-  /* Mengubah warna option saat dipilih */
     :deep(option:checked) {
         background-color: #e8e8e0;
         font-weight: bold;
     }
-  
-  </style>
+</style>

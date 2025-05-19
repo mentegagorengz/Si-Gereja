@@ -1,9 +1,8 @@
-// Import fungsi yang diperlukan dari Firebase SDK
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
-// Konfigurasi Firebase - ganti dengan config proyekmu sendiri!
+// Konfigurasi Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBtGgShLr_s_qgq0GhOEPmh5VfwZUJDHeY",
   authDomain: "myrajawali-app.firebaseapp.com",
@@ -21,5 +20,4 @@ const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
 const db = getFirestore(app)
 
-// Export semua layanan yang akan digunakan
 export { app, auth, db }

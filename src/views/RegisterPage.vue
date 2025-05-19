@@ -95,7 +95,6 @@ export default {
   },
   data() {
     return {
-      // Data fields
       nama: '',
       tanggalLahir: '',
       status: '',
@@ -103,13 +102,11 @@ export default {
       password: '',
       confirmPassword: '',
       
-      // Error messages
       namaError: '',
       passwordError: '',
       confirmPasswordError: '',
       errorMsg: '',
 
-      // Options untuk dropdown
       statusOptions: ['Menikah', 'Single', 'Janda/Duda'],
 
       namaExists: false
@@ -156,17 +153,14 @@ export default {
       }
 
       try {
-        // Data tambahan jemaat
         const userData = {
           tanggalLahir: this.tanggalLahir,
           status: this.status,
           sektor: this.sektor
         };
         
-        // Register jemaat
         await registerJemaat(this.nama, this.password, userData);
 
-      // Arahkan ke halaman sukses
       this.$router.push('/success-register')
       } catch (error) {
         // Tangani pesan error dari Firebase

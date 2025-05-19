@@ -14,7 +14,6 @@
   </template>
   
   <script>
-  // Menggunakan Options API sebagai solusi yang lebih kompatibel
   export default {
     name: 'FormInput',
     props: {

@@ -47,8 +47,8 @@
     },
     data() {
       return {
-        initStatus: 'loading', // 'loading', 'success', 'error'
-        firestoreStatus: 'loading', // 'loading', 'success', 'error'
+        initStatus: 'loading',
+        firestoreStatus: 'loading', 
         errorMessage: '',
         testData: []
       };
@@ -73,7 +73,7 @@
           
           // Test Firestore connection by fetching data
           try {
-            // Coba query collection 'jemaat' (disesuaikan dengan collection yang ada)
+
             const jemaatQuery = query(collection(db, 'jemaat'), limit(1));
             const snapshot = await getDocs(jemaatQuery);
             
@@ -81,9 +81,8 @@
               this.testData.push({ message: 'Tidak ada data dalam collection jemaat' });
             } else {
               snapshot.forEach(doc => {
-                // Tambahkan sample data ke test results
+
                 const data = doc.data();
-                // Hapus field sensitif seperti password jika ada
                 if (data.password) delete data.password;
                 
                 this.testData.push({
