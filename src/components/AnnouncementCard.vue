@@ -95,7 +95,7 @@ export default {
 }
 
 .birthday-card {
-  background: linear-gradient(135deg, #41442A, #738045);
+  background: linear-gradient(135deg, #aa1a64, #b93283);
 }
 
 .birthday-card::before {
@@ -109,7 +109,7 @@ export default {
 }
 
 .service-card {
-  background: linear-gradient(135deg, #4A4D33, #41442A);
+  background: linear-gradient(135deg, #c7640e, #825900);
 }
 .service-card::before {
   content: "🙏";

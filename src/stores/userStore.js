@@ -9,12 +9,32 @@ export const useUserStore = defineStore('user', {
   
   actions: {
     async login(nama, password) {
-      const userData = await loginJemaat(nama, password);
-      this.user = userData;
-      this.isLoggedIn = true;
-      
-      localStorage.setItem('user', JSON.stringify(userData));
-      return userData;
+      try {
+        console.log('🔍 [UserStore] login called with:', { 
+          nama: nama, 
+          namaType: typeof nama,
+          password: password ? '[HIDDEN]' : 'undefined',
+          passwordType: typeof password
+        });
+
+         // Validasi parameter
+        if (!nama || !password) {
+          throw new Error('Nama dan password harus diisi');
+        }
+        
+        const userData = await loginJemaat(nama, password);
+        
+        console.log('✅ [UserStore] Login successful, userData:', userData);
+        
+        this.user = userData;
+        this.isLoggedIn = true;
+        
+        localStorage.setItem('user', JSON.stringify(userData));
+        return userData;
+      } catch (error) {
+        console.error('❌ [UserStore] login error:', error);
+        throw error;
+      }
     },
     
     logout() {

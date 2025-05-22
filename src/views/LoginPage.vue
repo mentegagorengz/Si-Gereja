@@ -36,7 +36,6 @@
 </template>
 
 <script>
-import { loginJemaat } from '@/services/auth'
 import FormInput from '@/components/common/FormInput.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
@@ -75,11 +74,15 @@ export default {
         return
       }
 
-      // Login dengan custom auth
-      const userData = await loginJemaat(this.nama, this.password);
-      
+      console.log('Debug LoginPage:', {
+        nama: this.nama,
+        password: this.password,
+        namaLength: this.nama?.length,
+        passwordLength: this.password?.length
+      });
+
       const userStore = useUserStore();
-      userStore.login(userData);
+      await userStore.login(this.nama, this.password);
 
       this.updateStreakData()
       

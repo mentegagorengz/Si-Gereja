@@ -45,15 +45,11 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   // Daftar route yang membutuhkan autentikasi
   const requiresAuth = ['/home'];
-  const redirectIfLoggedIn = ['/', '/register', '/success-register'];
   const currentUser = getCurrentJemaat();
   
   if (requiresAuth.includes(to.path) && !currentUser) {
     next('/');
-  } 
-  else if (currentUser && redirectIfLoggedIn.includes(to.path)) {
-    next('/home');
-  } 
+  }
   else {
     next();
   }

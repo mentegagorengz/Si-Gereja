@@ -45,6 +45,7 @@ import AnnouncementCard from '@/components/AnnouncementCard.vue'
 import { useUserStore } from '@/stores/userStore'
 import ayatImg from '@/assets/Ayat.png'
 import { getUserFromLocalStorage } from '@/services/auth'
+import { getAnnouncements } from '@/services/announcements'
 
 export default {
   name: 'HomePage',
@@ -68,23 +69,13 @@ export default {
         { name: "Renungan", icon: "renungan.png" },
         { name: "Prayer Request", icon: "prayer.png" }
       ],
-      announcementList: [
-        {
-          title: 'Happy Birthday, Kak Irene!',
-          desc: '09 Agustus – Tuhan berkati selalu!',
-          icon: 'cake.png'
-        },
-        {
-          title: 'Ibadah PELPRAP',
-          desc: 'Pukul 17.00 WITA – Gedung Gereja',
-          icon: 'ibadah.png'
-        }
-      ]
+      announcementList: []
     }
   },
   created() {
     this.loadUserData()
     this.checkStreak()
+    this.fetchAnnouncements()
   },
   methods: {
     loadUserData() {
@@ -122,6 +113,13 @@ export default {
           lastLoginDate: today,
           streakCount: this.streakCount
         }))
+      }
+    },
+    async fetchAnnouncements() {
+      try {
+        this.announcementList = await getAnnouncements(5); // Ambil 5 pengumuman terbaru
+      } catch (error) {
+        console.error("Error fetching announcements:", error);
       }
     }
   }
