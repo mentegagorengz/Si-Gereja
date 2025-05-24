@@ -45,7 +45,8 @@
   .header-inner {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
+    position: relative;
   }
   
   .back-button {
@@ -59,6 +60,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    z-index: 1;
   }
   
   .icon-back {
@@ -69,10 +71,19 @@
   }
   
   .header-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     font-family: 'Inter';
     font-size: 18px;
     font-weight: 600;
     line-height: 1.2;
     margin: 0;
+    text-align: center;
+  }
+
+  .spacer {
+    width: 32px;
+    height: 32px;
   }
 </style>

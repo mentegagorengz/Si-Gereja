@@ -17,11 +17,6 @@ export const useUserStore = defineStore('user', {
           passwordType: typeof password
         });
 
-         // Validasi parameter
-        if (!nama || !password) {
-          throw new Error('Nama dan password harus diisi');
-        }
-        
         const userData = await loginJemaat(nama, password);
         
         console.log('✅ [UserStore] Login successful, userData:', userData);

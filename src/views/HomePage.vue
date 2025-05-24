@@ -19,7 +19,7 @@
       </div>
 
       <!-- Title untuk Announcement -->
-      <h2 class="section-title">Announcement</h2>
+      <h2 class="section-title">Announcements</h2>
 
       <!-- Announcement Cards -->
       <AnnouncementCard
@@ -28,6 +28,7 @@
         :title="item.title"
         :desc="item.desc"
         :icon="item.icon"
+        :category="item.category"
       />
 
       <!-- Bottom Navbar -->

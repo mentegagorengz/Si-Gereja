@@ -1,5 +1,5 @@
 <template>
-  <div class="announcement-card" :class="getCardClass(title)">
+  <div class="announcement-card" :class="getCardClass(category)">
     <div class="card-icon">
       <img :src="iconSrc" alt="icon" class="icon-img" />
     </div>
@@ -16,7 +16,8 @@ export default {
   props: {
     title: String,
     desc: String,
-    icon: String
+    icon: String,
+    category: String
   },
   computed: {
     iconSrc() {
@@ -29,13 +30,18 @@ export default {
     }
   },
   methods: {
-    getCardClass(title) {
-      if (title.toLowerCase().includes('birthday')) {
-        return 'birthday-card'
-      } else if (title.toLowerCase().includes('ibadah')) {
-        return 'service-card'
-      } else {
-        return 'default-card'
+    getCardClass(category) {
+      switch(category) {
+        case 'birthday':
+          return 'birthday-card'
+        case 'service':
+          return 'service-card' 
+        case 'event':
+          return 'event-card'
+        case 'pengumuman':
+          return 'pengumuman-card'
+        default:
+          return 'default-card'
       }
     }
   }
@@ -109,9 +115,35 @@ export default {
 }
 
 .service-card {
-  background: linear-gradient(135deg, #c7640e, #825900);
+  background: linear-gradient(135deg, #825900, #c7640e);
 }
 .service-card::before {
+  content: "🙏";
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  font-size: 50px;
+  opacity: 0.15;
+  transform: rotate(15deg);
+}
+
+.event-card {
+  background: linear-gradient(135deg, #7c6b1d, #e0be00);
+}
+.event-card::before {
+  content: "🙏";
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  font-size: 50px;
+  opacity: 0.15;
+  transform: rotate(15deg);
+}
+
+.pengumuman-card {
+  background: linear-gradient(135deg, #261b76, #2156a6);
+}
+.pengumuman-card::before {
   content: "🙏";
   position: absolute;
   right: -10px;

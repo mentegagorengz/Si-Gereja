@@ -36,7 +36,16 @@
     },
     methods: {
       goToPage() {
-        const path = '/' + this.name.toLowerCase().replace(/ /g, '-')
+        let path = ''
+        
+        if (this.name === 'Jadwal') {
+          path = '/jadwal'
+        } else {
+          // Untuk feature lain, gunakan format default
+          path = '/' + this.name.toLowerCase().replace(/ /g, '-')
+        }
+        
+        console.log(`🔍 [FeatureBox] Navigating to: ${path}`)
         this.$router.push(path)
       }
     }

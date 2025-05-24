@@ -7,6 +7,7 @@ import RegisterPage from '../views/RegisterPage.vue'
 import HomePage from '../views/HomePage.vue'
 import SuccessRegister from '../views/SuccessRegister.vue'
 import FirebaseTestPage from '../views/FirebaseTestPage.vue'
+import JadwalPage from '../views/JadwalPage.vue'
 
 const routes = [
   { 
@@ -33,6 +34,11 @@ const routes = [
     path: '/firebase-test',
     name: 'FirebaseTestPage',
     component: FirebaseTestPage
+  },
+  {
+    path: '/jadwal',
+    name: 'JadwalPage',
+    component: JadwalPage
   }
 ]
 
