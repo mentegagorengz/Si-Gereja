@@ -11,6 +11,8 @@ import JadwalPage from '../views/JadwalPage.vue'
 import DetailJadwal from '../views/DetailJadwal.vue'
 import NewsPage from '../views/NewsPage.vue'
 import DetailNews from '../views/DetailNews.vue'
+import RenunganPage from '../views/RenunganPage.vue'
+import DetailRenungan from '../views/DetailRenungan.vue'
 
 const routes = [
   { 
@@ -57,6 +59,16 @@ const routes = [
     path: '/news/:id',
     name: 'DetailNews',
     component: DetailNews
+  },
+  {
+    path: '/renungan',
+    name: 'RenunganPage',
+    component: RenunganPage
+  },
+  {
+    path: '/renungan/:id',
+    name: 'DetailRenungan',
+    component: DetailRenungan
   }
 ]
 
