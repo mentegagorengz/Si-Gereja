@@ -16,7 +16,10 @@ export const ICON_MAP = {
   'doa': defaultIcon,         // ⭐ SEMENTARA PAKAI DEFAULT
   'sektor': defaultIcon,      // ⭐ SEMENTARA PAKAI DEFAULT
   'ibadah': defaultIcon,      // ⭐ SEMENTARA PAKAI DEFAULT
-  'default': defaultIcon
+  'default': defaultIcon,     
+  'event': defaultIcon,         // ⭐ SEMENTARA PAKAI DEFAULT
+  'birthday': defaultIcon,      // ⭐ SEMENTARA PAKAI DEFAULT
+  'undangan': defaultIcon      // ⭐ SEMENTARA PAKAI DEFAULT
 }
 
 export const THUMBNAIL_MAP = {
@@ -25,7 +28,10 @@ export const THUMBNAIL_MAP = {
   'doa': defaultThumb,        // ⭐ SEMENTARA PAKAI DEFAULT
   'sektor': defaultThumb,     // ⭐ SEMENTARA PAKAI DEFAULT
   'ibadah': defaultThumb,     // ⭐ SEMENTARA PAKAI DEFAULT
-  'default': defaultThumb
+  'default': defaultThumb,
+  'event': defaultThumb,        // ⭐ SEMENTARA PAKAI DEFAULT
+  'birthday': defaultThumb,      // ⭐ SEMENTARA PAKAI DEFAULT
+  'undangan': defaultThumb      // ⭐ SEMENTARA PAKAI DEFAULT
 }
 
 // ⭐ HELPER FUNCTIONS (SAMA SEPERTI SEBELUMNYA)

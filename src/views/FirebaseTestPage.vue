@@ -109,6 +109,22 @@ export default {
               });
             });
           }
+
+          // Test collection news (BARU DITAMBAH!)
+          const newsQuery = query(collection(db, 'news'), limit(3));
+          const newsSnapshot = await getDocs(newsQuery);
+          
+          if (newsSnapshot.empty) {
+            this.testData.push({ collection: 'news', message: 'Tidak ada data dalam collection news' });
+          } else {
+            newsSnapshot.forEach(doc => {
+              this.testData.push({
+                collection: 'news',
+                id: doc.id,
+                ...doc.data()
+              });
+            });
+          }
           
           // ===== UPDATE SELESAI SAMPAI SINI =====
           

@@ -78,7 +78,16 @@ export default {
   },
   methods: {
     goToDetail() {
-      this.$router.push(`/jadwal/${this.schedule.id}`)
+      // ⭐ SMART DETECTION: Deteksi berdasarkan route saat ini
+      const currentPath = this.$route.path
+      
+      if (currentPath.startsWith('/news')) {
+        // Kalau di halaman news, navigate ke detail news
+        this.$router.push(`/news/${this.schedule.id}`)
+      } else {
+        // Kalau di halaman jadwal, navigate ke detail jadwal
+        this.$router.push(`/jadwal/${this.schedule.id}`)
+      }
     },
     
     onImageError() {

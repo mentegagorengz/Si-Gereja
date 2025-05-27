@@ -9,6 +9,8 @@ import SuccessRegister from '../views/SuccessRegister.vue'
 import FirebaseTestPage from '../views/FirebaseTestPage.vue'
 import JadwalPage from '../views/JadwalPage.vue'
 import DetailJadwal from '../views/DetailJadwal.vue'
+import NewsPage from '../views/NewsPage.vue'
+import DetailNews from '../views/DetailNews.vue'
 
 const routes = [
   { 
@@ -45,6 +47,16 @@ const routes = [
     path: '/jadwal/:id',
     name: 'DetailJadwal',
     component: DetailJadwal
+  },
+  {
+    path: '/news',
+    name: 'NewsPage',
+    component: NewsPage
+  },
+  {
+    path: '/news/:id',
+    name: 'DetailNews',
+    component: DetailNews
   }
 ]
 
