@@ -38,17 +38,39 @@ export const useUserStore = defineStore('user', {
       this.isLoggedIn = false;
     },
     
+    // ⭐ TAMBAH: Method untuk set user dari localStorage
+    setUser(userData) {
+      console.log('✅ [UserStore] Setting user from localStorage:', userData.nama);
+      this.user = userData;
+      this.isLoggedIn = true;
+    },
+    
+    // ⭐ PERBAIKI: Method untuk cek login status
     checkLoginStatus() {
+      console.log('🔍 [UserStore] Checking login status...');
+      
       const savedUser = getCurrentJemaat();
       if (savedUser) {
+        console.log('✅ [UserStore] Found saved user:', savedUser.nama);
         this.user = savedUser;
         this.isLoggedIn = true;
+        return true;
+      } else {
+        console.log('❌ [UserStore] No saved user found');
+        this.user = null;
+        this.isLoggedIn = false;
+        return false;
       }
     }
   },
   
   getters: {
-    namaUser: (state) => state.user?.nama || 'Jemaat',
+    namaUser: (state) => {
+      // ⭐ PERBAIKI: Always return nama, dengan fallback
+      const nama = state.user?.nama || 'Jemaat';
+      console.log('🔍 [UserStore] namaUser getter:', nama);
+      return nama;
+    },
     sektorUser: (state) => state.user?.sektor || '',
     statusUser: (state) => state.user?.status || '',
   }

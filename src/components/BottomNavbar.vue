@@ -1,29 +1,62 @@
 <template>
   <nav class="bottom-navbar">
     <router-link to="/home" class="nav-item" exact aria-label="Beranda">
-      <House :class="['icon', route.path === '/home' ? 'icon-active' : '']" />
-      <span :class="{ 'text-active': route.path === '/home' }">Home</span>
+      <House :class="['icon', isActiveRoute('/home') ? 'icon-active' : '']" />
+      <span :class="{ 'text-active': isActiveRoute('/home') }">Home</span>
     </router-link>
     <router-link to="/jadwal" class="nav-item" aria-label="Kalender">
-      <Calendar :class="['icon', route.path === '/jadwal' ? 'icon-active' : '']" />
-      <span :class="{ 'text-active': route.path === '/jadwal' }">Kalender</span>
+      <Calendar :class="['icon', isActiveRoute('/jadwal') ? 'icon-active' : '']" />
+      <span :class="{ 'text-active': isActiveRoute('/jadwal') }">Kalender</span>
     </router-link>
     <router-link to="/notifikasi" class="nav-item" aria-label="Notifikasi">
-      <Bell :class="['icon', route.path === '/notifikasi' ? 'icon-active' : '']" />
-      <span :class="{ 'text-active': route.path === '/notifikasi' }">Notifikasi</span>
+      <Bell :class="['icon', isActiveRoute('/notifikasi') ? 'icon-active' : '']" />
+      <span :class="{ 'text-active': isActiveRoute('/notifikasi') }">Notifikasi</span>
     </router-link>
     <router-link to="/account" class="nav-item" aria-label="Akun">
-      <User :class="['icon', route.path === '/account' ? 'icon-active' : '']" />
-      <span :class="{ 'text-active': route.path === '/account' }">Profile</span>
+      <User :class="['icon', isActiveRoute('/account') ? 'icon-active' : '']" />
+      <span :class="{ 'text-active': isActiveRoute('/account') }">Profile</span>
     </router-link>
   </nav>
 </template>
 
-<script setup>
+<script>
 import { House, Calendar, Bell, User } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
 
-const route = useRoute()
+export default {
+  name: 'BottomNavbar',
+  components: {
+    House,
+    Calendar,
+    Bell,
+    User
+  },
+  props: {
+    forceActiveRoute: {
+      type: String,
+      default: null
+    }
+  },
+  setup(props) {
+    const route = useRoute()
+    
+    // Function untuk cek active route
+    const isActiveRoute = (path) => {
+      // Jika ada forceActiveRoute, gunakan itu
+      if (props.forceActiveRoute) {
+        return props.forceActiveRoute === path
+      }
+      
+      // Jika tidak, gunakan route.path biasa
+      return route.path === path
+    }
+    
+    return {
+      route,
+      isActiveRoute
+    }
+  }
+}
 </script>
 
 <style scoped>

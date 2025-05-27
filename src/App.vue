@@ -3,8 +3,19 @@
 </template>
 
 <script>
+import { useUserStore } from '@/stores/userStore'
+
 export default {
-  name: 'App'
+  name: 'App',
+  created() {
+    // ⭐ TAMBAH: Global state check saat app startup
+    console.log('🚀 [App] Initializing app...')
+    
+    const userStore = useUserStore()
+    userStore.checkLoginStatus()
+    
+    console.log('✅ [App] App initialized')
+  }
 }
 </script>
 

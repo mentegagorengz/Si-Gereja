@@ -220,11 +220,31 @@ export async function logoutJemaat() {
 // Fungsi untuk mendapatkan data jemaat yang sedang login
 export async function getCurrentJemaat() {
   try {
-    const userData = JSON.parse(localStorage.getItem('user'));
-    console.log('🔍 [getCurrentJemaat] Retrieved user from localStorage:', userData ? 'Found' : 'Not found');
+    console.log('🔍 [getCurrentJemaat] Checking localStorage...');
+    
+    const userDataString = localStorage.getItem('user');
+    console.log('🔍 [getCurrentJemaat] Raw localStorage data:', userDataString);
+    
+    if (!userDataString) {
+      console.log('❌ [getCurrentJemaat] No user data in localStorage');
+      return null;
+    }
+    
+    const userData = JSON.parse(userDataString);
+    console.log('✅ [getCurrentJemaat] Parsed user data:', userData);
+    
+    // Validasi data
+    if (!userData.nama) {
+      console.log('❌ [getCurrentJemaat] User data invalid - no nama field');
+      return null;
+    }
+    
+    console.log('✅ [getCurrentJemaat] Returning valid user:', userData.nama);
     return userData;
   } catch (error) {
     console.error('❌ [getCurrentJemaat] Error parsing user data:', error);
+    // Clear corrupted data
+    localStorage.removeItem('user');
     return null;
   }
 }

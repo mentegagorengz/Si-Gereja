@@ -38,6 +38,8 @@
 </template>
 
 <script>
+// BAGIAN SCRIPT HomePage.vue yang diperbaiki:
+
 import HeaderHome from '@/components/layout/HeaderHome.vue'
 import DailyVerse from '@/components/DailyVerse.vue'
 import FeatureBox from '@/components/FeatureBox.vue'
@@ -45,7 +47,7 @@ import BottomNavbar from '@/components/BottomNavbar.vue'
 import AnnouncementCard from '@/components/AnnouncementCard.vue'
 import { useUserStore } from '@/stores/userStore'
 import ayatImg from '@/assets/Ayat.png'
-import { getUserFromLocalStorage } from '@/services/auth'
+import { getCurrentJemaat } from '@/services/auth' // ⭐ TAMBAH: Import langsung
 import { getAnnouncements } from '@/services/announcements'
 
 export default {
@@ -59,7 +61,7 @@ export default {
   },
   data() {
     return {
-      namaUser: 'Jemaat',
+      namaUser: 'Jemaat', // Default fallback
       streakCount: 0,
       ayatGambar: ayatImg,
       featureList: [
@@ -73,23 +75,41 @@ export default {
       announcementList: []
     }
   },
-  created() {
-    this.loadUserData()
+  async created() {
+    // ⭐ PERBAIKI: Urutan yang benar dengan await
+    await this.initializeUserData()
     this.checkStreak()
     this.fetchAnnouncements()
   },
   methods: {
-    loadUserData() {
-      const userStore = useUserStore()
-
-      if (userStore.namaUser) {
-        this.namaUser = userStore.namaUser
-      } else {
-        const savedUser = getUserFromLocalStorage()
+    // ⭐ PERBAIKI: Method baru dengan debug lengkap
+    async initializeUserData() {
+      console.log('🔍 [HomePage] === INITIALIZING USER DATA ===');
+      
+      try {
+        // 1. Cek localStorage langsung dulu
+        const savedUser = await getCurrentJemaat();
+        console.log('🔍 [HomePage] getCurrentJemaat result:', savedUser);
+        
         if (savedUser && savedUser.nama) {
-          this.namaUser = savedUser.nama
-          userStore.setUser(savedUser)
+          // 2. Set ke component data
+          this.namaUser = savedUser.nama;
+          console.log('✅ [HomePage] Set namaUser from localStorage:', this.namaUser);
+          
+          // 3. Update userStore juga
+          const userStore = useUserStore();
+          userStore.setUser(savedUser);
+          console.log('✅ [HomePage] Updated userStore with saved user');
+        } else {
+          console.log('❌ [HomePage] No valid saved user, keeping default "Jemaat"');
+          this.namaUser = 'Jemaat';
         }
+        
+        console.log('🔍 [HomePage] Final namaUser value:', this.namaUser);
+        
+      } catch (error) {
+        console.error('❌ [HomePage] Error in initializeUserData:', error);
+        this.namaUser = 'Jemaat';
       }
     },
 
@@ -116,9 +136,10 @@ export default {
         }))
       }
     },
+    
     async fetchAnnouncements() {
       try {
-        this.announcementList = await getAnnouncements(5); // Ambil 5 pengumuman terbaru
+        this.announcementList = await getAnnouncements(5);
       } catch (error) {
         console.error("Error fetching announcements:", error);
       }

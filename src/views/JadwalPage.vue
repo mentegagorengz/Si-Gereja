@@ -6,7 +6,7 @@
   
         <!-- Loading state -->
         <div v-if="loading" class="loading-container">
-          <p>Memuat jadwal...</p>
+          <p>Memuat jadwal ibadah...</p>
         </div>
   
         <!-- Error state -->
@@ -37,16 +37,12 @@
           </div>
         </div>
       </div>
-  
-      <!-- Bottom Navigation -->
-      <BottomNavbar />
     </div>
   </template>
   
   <script>
   import HeaderWithBack from '@/components/layout/HeaderWithBack.vue'
   import ScheduleCard from '@/components/ScheduleCard.vue'
-  import BottomNavbar from '@/components/BottomNavbar.vue'
   import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
   import { Calendar } from 'lucide-vue-next'
   import { getSchedules } from '@/services/schedules'
@@ -56,7 +52,6 @@
     components: {
       HeaderWithBack,
       ScheduleCard,
-      BottomNavbar,
       ButtonPrimary,
       Calendar
     },
@@ -100,7 +95,6 @@
   .jadwal-container {
     background: #fcfcf7;
     min-height: 100vh;
-    padding-bottom: 80px; /* Space untuk bottom navbar */
   }
   
   .jadwal-wrapper {

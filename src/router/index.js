@@ -8,6 +8,7 @@ import HomePage from '../views/HomePage.vue'
 import SuccessRegister from '../views/SuccessRegister.vue'
 import FirebaseTestPage from '../views/FirebaseTestPage.vue'
 import JadwalPage from '../views/JadwalPage.vue'
+import DetailJadwal from '../views/DetailJadwal.vue'
 
 const routes = [
   { 
@@ -39,6 +40,11 @@ const routes = [
     path: '/jadwal',
     name: 'JadwalPage',
     component: JadwalPage
+  },
+  {
+    path: '/jadwal/:id',
+    name: 'DetailJadwal',
+    component: DetailJadwal
   }
 ]
 
@@ -50,7 +56,7 @@ const router = createRouter({
 // Tambahkan route guard
 router.beforeEach((to, from, next) => {
   // Daftar route yang membutuhkan autentikasi
-  const requiresAuth = ['/home'];
+  const requiresAuth = ['/home', '/jadwal'];
   const currentUser = getCurrentJemaat();
   
   if (requiresAuth.includes(to.path) && !currentUser) {

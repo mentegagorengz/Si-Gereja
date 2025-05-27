@@ -1,224 +1,200 @@
 <template>
-    <div class="schedule-card" @click="goToDetail">
-      <!-- Thumbnail (gambar kecil di kiri) -->
-      <div class="card-thumbnail">
-        <img 
-          v-if="schedule.thumbnail" 
-          :src="thumbnailSrc" 
-          :alt="schedule.title"
-          class="thumbnail-img"
-          @error="onImageError"
-        />
-        <!-- Fallback jika gambar tidak ada -->
-        <div v-else class="thumbnail-placeholder">
-          <span>{{ schedule.title.charAt(0) }}</span>
-        </div>
-      </div>
-  
-      <!-- Konten text di kanan -->
-      <div class="card-content">
-        <h3 class="card-title">{{ schedule.title }}</h3>
-      </div>
-  
-      <!-- Arrow untuk menunjukkan bisa diklik -->
-      <div class="card-arrow">
-        <ChevronRight class="arrow-icon" />
+  <div class="schedule-card" @click="goToDetail">
+    <!-- ⭐ DEBUG: Tampilkan data di template -->
+    <div style="position: absolute; top: -20px; left: 0; font-size: 10px; background: yellow; padding: 2px; z-index: 1000;">
+      Category: {{ schedule?.category || 'NO_CATEGORY' }}
+    </div>
+    
+    <!-- Thumbnail (gambar kecil di kiri) -->
+    <div class="card-thumbnail">
+      <img 
+        v-if="thumbnailSrc && !imageError" 
+        :src="thumbnailSrc" 
+        :alt="schedule.title"
+        class="thumbnail-img"
+        @error="onImageError"
+      />
+      <!-- Fallback jika gambar tidak ada -->
+      <div v-else class="thumbnail-placeholder">
+        <span>{{ schedule.title.charAt(0) }}</span>
       </div>
     </div>
-  </template>
-  
-  <script>
-  import { ChevronRight } from 'lucide-vue-next'
-  
-  export default {
-    name: 'ScheduleCard',
-    components: {
-      ChevronRight
-    },
-    props: {
-      schedule: {
-        type: Object,
-        required: true
-      }
-    },
-    data() {
-      return {
-        imageError: false
-      }
-    },
-    computed: {
-      thumbnailSrc() {
-        if (this.imageError) {
-          return null;
-        }
-        
-        try {
-          // Coba load dari folder assets/thumbnails
-          return require(`@/assets/thumbnails/${this.schedule.thumbnail}`)
-        } catch (err) {
-          console.warn(`❗ Gagal memuat thumbnail: ${this.schedule.thumbnail}`)
-          return null
-        }
-      }
-    },
-    methods: {
-      goToDetail() {
-        // Navigasi ke halaman detail dengan ID jadwal
-        this.$router.push(`/jadwal/${this.schedule.id}`)
-      },
+
+    <!-- Konten text di kanan - HANYA TITLE -->
+    <div class="card-content">
+      <h3 class="card-title">{{ schedule.title }}</h3>
+    </div>
+
+    <!-- Arrow untuk menunjukkan bisa diklik -->
+    <div class="card-arrow">
+      <ChevronRight class="arrow-icon" />
+    </div>
+  </div>
+</template>
+
+<script>
+import { ChevronRight } from 'lucide-vue-next'
+
+// ⭐ IMPORT LANGSUNG - PASTI WORK!
+import pelprapIcon from '@/assets/icons/pelprap.png'
+import defaultIcon from '@/assets/icons/default.png'
+
+export default {
+  name: 'ScheduleCard',
+  components: {
+    ChevronRight
+  },
+  props: {
+    schedule: {
+      type: Object,
+      required: true
+    }
+  },
+  data() {
+    return {
+      imageError: false
+    }
+  },
+  computed: {
+    thumbnailSrc() {
+      console.log('🔍 [ScheduleCard] DIRECT - Schedule data:', this.schedule)
+      console.log('🔍 [ScheduleCard] DIRECT - Category:', this.schedule?.category)
       
-      formatDate(dateString) {
-        // Format tanggal dari "2025-08-17" jadi "17 Agustus 2025"
-        try {
-          const date = new Date(dateString)
-          const options = { 
-            day: 'numeric', 
-            month: 'long', 
-            year: 'numeric' 
-          }
-          return date.toLocaleDateString('id-ID', options)
-        } catch (error) {
-          return dateString // Return original jika error
-        }
-      },
+      // ⭐ MAPPING LANGSUNG
+      const category = this.schedule?.category || 'default'
       
-      onImageError() {
-        this.imageError = true
+      let selectedIcon = defaultIcon // fallback
+      
+      if (category === 'pelprap') {
+        selectedIcon = pelprapIcon
+        console.log('✅ [ScheduleCard] DIRECT - Using pelprap icon')
+      } else {
+        console.log('⚠️ [ScheduleCard] DIRECT - Using default icon for:', category)
       }
+      
+      console.log('🔍 [ScheduleCard] DIRECT - Final icon:', selectedIcon)
+      return selectedIcon
+    }
+  },
+  methods: {
+    goToDetail() {
+      this.$router.push(`/jadwal/${this.schedule.id}`)
+    },
+    
+    onImageError() {
+      console.log('🖼️ Image failed to load, showing placeholder')
+      this.imageError = true
     }
   }
-  </script>
-  
-  <style scoped>
+}
+</script>
+
+<style scoped>
+.schedule-card {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 12px;
+  padding: 0;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #f0f0f0;
+  overflow: hidden;
+  height: 80px;
+}
+
+.schedule-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.schedule-card:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.card-thumbnail {
+  width: 80px;
+  min-width: 80px;
+  height: 80px;
+  border-radius: 0;
+  overflow: hidden;
+  margin-right: 0;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #41442A, #5a5e3d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.card-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 16px;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #41442A;
+  margin: 0;
+  font-family: 'Inter';
+  line-height: 1.3;
+}
+
+.card-arrow {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.arrow-icon {
+  width: 16px;
+  height: 16px;
+  color: #999;
+}
+
+@media (max-width: 360px) {
   .schedule-card {
-    display: flex;
-    align-items: center;
-    background: white;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 1px solid #f0f0f0;
+    height: 70px;
   }
   
-  .schedule-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  }
-  
-  .schedule-card:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  }
-  
-  /* Thumbnail di kiri */
   .card-thumbnail {
-    width: 60px;
-    height: 60px;
-    min-width: 60px;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-right: 16px;
-    background-color: #f5f5f5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 70px;
+    min-width: 70px;
+    height: 70px;
   }
   
-  .thumbnail-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .thumbnail-placeholder {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #41442A, #5a5e3d);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 24px;
-  }
-  
-  /* Konten text di tengah */
   .card-content {
-    flex: 1;
-    display: flex;
-    align-items: center;
+    padding: 12px;
+  }
+  
+  .card-arrow {
+    padding: 12px;
   }
   
   .card-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #41442A;
-    margin: 0;
-    font-family: 'Inter';
-    line-height: 1.2;
+    font-size: 14px;
   }
-  
-  .card-details {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  
-  .detail-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  
-  .detail-icon {
-    width: 14px;
-    height: 14px;
-    color: #777;
-    flex-shrink: 0;
-  }
-  
-  .detail-text {
-    font-size: 12px;
-    color: #666;
-    font-family: 'Inter';
-    line-height: 1.2;
-  }
-  
-  /* Arrow di kanan */
-  .card-arrow {
-    margin-left: 8px;
-    display: flex;
-    align-items: center;
-  }
-  
-  .arrow-icon {
-    width: 16px;
-    height: 16px;
-    color: #999;
-  }
-  
-  /* Responsive untuk layar kecil */
-  @media (max-width: 360px) {
-    .schedule-card {
-      padding: 12px;
-    }
-    
-    .card-thumbnail {
-      width: 50px;
-      height: 50px;
-      min-width: 50px;
-      margin-right: 12px;
-    }
-    
-    .card-title {
-      font-size: 14px;
-    }
-    
-    .detail-text {
-      font-size: 11px;
-    }
-  }
-  </style>
+}
+</style>
