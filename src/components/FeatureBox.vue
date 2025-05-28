@@ -38,12 +38,12 @@
       goToPage() {
         let path = ''
         
-        if (this.name === 'Jadwal') {
+        if (this.name === 'Renungan') {
+          path = '/renungan'
+        } else if (this.name === 'Jadwal') {
           path = '/jadwal'
         } else if (this.name === 'News') {
           path = '/news'
-        } else if (this.name === 'Renungan') {
-          path = '/renungan'
         } else {
           // Untuk feature lain, gunakan format default
           path = '/' + this.name.toLowerCase().replace(/ /g, '-')

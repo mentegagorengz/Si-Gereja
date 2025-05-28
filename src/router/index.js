@@ -11,8 +11,10 @@ import JadwalPage from '../views/JadwalPage.vue'
 import DetailJadwal from '../views/DetailJadwal.vue'
 import NewsPage from '../views/NewsPage.vue'
 import DetailNews from '../views/DetailNews.vue'
+// ⭐ TAMBAHAN BARU - IMPORT RENUNGAN PAGES
 import RenunganPage from '../views/RenunganPage.vue'
 import DetailRenungan from '../views/DetailRenungan.vue'
+import BookmarksPage from '../views/BookmarksPage.vue'
 
 const routes = [
   { 
@@ -60,10 +62,16 @@ const routes = [
     name: 'DetailNews',
     component: DetailNews
   },
+  // ⭐ TAMBAHAN BARU - ROUTE RENUNGAN
   {
     path: '/renungan',
     name: 'RenunganPage',
     component: RenunganPage
+  },
+  {
+    path: '/renungan/bookmarks',
+    name: 'BookmarksPage',
+    component: BookmarksPage
   },
   {
     path: '/renungan/:id',
@@ -80,7 +88,7 @@ const router = createRouter({
 // Tambahkan route guard
 router.beforeEach((to, from, next) => {
   // Daftar route yang membutuhkan autentikasi
-  const requiresAuth = ['/home', '/jadwal'];
+  const requiresAuth = ['/home', '/jadwal', '/renungan']; // ⭐ TAMBAH /renungan
   const currentUser = getCurrentJemaat();
   
   if (requiresAuth.includes(to.path) && !currentUser) {

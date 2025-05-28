@@ -1,6 +1,6 @@
 <template>
   <div class="schedule-card" @click="goToDetail">
-    <!-- ⭐ DEBUG: Tampilkan data di template -->
+    <!-- DEBUG: Tampilkan data di template -->
     <div style="position: absolute; top: -20px; left: 0; font-size: 10px; background: yellow; padding: 2px; z-index: 1000;">
       Category: {{ schedule?.category || 'NO_CATEGORY' }}
     </div>
@@ -34,8 +34,6 @@
 
 <script>
 import { ChevronRight } from 'lucide-vue-next'
-
-// ⭐ IMPORT LANGSUNG - PASTI WORK!
 import pelprapIcon from '@/assets/icons/pelprap.png'
 import defaultIcon from '@/assets/icons/default.png'
 
@@ -60,7 +58,6 @@ export default {
       console.log('🔍 [ScheduleCard] DIRECT - Schedule data:', this.schedule)
       console.log('🔍 [ScheduleCard] DIRECT - Category:', this.schedule?.category)
       
-      // ⭐ MAPPING LANGSUNG
       const category = this.schedule?.category || 'default'
       
       let selectedIcon = defaultIcon // fallback
@@ -78,14 +75,19 @@ export default {
   },
   methods: {
     goToDetail() {
-      // ⭐ SMART DETECTION: Deteksi berdasarkan route saat ini
       const currentPath = this.$route.path
       
+      console.log('🔍 [ScheduleCard] Current path:', currentPath)
+      console.log('🔍 [ScheduleCard] Schedule ID:', this.schedule.id)
+      
       if (currentPath.startsWith('/news')) {
-        // Kalau di halaman news, navigate ke detail news
+        console.log('✅ [ScheduleCard] Navigating to news detail')
         this.$router.push(`/news/${this.schedule.id}`)
+      } else if (currentPath.startsWith('/renungan')) {
+        console.log('✅ [ScheduleCard] Navigating to renungan detail')
+        this.$router.push(`/renungan/${this.schedule.id}`)
       } else {
-        // Kalau di halaman jadwal, navigate ke detail jadwal
+        console.log('✅ [ScheduleCard] Navigating to jadwal detail')
         this.$router.push(`/jadwal/${this.schedule.id}`)
       }
     },

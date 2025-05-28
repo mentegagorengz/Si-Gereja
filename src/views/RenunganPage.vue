@@ -1,8 +1,13 @@
 <template>
   <div class="renungan-container">
     <div class="renungan-wrapper">
-      <!-- Header dengan tombol back -->
-      <HeaderWithBack title="Renungan" />
+      <!-- Header dengan tombol back dan bookmark icon -->
+      <div class="custom-header">
+        <HeaderWithBack title="Renungan" />
+        <button class="bookmark-nav-btn" @click="goToBookmarks" aria-label="Lihat Bookmark">
+          <Bookmark class="bookmark-nav-icon" />
+        </button>
+      </div>
 
       <!-- Loading state -->
       <div v-if="loading" class="loading-container">
@@ -44,7 +49,7 @@
 import HeaderWithBack from '@/components/layout/HeaderWithBack.vue'
 import ScheduleCard from '@/components/ScheduleCard.vue'
 import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
-import { BookOpen } from 'lucide-vue-next'
+import { BookOpen, Bookmark } from 'lucide-vue-next'
 import { getDevotionals } from '@/services/devotionals'
 
 export default {
@@ -53,8 +58,10 @@ export default {
     HeaderWithBack,
     ScheduleCard,
     ButtonPrimary,
-    BookOpen
+    BookOpen,
+    Bookmark
   },
+
   data() {
     return {
       devotionals: [],
@@ -86,6 +93,10 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+
+    goToBookmarks() {
+      this.$router.push('/renungan/bookmarks')
     }
   }
 }
@@ -121,6 +132,41 @@ export default {
   gap: 16px;
   padding: 32px 16px;
   text-align: center;
+}
+
+ /* Custom Header dengan Bookmark Nav */
+ .custom-header {
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.bookmark-nav-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bookmark-nav-btn:hover {
+  transform: scale(1.1);
+}
+
+.bookmark-nav-btn:active {
+  transform: scale(0.9);
+}
+
+.bookmark-nav-icon {
+  width: 20px;
+  height: 20px;
+  color: #41442A;
 }
 
 .error-text {
