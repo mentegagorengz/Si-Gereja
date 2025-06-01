@@ -5,7 +5,7 @@
       <!-- Header: Greeting + Streak -->
       <HeaderHome :namaUser="namaUser" :streakCount="streakCount" />
 
-      <!-- Ayat Hari Ini -->
+      <!-- Ayat Hari Ini - PAKAI CLOUDINARY -->
       <DailyVerse :ayatGambar="ayatGambar" />
 
       <!-- Menu Fitur -->
@@ -38,16 +38,14 @@
 </template>
 
 <script>
-// BAGIAN SCRIPT HomePage.vue yang diperbaiki:
-
 import HeaderHome from '@/components/layout/HeaderHome.vue'
 import DailyVerse from '@/components/DailyVerse.vue'
 import FeatureBox from '@/components/FeatureBox.vue'
 import BottomNavbar from '@/components/BottomNavbar.vue'
 import AnnouncementCard from '@/components/AnnouncementCard.vue'
 import { useUserStore } from '@/stores/userStore'
+// ⭐ IMPORT CLOUDINARY HELPER
 import { getDailyVerseUrl } from '@/config/cloudinary'
-import { buildCloudinaryUrl } from '@/config/cloudinary'
 import { getCurrentJemaat } from '@/services/auth'
 import { getAnnouncements } from '@/services/announcements'
 
@@ -64,8 +62,10 @@ export default {
     return {
       namaUser: 'Jemaat',
       streakCount: 0,
-      ayatGambar: '',
+      // ⭐ KEMBALI KE LANGSUNG LOAD (karena sekarang sync)
+      ayatGambar: getDailyVerseUrl('large'),
       featureList: [
+        // ⭐ SEKARANG CUMA NAMA FILE, NANTI DIPROSES DI FeatureBox
         { name: "News", icon: "news" },
         { name: "Jadwal", icon: "jadwal" },
         { name: "Giving", icon: "giving" },
@@ -78,36 +78,21 @@ export default {
   },
   async created() {
     await this.initializeUserData()
-    await this.loadDailyVerse()
     this.checkStreak()
     this.fetchAnnouncements()
   },
   methods: {
-    async loadDailyVerse() {
-      try {
-        console.log('🔍 [HomePage] Loading daily verse...')
-        this.ayatGambar = await getDailyVerseUrl('large')
-        console.log('✅ [HomePage] Daily verse loaded:', this.ayatGambar)
-      } catch (error) {
-        console.error('❌ [HomePage] Error loading daily verse:', error)
-        this.ayatGambar = buildCloudinaryUrl('daily-verse', 'ayat1.jpg', 'large')
-      }
-    },
-
     async initializeUserData() {
       console.log('🔍 [HomePage] === INITIALIZING USER DATA ===');
       
       try {
-        // 1. Cek localStorage
         const savedUser = await getCurrentJemaat();
         console.log('🔍 [HomePage] getCurrentJemaat result:', savedUser);
         
         if (savedUser && savedUser.nama) {
-          // 2. Set ke component data
           this.namaUser = savedUser.nama;
           console.log('✅ [HomePage] Set namaUser from localStorage:', this.namaUser);
           
-          // 3. Update userStore
           const userStore = useUserStore();
           userStore.setUser(savedUser);
           console.log('✅ [HomePage] Updated userStore with saved user');

@@ -63,7 +63,7 @@
   
   <script>
   import HeaderWithBack from '@/components/layout/HeaderWithBack.vue'
-  import { getThumbnail } from '@/utils/imageUtils' // ⭐ IMPORT HELPER
+  import { getThumbnail } from '@/utils/imageUtils'
   
   export default {
     name: 'DetailLayout',
@@ -124,8 +124,14 @@
     },
     computed: {
       thumbnailSrc() {
-        // ⭐ PAKAI HELPER FUNCTION - LEBIH RELIABLE
-        return getThumbnail(this.category, this.thumbnail)
+        // ⭐ PAKAI HELPER FUNCTION YANG SUDAH DIUPDATE
+        const item = {
+          thumbnail: this.thumbnail,
+          category: this.category,
+          title: this.title
+        }
+        
+        return getThumbnail(this.category, item, 'large')
       },
       
       formattedDate() {

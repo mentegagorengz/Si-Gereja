@@ -1,7 +1,12 @@
 <template>
   <div class="announcement-card" :class="getCardClass(category)">
     <div class="card-icon">
-      <img :src="iconSrc" alt="icon" class="icon-img" />
+      <img 
+        :src="iconSrc" 
+        :alt="category" 
+        class="icon-img" 
+        @error="onIconError"
+      />
     </div>
     <div class="card-content">
       <h3 class="card-title">{{ title }}</h3>
@@ -11,6 +16,9 @@
 </template>
 
 <script>
+// ⭐ IMPORT CLOUDINARY HELPER
+import { getAnnouncementIconUrl } from '@/utils/imageUtils'
+
 export default {
   name: 'AnnouncementCard',
   props: {
@@ -19,13 +27,26 @@ export default {
     icon: String,
     category: String
   },
+  data() {
+    return {
+      iconError: false
+    }
+  },
   computed: {
     iconSrc() {
+      if (this.iconError) {
+        // Fallback ke default icon
+        return getAnnouncementIconUrl('default')
+      }
+      
       try {
-        return require(`@/assets/icons/${this.icon}`)
+        // ⭐ PAKAI HELPER FUNCTION
+        const iconUrl = getAnnouncementIconUrl(this.category || this.icon)
+        console.log('🔍 [AnnouncementCard] Icon URL:', iconUrl)
+        return iconUrl
       } catch (err) {
-        console.warn('❗ Gagal load icon:', this.icon)
-        return require(`@/assets/icons/cross.png`)
+        console.warn('❗ Gagal load icon:', this.category || this.icon, err)
+        return getAnnouncementIconUrl('default')
       }
     }
   },
@@ -40,9 +61,17 @@ export default {
           return 'event-card'
         case 'pengumuman':
           return 'pengumuman-card'
+        case 'pelprap':
+          return 'pelprap-card'
         default:
           return 'default-card'
       }
+    },
+    
+    onIconError() {
+      console.warn('❗ Announcement icon failed to load')
+      this.iconError = true
+      this.$forceUpdate()
     }
   }
 }
@@ -131,7 +160,7 @@ export default {
   background: linear-gradient(135deg, #7c6b1d, #e0be00);
 }
 .event-card::before {
-  content: "🙏";
+  content: "✨";
   position: absolute;
   right: -10px;
   top: -10px;
@@ -144,6 +173,19 @@ export default {
   background: linear-gradient(135deg, #261b76, #2156a6);
 }
 .pengumuman-card::before {
+  content: "📢";
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  font-size: 50px;
+  opacity: 0.15;
+  transform: rotate(15deg);
+}
+
+.pelprap-card {
+  background: linear-gradient(135deg, #4a5d23, #6b8230);
+}
+.pelprap-card::before {
   content: "🙏";
   position: absolute;
   right: -10px;

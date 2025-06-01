@@ -34,8 +34,7 @@
 
 <script>
 import { ChevronRight } from 'lucide-vue-next'
-import pelprapIcon from '@/assets/icons/pelprap.png'
-import defaultIcon from '@/assets/icons/default.png'
+import { getScheduleThumbnail, getNewsThumbnail, getDevotionalThumbnail } from '@/utils/imageUtils'
 
 export default {
   name: 'ScheduleCard',
@@ -55,24 +54,27 @@ export default {
   },
   computed: {
     thumbnailSrc() {
-      console.log('🔍 [ScheduleCard] DIRECT - Schedule data:', this.schedule)
-      console.log('🔍 [ScheduleCard] DIRECT - Category:', this.schedule?.category)
-      
-      const category = this.schedule?.category || 'default'
-      
-      let selectedIcon = defaultIcon // fallback
-      
-      if (category === 'pelprap') {
-        selectedIcon = pelprapIcon
-        console.log('✅ [ScheduleCard] DIRECT - Using pelprap icon')
+    const currentPath = this.$route.path
+    
+    console.log('🔍 [ScheduleCard] Current path:', currentPath)
+    console.log('🔍 [ScheduleCard] Schedule data:', this.schedule)
+    
+    try {
+      // ⭐ TENTUKAN BERDASARKAN HALAMAN SAAT INI
+      if (currentPath.startsWith('/news')) {
+        return getNewsThumbnail(this.schedule, 'small')
+      } else if (currentPath.startsWith('/renungan')) {
+        return getDevotionalThumbnail(this.schedule, 'small')
       } else {
-        console.log('⚠️ [ScheduleCard] DIRECT - Using default icon for:', category)
+        // Default ke jadwal
+        return getScheduleThumbnail(this.schedule, 'small')
       }
-      
-      console.log('🔍 [ScheduleCard] DIRECT - Final icon:', selectedIcon)
-      return selectedIcon
+    } catch (error) {
+      console.error('❌ [ScheduleCard] Error getting thumbnail:', error)
+      return null
     }
-  },
+  }
+},
   methods: {
     goToDetail() {
       const currentPath = this.$route.path
