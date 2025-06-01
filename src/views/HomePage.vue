@@ -46,8 +46,9 @@ import FeatureBox from '@/components/FeatureBox.vue'
 import BottomNavbar from '@/components/BottomNavbar.vue'
 import AnnouncementCard from '@/components/AnnouncementCard.vue'
 import { useUserStore } from '@/stores/userStore'
-import ayatImg from '@/assets/Ayat.png'
-import { getCurrentJemaat } from '@/services/auth' // ⭐ TAMBAH: Import langsung
+import { getDailyVerseUrl } from '@/config/cloudinary'
+import { buildCloudinaryUrl } from '@/config/cloudinary'
+import { getCurrentJemaat } from '@/services/auth'
 import { getAnnouncements } from '@/services/announcements'
 
 export default {
@@ -61,33 +62,43 @@ export default {
   },
   data() {
     return {
-      namaUser: 'Jemaat', // Default fallback
+      namaUser: 'Jemaat',
       streakCount: 0,
-      ayatGambar: ayatImg,
+      ayatGambar: '',
       featureList: [
-        { name: "News", icon: "news.png" },
-        { name: "Jadwal", icon: "jadwal.png" },
-        { name: "Giving", icon: "giving.png" },
-        { name: "Alkitab Setahun", icon: "alkitab.png" },
-        { name: "Renungan", icon: "renungan.png" },
-        { name: "Prayer Request", icon: "prayer.png" }
+        { name: "News", icon: "news" },
+        { name: "Jadwal", icon: "jadwal" },
+        { name: "Giving", icon: "giving" },
+        { name: "Alkitab Setahun", icon: "alkitab" },
+        { name: "Renungan", icon: "renungan" },
+        { name: "Prayer Request", icon: "prayer" }
       ],
       announcementList: []
     }
   },
   async created() {
-    // ⭐ PERBAIKI: Urutan yang benar dengan await
     await this.initializeUserData()
+    await this.loadDailyVerse()
     this.checkStreak()
     this.fetchAnnouncements()
   },
   methods: {
-    // ⭐ PERBAIKI: Method baru dengan debug lengkap
+    async loadDailyVerse() {
+      try {
+        console.log('🔍 [HomePage] Loading daily verse...')
+        this.ayatGambar = await getDailyVerseUrl('large')
+        console.log('✅ [HomePage] Daily verse loaded:', this.ayatGambar)
+      } catch (error) {
+        console.error('❌ [HomePage] Error loading daily verse:', error)
+        this.ayatGambar = buildCloudinaryUrl('daily-verse', 'ayat1.jpg', 'large')
+      }
+    },
+
     async initializeUserData() {
       console.log('🔍 [HomePage] === INITIALIZING USER DATA ===');
       
       try {
-        // 1. Cek localStorage langsung dulu
+        // 1. Cek localStorage
         const savedUser = await getCurrentJemaat();
         console.log('🔍 [HomePage] getCurrentJemaat result:', savedUser);
         
@@ -96,7 +107,7 @@ export default {
           this.namaUser = savedUser.nama;
           console.log('✅ [HomePage] Set namaUser from localStorage:', this.namaUser);
           
-          // 3. Update userStore juga
+          // 3. Update userStore
           const userStore = useUserStore();
           userStore.setUser(savedUser);
           console.log('✅ [HomePage] Updated userStore with saved user');

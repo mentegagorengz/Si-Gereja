@@ -157,7 +157,7 @@
       },
   
       getThumbnailSrc(devotional) {
-        // ⭐ GUNAKAN UTILITY FUNCTION KHUSUS DEVOTIONAL
+        // ⭐ PAKAI UTILITY FUNCTION YANG SUDAH WEBPACK-SAFE
         return getDevotionalThumbnail(devotional)
       },
   
