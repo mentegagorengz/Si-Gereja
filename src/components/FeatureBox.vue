@@ -15,7 +15,7 @@
 </template>
 
 <script>
-// ⭐ IMPORT CLOUDINARY HELPER
+// ⭐ IMPORT LOCAL ASSETS HELPER
 import { getFeatureIconUrl } from '@/utils/imageUtils'
 
 export default {
@@ -44,7 +44,7 @@ export default {
       
       try {
         const url = getFeatureIconUrl(this.name)
-        console.log('🔍 [FeatureBox] Final icon URL for', this.name, ':', url)
+        console.log('🔍 [FeatureBox LOCAL] Final icon URL for', this.name, ':', url)
         return url
       } catch (err) {
         console.warn(`❗ Gagal load icon untuk ${this.name}:`, err)

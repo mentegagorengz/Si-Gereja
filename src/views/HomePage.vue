@@ -1,3 +1,4 @@
+// src/views/HomePage.vue - LOCAL ASSETS VERSION
 <template>
   <div class="home-container">
     <div class="home-wrapper">
@@ -5,7 +6,7 @@
       <!-- Header: Greeting + Streak -->
       <HeaderHome :namaUser="namaUser" :streakCount="streakCount" />
 
-      <!-- Ayat Hari Ini - PAKAI CLOUDINARY -->
+      <!-- Ayat Hari Ini - PAKAI LOCAL ASSET -->
       <DailyVerse :ayatGambar="ayatGambar" />
 
       <!-- Menu Fitur -->
@@ -44,8 +45,8 @@ import FeatureBox from '@/components/FeatureBox.vue'
 import BottomNavbar from '@/components/BottomNavbar.vue'
 import AnnouncementCard from '@/components/AnnouncementCard.vue'
 import { useUserStore } from '@/stores/userStore'
-// ⭐ IMPORT CLOUDINARY HELPER
-import { getDailyVerseUrl } from '@/config/cloudinary'
+// ⭐ IMPORT LOCAL HELPER  
+import { getDailyVerseUrl } from '@/utils/imageUtils'
 import { getCurrentJemaat } from '@/services/auth'
 import { getAnnouncements } from '@/services/announcements'
 
@@ -62,10 +63,10 @@ export default {
     return {
       namaUser: 'Jemaat',
       streakCount: 0,
-      // ⭐ KEMBALI KE LANGSUNG LOAD (karena sekarang sync)
-      ayatGambar: getDailyVerseUrl('large'),
+      // ⭐ PAKAI LOCAL ASSET HELPER
+      ayatGambar: null,
       featureList: [
-        // ⭐ SEKARANG CUMA NAMA FILE, NANTI DIPROSES DI FeatureBox
+        // ⭐ SIMPLIFIED - cuma nama, icon akan di-handle otomatis
         { name: "News", icon: "news" },
         { name: "Jadwal", icon: "jadwal" },
         { name: "Giving", icon: "giving" },
@@ -78,6 +79,7 @@ export default {
   },
   async created() {
     await this.initializeUserData()
+    this.loadDailyVerse()
     this.checkStreak()
     this.fetchAnnouncements()
   },
@@ -109,6 +111,40 @@ export default {
       }
     },
 
+    // ⭐ LOAD DAILY VERSE FROM LOCAL
+    loadDailyVerse() {
+      try {
+        const ayatUrl = getDailyVerseUrl()
+        this.ayatGambar = ayatUrl
+        console.log('✅ [HomePage] Daily verse loaded:', ayatUrl)
+      } catch (error) {
+        console.error('❌ [HomePage] Error loading daily verse:', error)
+        // Fallback ke placeholder
+        this.ayatGambar = this.createPlaceholderAyat()
+      }
+    },
+
+    // ⭐ FALLBACK AYAT PLACEHOLDER
+    createPlaceholderAyat() {
+      const canvas = document.createElement('canvas')
+      canvas.width = 400
+      canvas.height = 200
+      const ctx = canvas.getContext('2d')
+      
+      // Background
+      ctx.fillStyle = '#41442A'
+      ctx.fillRect(0, 0, 400, 200)
+      
+      // Text
+      ctx.fillStyle = 'white'
+      ctx.font = '24px Inter, Arial, sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('AYAT HARI INI', 200, 100)
+      
+      return canvas.toDataURL()
+    },
+
     checkStreak() {
       const today = new Date().toDateString()
       const saved = JSON.parse(localStorage.getItem('streakData')) || {}
@@ -138,6 +174,21 @@ export default {
         this.announcementList = await getAnnouncements(5);
       } catch (error) {
         console.error("Error fetching announcements:", error);
+        // Fallback ke data static
+        this.announcementList = [
+          {
+            title: 'Happy Birthday, Kak Irene!',
+            desc: '09 Agustus – Tuhan berkati selalu!',
+            icon: 'cake.png',
+            category: 'birthday'
+          },
+          {
+            title: 'Ibadah PELPRAP',
+            desc: 'Pukul 17.00 WITA – Gedung Gereja',
+            icon: 'ibadah.png',
+            category: 'pelprap'
+          }
+        ];
       }
     }
   }

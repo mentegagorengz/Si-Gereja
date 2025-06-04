@@ -1,7 +1,7 @@
 <template>
     <div class="login-container">
             <!-- Logo -->
-            <img src="@/assets/logo-MyRajawali.png" alt="Logo" class="logo-img"/>
+            <img src="@/assets/logos/logo-MyRajawali.png" alt="Logo" class="logo-img"/>
 
             <!-- Teks Welcome -->
             <h2 class="welcome-text">Welcome to MyRajawali</h2>

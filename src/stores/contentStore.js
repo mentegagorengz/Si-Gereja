@@ -1,3 +1,4 @@
+// src/stores/contentStore.js
 import { defineStore } from 'pinia'
 import ayatImg from '@/assets/Ayat.png'
 
@@ -10,23 +11,31 @@ export const useContentStore = defineStore('content', {
       },
       announcements: [
         {
-          title: 'Happy Birthday, Kak Irene!',
-          desc: '09 Agustus – Tuhan berkati selalu!',
-          icon: 'cake.png'
+          title: 'Happy Birthday, Gembala!',
+          desc: '13 Juli – Tuhan berkati selalu!',
+          icon: 'birthday.png', // Optional - bisa diabaikan
+          category: 'birthday' // ⭐ INI YANG PENTING - akan jadi birthday.png
         },
         {
           title: 'Ibadah PELPRAP',
           desc: 'Pukul 17.00 WITA – Gedung Gereja',
-          icon: 'ibadah.png'
+          icon: 'ibadah.png', // Optional
+          category: 'pelprap' // ⭐ akan jadi ibadah.png (karena mapping)
+        },
+        {
+          title: 'Pembekalan Pelatar',
+          desc: 'Pukul 19.00 WITA – Gedung Gereja',
+          icon: 'event.png', // Optional
+          category: 'pelatar' // ⭐ akan jadi event.png (karena mapping)
         }
       ],
       features: [
-        { name: "News", icon: "N" },
-        { name: "Jadwal", icon: "J" },
-        { name: "Giving", icon: "G" },
-        { name: "Alkitab Setahun", icon: "A" },
-        { name: "Renungan", icon: "R" },
-        { name: "Prayer Request", icon: "P" }
+        { name: "News", icon: "news" },
+        { name: "Jadwal", icon: "jadwal" },
+        { name: "Giving", icon: "giving" },
+        { name: "Alkitab Setahun", icon: "alkitab" },
+        { name: "Renungan", icon: "renungan" },
+        { name: "Prayer Request", icon: "prayer" }
       ]
     }
   },

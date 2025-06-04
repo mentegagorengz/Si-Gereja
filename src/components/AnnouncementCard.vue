@@ -16,7 +16,7 @@
 </template>
 
 <script>
-// ⭐ IMPORT CLOUDINARY HELPER
+// ⭐ IMPORT LOCAL ASSETS HELPER
 import { getAnnouncementIconUrl } from '@/utils/imageUtils'
 
 export default {
@@ -35,18 +35,17 @@ export default {
   computed: {
     iconSrc() {
       if (this.iconError) {
-        // Fallback ke default icon
-        return getAnnouncementIconUrl('default')
+        // Fallback ke emoji jika error
+        return this.createEmojiIcon(this.category || this.icon)
       }
       
       try {
-        // ⭐ PAKAI HELPER FUNCTION
         const iconUrl = getAnnouncementIconUrl(this.category || this.icon)
-        console.log('🔍 [AnnouncementCard] Icon URL:', iconUrl)
+        console.log('🔍 [AnnouncementCard LOCAL] Icon URL:', iconUrl)
         return iconUrl
       } catch (err) {
         console.warn('❗ Gagal load icon:', this.category || this.icon, err)
-        return getAnnouncementIconUrl('default')
+        return this.createEmojiIcon(this.category || this.icon)
       }
     }
   },
@@ -72,6 +71,34 @@ export default {
       console.warn('❗ Announcement icon failed to load')
       this.iconError = true
       this.$forceUpdate()
+    },
+    
+    createEmojiIcon(category) {
+      const emojiMap = {
+        'birthday': '🎂',
+        'service': '⛪',
+        'event': '✨',
+        'pengumuman': '📢',
+        'pelprap': '🙏',
+        'pelatar': '🎓',
+        'ibadah': '⛪',
+        'default': 'ℹ️'
+      }
+      
+      const emoji = emojiMap[category] || emojiMap['default']
+      
+      // Create emoji as data URL
+      const canvas = document.createElement('canvas')
+      canvas.width = 28
+      canvas.height = 28
+      const ctx = canvas.getContext('2d')
+      
+      ctx.font = '20px Arial'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(emoji, 14, 14)
+      
+      return canvas.toDataURL()
     }
   }
 }
@@ -133,66 +160,20 @@ export default {
   background: linear-gradient(135deg, #aa1a64, #b93283);
 }
 
-.birthday-card::before {
-  content: "🎂";
-  position: absolute;
-  right: -10px;
-  top: -10px;
-  font-size: 50px;
-  opacity: 0.15;
-  transform: rotate(15deg);
-}
-
 .service-card {
   background: linear-gradient(135deg, #825900, #c7640e);
-}
-.service-card::before {
-  content: "🙏";
-  position: absolute;
-  right: -10px;
-  top: -10px;
-  font-size: 50px;
-  opacity: 0.15;
-  transform: rotate(15deg);
 }
 
 .event-card {
   background: linear-gradient(135deg, #7c6b1d, #e0be00);
 }
-.event-card::before {
-  content: "✨";
-  position: absolute;
-  right: -10px;
-  top: -10px;
-  font-size: 50px;
-  opacity: 0.15;
-  transform: rotate(15deg);
-}
 
 .pengumuman-card {
   background: linear-gradient(135deg, #261b76, #2156a6);
 }
-.pengumuman-card::before {
-  content: "📢";
-  position: absolute;
-  right: -10px;
-  top: -10px;
-  font-size: 50px;
-  opacity: 0.15;
-  transform: rotate(15deg);
-}
 
 .pelprap-card {
   background: linear-gradient(135deg, #4a5d23, #6b8230);
-}
-.pelprap-card::before {
-  content: "🙏";
-  position: absolute;
-  right: -10px;
-  top: -10px;
-  font-size: 50px;
-  opacity: 0.15;
-  transform: rotate(15deg);
 }
 
 .default-card {

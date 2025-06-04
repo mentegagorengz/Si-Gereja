@@ -1,7 +1,7 @@
 <template>
     <div class="success-container">
       <div class="content-wrapper">
-        <img src="@/assets/logo-MyRajawali.png" alt="Logo MyRajawali" class="logo-img" />
+        <img src="@/assets/logos/logo-MyRajawali.png" alt="Logo MyRajawali" class="logo-img" />
         <h2>Welcome to MyRajawali</h2>
         <p class="desc-text">
           Akun MyRajawali Anda telah <strong>BERHASIL</strong> dibuat.<br />
