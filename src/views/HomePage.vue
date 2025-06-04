@@ -112,37 +112,52 @@ export default {
     },
 
     // ⭐ LOAD DAILY VERSE FROM LOCAL
+    // 🎯 CLEAN VERSION - Ganti method loadDailyVerse() di HomePage.vue dengan ini:
+
     loadDailyVerse() {
+      console.log('🔍 [HomePage] Loading daily verse...')
+      
       try {
         const ayatUrl = getDailyVerseUrl()
         this.ayatGambar = ayatUrl
-        console.log('✅ [HomePage] Daily verse loaded:', ayatUrl)
+        console.log('✅ [HomePage] Daily verse loaded successfully:', ayatUrl)
       } catch (error) {
-        console.error('❌ [HomePage] Error loading daily verse:', error)
-        // Fallback ke placeholder
-        this.ayatGambar = this.createPlaceholderAyat()
+        console.error('❌ [HomePage] Failed to load daily verse:', error.message)
+        console.error('📂 Make sure you have ayat files in: src/assets/daily-verse/')
+        console.error('📋 Expected files: ayat1.png, ayat2.png, ayat3.png, etc.')
+        
+        // Set ke null supaya DailyVerse component bisa handle
+        this.ayatGambar = null
       }
     },
 
-    // ⭐ FALLBACK AYAT PLACEHOLDER
-    createPlaceholderAyat() {
-      const canvas = document.createElement('canvas')
-      canvas.width = 400
-      canvas.height = 200
-      const ctx = canvas.getContext('2d')
+    debugDailyVerse() {
+      console.log('🧪 [HomePage] === DEBUGGING DAILY VERSE FILES ===')
       
-      // Background
-      ctx.fillStyle = '#41442A'
-      ctx.fillRect(0, 0, 400, 200)
+      const today = new Date().getDate()
+      const expectedIndex = ((today - 1) % 31) + 1
+      console.log(`📅 Today is day ${today}, expecting ayat${expectedIndex}.png`)
       
-      // Text
-      ctx.fillStyle = 'white'
-      ctx.font = '24px Inter, Arial, sans-serif'
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText('AYAT HARI INI', 200, 100)
+      // Test file yang diharapkan hari ini
+      try {
+        require(`@/assets/daily-verse/ayat${expectedIndex}.png`)
+        console.log(`✅ ayat${expectedIndex}.png -> EXISTS`)
+      } catch (error) {
+        console.log(`❌ ayat${expectedIndex}.png -> NOT FOUND`)
+      }
       
-      return canvas.toDataURL()
+      // Test beberapa file sample
+      console.log('📁 Checking sample files:')
+      for (let i = 1; i <= 10; i++) {
+        try {
+          require(`@/assets/daily-verse/ayat${i}.png`)
+          console.log(`✅ ayat${i}.png -> EXISTS`)
+        } catch (error) {
+          console.log(`❌ ayat${i}.png -> NOT FOUND`)
+        }
+      }
+      
+      console.log('🧪 Debug complete!')
     },
 
     checkStreak() {
