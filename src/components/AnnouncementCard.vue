@@ -23,7 +23,6 @@
 </template>
 
 <script>
-// ⭐ IMPORT OPTIMIZED HELPER
 import { getAnnouncementIconUrl } from '@/utils/imageUtils'
 
 export default {
@@ -62,20 +61,15 @@ export default {
       if (this.iconError) return null
       
       try {
-        // Prioritas: category > icon prop > fallback
         const iconKey = this.category || this.icon || 'default'
         const iconUrl = getAnnouncementIconUrl(iconKey)
-        
         return iconUrl
       } catch (err) {
-        console.warn('❗ [AnnouncementCard] Gagal load icon:', this.category || this.icon, err)
-        // JANGAN ubah data di computed property - biarkan onIconError yang handle
         return null
       }
     }
   },
   mounted() {
-    // Delay loading untuk UX yang lebih smooth
     setTimeout(() => {
       if (!this.iconLoaded && !this.iconError) {
         this.isLoading = false
@@ -84,14 +78,11 @@ export default {
   },
   methods: {
     getCardClass(category) {
-      // ⭐ MAPPING CATEGORY KE CSS CLASS - 4 kategori utama
       const classMap = {
         'pengumuman': 'pengumuman-card',
         'birthday': 'birthday-card',
         'ibadah': 'ibadah-card',
         'event': 'event-card',
-        
-        // Alias untuk compatibility
         'announcement': 'pengumuman-card',
         'service': 'ibadah-card',
         'pelprap': 'ibadah-card',
@@ -100,7 +91,6 @@ export default {
         'ulang_tahun': 'birthday-card',
         'acara': 'event-card',
         'pelatar': 'event-card',
-        
         'default': 'pengumuman-card'
       }
       
@@ -108,14 +98,11 @@ export default {
     },
     
     getIconFallback() {
-      // ⭐ EMOJI FALLBACK BERDASARKAN 4 CATEGORY UTAMA
       const emojiMap = {
         'pengumuman': '📢',
         'birthday': '🎂',
         'ibadah': '⛪',
         'event': '✨',
-        
-        // Alias untuk compatibility
         'announcement': '📢',
         'service': '⛪',
         'pelprap': '🙏',
@@ -124,7 +111,6 @@ export default {
         'ulang_tahun': '🎂',
         'acara': '🎉',
         'pelatar': '🎓',
-        
         'default': '📢'
       }
       
@@ -132,14 +118,12 @@ export default {
     },
     
     onIconError() {
-      console.warn('❗ [AnnouncementCard] Icon failed to load for category:', this.category)
       this.iconError = true
       this.iconLoaded = false
       this.isLoading = false
     },
     
     onIconLoad() {
-      console.log('✅ [AnnouncementCard] Icon loaded successfully for:', this.category)
       this.iconLoaded = true
       this.iconError = false
       this.isLoading = false
@@ -147,8 +131,6 @@ export default {
     
     handleClick() {
       if (this.clickable) {
-        console.log('🔍 [AnnouncementCard] Card clicked:', this.title)
-        // Emit event untuk parent component handle
         this.$emit('click', {
           title: this.title,
           desc: this.desc,
@@ -237,7 +219,7 @@ export default {
 
 .card-content {
   flex: 1;
-  min-width: 0; /* Untuk text truncation */
+  min-width: 0;
 }
 
 .card-title {
@@ -247,17 +229,11 @@ export default {
   color: #fff;
   font-family: 'Inter', sans-serif;
   line-height: 1.3;
-  /* Text truncation with fallback */
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  /* Modern browsers */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  white-space: normal; /* Override for multi-line */
-  /* Fallback for older browsers */
-  max-height: calc(1.3em * 2); /* line-height * max lines */
+  text-overflow: ellipsis;
 }
 
 .card-desc {
@@ -266,20 +242,14 @@ export default {
   color: rgba(255, 255, 255, 0.9);
   font-family: 'Inter', sans-serif;
   line-height: 1.4;
-  /* Text truncation with fallback */
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  /* Modern browsers */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  white-space: normal; /* Override for multi-line */
-  /* Fallback for older browsers */
-  max-height: calc(1.4em * 2); /* line-height * max lines */
+  text-overflow: ellipsis;
 }
 
-/* ⭐ CATEGORY-SPECIFIC STYLES - 4 Kategori Utama */
+/* Category Styles */
 .pengumuman-card {
   background: linear-gradient(135deg, #261b76, #2156a6);
 }
@@ -296,7 +266,7 @@ export default {
   background: linear-gradient(135deg, #7c6b1d, #e0be00);
 }
 
-/* Hover effects per category */
+/* Hover Effects */
 .pengumuman-card:hover {
   background: linear-gradient(135deg, #312e81, #3b82f6);
   box-shadow: 0 6px 20px rgba(38, 27, 118, 0.3);

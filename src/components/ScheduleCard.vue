@@ -24,10 +24,6 @@
     <!-- Konten text di kanan -->
     <div class="card-content">
       <h3 class="card-title">{{ schedule.title }}</h3>
-      <!-- Tambahan info untuk debugging -->
-      <p v-if="showDebugInfo" class="debug-text">
-        Type: {{ getContentType() }} | ID: {{ schedule.id }}
-      </p>
     </div>
 
     <!-- Arrow untuk menunjukkan bisa diklik -->

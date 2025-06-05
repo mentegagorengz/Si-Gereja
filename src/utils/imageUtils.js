@@ -1,13 +1,197 @@
-// src/utils/imageUtils.js - OPTIMIZED VERSION
-// ✨ Fixed path handling untuk folder structure yang benar
+// src/utils/imageUtils.js - UPDATED VERSION dengan Logic yang Benar!
+// ✨ Sesuai struktur folder: news, jadwal, devotionals
 
-console.log('🚀 [imageUtils] Loading optimized version...')
+console.log('🚀 [imageUtils] Loading NEW optimized version dengan folder structure...')
 
-// ⭐ FEATURE ICONS - dari assets/icons/features/
+// ⭐ NEWS THUMBNAILS - dari assets/thumbnails/news/
+export const getNewsThumbnail = (news, size = 'large') => {
+  console.log('🔍 [getNewsThumbnail] Getting thumbnail for:', news?.title)
+  console.log('🔍 [getNewsThumbnail] Category:', news?.category)
+  console.log('🔍 [getNewsThumbnail] Thumbnail field:', news?.thumbnail)
+  console.log('🔍 [getNewsThumbnail] Size requested:', size)
+  
+  const extensions = ['png', 'jpg', 'jpeg', 'webp']
+  const sizeFolder = size === 'small' ? 'small' : 'large'
+  
+  // ⭐ STEP 1: PRIORITAS - Coba berdasarkan thumbnail field dulu (jika ADA)
+  if (news?.thumbnail && news.thumbnail.trim() !== '') {
+    console.log('🔍 [getNewsThumbnail] STEP 1: Trying thumbnail field from database...')
+    console.log('🔍 [getNewsThumbnail] Looking for:', `assets/thumbnails/news/${sizeFolder}/${news.thumbnail}.*`)
+    
+    for (const ext of extensions) {
+      try {
+        const thumbnailPath = require(`@/assets/thumbnails/news/${sizeFolder}/${news.thumbnail}.${ext}`)
+        console.log(`✅ [getNewsThumbnail] SUCCESS! Found thumbnail field-based: news/${sizeFolder}/${news.thumbnail}.${ext}`)
+        return thumbnailPath
+      } catch (error) {
+        console.log(`⚠️ [getNewsThumbnail] ${news.thumbnail}.${ext} not found in news/${sizeFolder}/`)
+        continue
+      }
+    }
+    
+    console.log('❌ [getNewsThumbnail] Thumbnail field provided but file not found, trying category fallback...')
+  }
+  
+  // ⭐ STEP 2: FALLBACK - Coba berdasarkan CATEGORY (kalau thumbnail kosong atau tidak ditemukan)
+  if (news?.category && news.category.trim() !== '') {
+    console.log('🔍 [getNewsThumbnail] STEP 2: Trying category-based thumbnail...')
+    console.log('🔍 [getNewsThumbnail] Looking for:', `assets/thumbnails/news/${sizeFolder}/${news.category}.*`)
+    
+    for (const ext of extensions) {
+      try {
+        const categoryPath = require(`@/assets/thumbnails/news/${sizeFolder}/${news.category}.${ext}`)
+        console.log(`✅ [getNewsThumbnail] SUCCESS! Found category-based: news/${sizeFolder}/${news.category}.${ext}`)
+        return categoryPath
+      } catch (error) {
+        console.log(`⚠️ [getNewsThumbnail] ${news.category}.${ext} not found in news/${sizeFolder}/`)
+        continue
+      }
+    }
+  }
+  
+  console.log('❌ [getNewsThumbnail] No thumbnail file found, creating placeholder')
+  
+  // ⭐ STEP 3: PLACEHOLDER berdasarkan category
+  const category = news?.category || 'news'
+  const width = size === 'small' ? 80 : 200
+  const height = size === 'small' ? 80 : 200
+  
+  console.log('🎨 [getNewsThumbnail] Creating placeholder for category:', category)
+  
+  return createPlaceholderDataUrl(
+    getCategoryText(category, 'NEWS'), 
+    width, 
+    height, 
+    getCategoryColor(category, '#2563eb')
+  )
+}
+
+// ⭐ SCHEDULE/JADWAL THUMBNAILS - dari assets/thumbnails/jadwal/
+export const getScheduleThumbnail = (schedule, size = 'large') => {
+  console.log('🔍 [getScheduleThumbnail] Getting thumbnail for:', schedule?.title)
+  console.log('🔍 [getScheduleThumbnail] Category:', schedule?.category)
+  console.log('🔍 [getScheduleThumbnail] Thumbnail field:', schedule?.thumbnail)
+  console.log('🔍 [getScheduleThumbnail] Size requested:', size)
+  
+  const extensions = ['png', 'jpg', 'jpeg', 'webp']
+  const sizeFolder = size === 'small' ? 'small' : 'large'
+  
+  // ⭐ STEP 1: PRIORITAS - Coba berdasarkan CATEGORY dulu
+  if (schedule?.category) {
+    console.log('🔍 [getScheduleThumbnail] STEP 1: Trying category-based thumbnail...')
+    console.log('🔍 [getScheduleThumbnail] Looking for:', `assets/thumbnails/jadwal/${sizeFolder}/${schedule.category}.*`)
+    
+    for (const ext of extensions) {
+      try {
+        const categoryPath = require(`@/assets/thumbnails/jadwal/${sizeFolder}/${schedule.category}.${ext}`)
+        console.log(`✅ [getScheduleThumbnail] SUCCESS! Found category-based: jadwal/${sizeFolder}/${schedule.category}.${ext}`)
+        return categoryPath
+      } catch (error) {
+        console.log(`⚠️ [getScheduleThumbnail] ${schedule.category}.${ext} not found in jadwal/${sizeFolder}/`)
+        continue
+      }
+    }
+  }
+  
+  // ⭐ STEP 2: FALLBACK - Coba berdasarkan thumbnail field dari database
+  if (schedule?.thumbnail) {
+    console.log('🔍 [getScheduleThumbnail] STEP 2: Trying thumbnail field from database...')
+    console.log('🔍 [getScheduleThumbnail] Looking for:', `assets/thumbnails/jadwal/${sizeFolder}/${schedule.thumbnail}.*`)
+    
+    for (const ext of extensions) {
+      try {
+        const thumbnailPath = require(`@/assets/thumbnails/jadwal/${sizeFolder}/${schedule.thumbnail}.${ext}`)
+        console.log(`✅ [getScheduleThumbnail] SUCCESS! Found thumbnail field-based: jadwal/${sizeFolder}/${schedule.thumbnail}.${ext}`)
+        return thumbnailPath
+      } catch (error) {
+        console.log(`⚠️ [getScheduleThumbnail] ${schedule.thumbnail}.${ext} not found in jadwal/${sizeFolder}/`)
+        continue
+      }
+    }
+  }
+  
+  console.log('❌ [getScheduleThumbnail] No thumbnail file found, creating placeholder')
+  
+  // ⭐ STEP 3: PLACEHOLDER berdasarkan category
+  const category = schedule?.category || 'jadwal'
+  const width = size === 'small' ? 80 : 200
+  const height = size === 'small' ? 80 : 200
+  
+  console.log('🎨 [getScheduleThumbnail] Creating placeholder for category:', category)
+  
+  return createPlaceholderDataUrl(
+    getCategoryText(category, 'JADWAL'), 
+    width, 
+    height, 
+    getCategoryColor(category, '#41442A')
+  )
+}
+
+// ⭐ DEVOTIONAL/RENUNGAN THUMBNAILS - dari assets/thumbnails/devotionals/
+export const getDevotionalThumbnail = (devotional, size = 'large') => {
+  console.log('🔍 [getDevotionalThumbnail] Getting thumbnail for:', devotional?.title)
+  console.log('🔍 [getDevotionalThumbnail] Category:', devotional?.category)
+  console.log('🔍 [getDevotionalThumbnail] Thumbnail field:', devotional?.thumbnail)
+  console.log('🔍 [getDevotionalThumbnail] Size requested:', size)
+  
+  const extensions = ['png', 'jpg', 'jpeg', 'webp']
+  const sizeFolder = size === 'small' ? 'small' : 'large'
+  
+  // ⭐ STEP 1: PRIORITAS - Coba berdasarkan CATEGORY dulu
+  if (devotional?.category) {
+    console.log('🔍 [getDevotionalThumbnail] STEP 1: Trying category-based thumbnail...')
+    console.log('🔍 [getDevotionalThumbnail] Looking for:', `assets/thumbnails/devotionals/${sizeFolder}/${devotional.category}.*`)
+    
+    for (const ext of extensions) {
+      try {
+        const categoryPath = require(`@/assets/thumbnails/devotionals/${sizeFolder}/${devotional.category}.${ext}`)
+        console.log(`✅ [getDevotionalThumbnail] SUCCESS! Found category-based: devotionals/${sizeFolder}/${devotional.category}.${ext}`)
+        return categoryPath
+      } catch (error) {
+        console.log(`⚠️ [getDevotionalThumbnail] ${devotional.category}.${ext} not found in devotionals/${sizeFolder}/`)
+        continue
+      }
+    }
+  }
+  
+  // ⭐ STEP 2: FALLBACK - Coba berdasarkan thumbnail field dari database
+  if (devotional?.thumbnail) {
+    console.log('🔍 [getDevotionalThumbnail] STEP 2: Trying thumbnail field from database...')
+    console.log('🔍 [getDevotionalThumbnail] Looking for:', `assets/thumbnails/devotionals/${sizeFolder}/${devotional.thumbnail}.*`)
+    
+    for (const ext of extensions) {
+      try {
+        const thumbnailPath = require(`@/assets/thumbnails/devotionals/${sizeFolder}/${devotional.thumbnail}.${ext}`)
+        console.log(`✅ [getDevotionalThumbnail] SUCCESS! Found thumbnail field-based: devotionals/${sizeFolder}/${devotional.thumbnail}.${ext}`)
+        return thumbnailPath
+      } catch (error) {
+        console.log(`⚠️ [getDevotionalThumbnail] ${devotional.thumbnail}.${ext} not found in devotionals/${sizeFolder}/`)
+        continue
+      }
+    }
+  }
+  
+  console.log('❌ [getDevotionalThumbnail] No thumbnail file found, creating placeholder')
+  
+  // ⭐ STEP 3: PLACEHOLDER berdasarkan category
+  const category = devotional?.category || 'renungan'
+  const width = size === 'small' ? 80 : 200
+  const height = size === 'small' ? 80 : 200
+  
+  console.log('🎨 [getDevotionalThumbnail] Creating placeholder for category:', category)
+  
+  return createPlaceholderDataUrl(
+    getCategoryText(category, 'RENUNGAN'), 
+    width, 
+    height, 
+    getCategoryColor(category, '#7c3aed')
+  )
+}
+
+// ⭐ FEATURE ICONS - dari assets/icons/features/ (UNCHANGED)
 export const getFeatureIconUrl = (iconName) => {
   console.log('🔍 [getFeatureIconUrl] Getting feature icon for:', iconName)
   
-  // Mapping nama feature ke nama file yang tepat
   const iconMapping = {
     'News': 'news',
     'Jadwal': 'jadwal', 
@@ -18,56 +202,32 @@ export const getFeatureIconUrl = (iconName) => {
   }
   
   const iconFile = iconMapping[iconName] || iconName.toLowerCase().replace(/\s+/g, '')
-  console.log('🔍 [getFeatureIconUrl] Mapped to file:', iconFile)
-  
-  // Coba berbagai ekstensi file
   const extensions = ['png', 'jpg', 'jpeg', 'svg', 'webp']
   
   for (const ext of extensions) {
     try {
-      // ⭐ PATH YANG BENAR: assets/icons/features/
       const iconPath = require(`@/assets/icons/features/${iconFile}.${ext}`)
-      console.log(`✅ [getFeatureIconUrl] SUCCESS! Found ${iconFile}.${ext}:`, iconPath)
+      console.log(`✅ [getFeatureIconUrl] SUCCESS! Found ${iconFile}.${ext}`)
       return iconPath
-      
     } catch (error) {
-      console.log(`⚠️ [getFeatureIconUrl] ${iconFile}.${ext} not found`)
       continue
     }
   }
   
-  // Jika semua gagal, coba nama asli
-  if (iconFile !== iconName.toLowerCase()) {
-    for (const ext of extensions) {
-      try {
-        const iconPath = require(`@/assets/icons/features/${iconName.toLowerCase()}.${ext}`)
-        console.log(`✅ [getFeatureIconUrl] Found with original name: ${iconName.toLowerCase()}.${ext}`)
-        return iconPath
-      } catch (error) {
-        continue
-      }
-    }
-  }
-  
-  // Final fallback ke emoji
-  console.warn('⚠️ [getFeatureIconUrl] All attempts failed, using emoji fallback')
+  console.warn('⚠️ [getFeatureIconUrl] Icon not found, using emoji fallback')
   return createEmojiDataUrl(getEmojiForFeature(iconName), 40)
 }
 
-// ⭐ ANNOUNCEMENT ICONS - dari assets/icons/announcements/
+// ⭐ ANNOUNCEMENT ICONS - dari assets/icons/announcements/ (UNCHANGED)
 export const getAnnouncementIconUrl = (category) => {
-  console.log('🔍 [getAnnouncementIconUrl] Getting announcement icon for category:', category)
+  console.log('🔍 [getAnnouncementIconUrl] Getting announcement icon for:', category)
   
-  // ⭐ MAPPING CATEGORY KE NAMA FILE - 4 kategori utama
   const getCategoryIconFile = (cat) => {
     const categoryMap = {
-      // 4 kategori utama
-      'pengumuman': 'megaphone',    // megaphone.png
-      'birthday': 'birthday',       // birthday.png  
-      'ibadah': 'ibadah',          // ibadah.png
-      'event': 'event',            // event.png
-      
-      // Alias untuk compatibility
+      'pengumuman': 'megaphone',
+      'birthday': 'birthday',       
+      'ibadah': 'ibadah',          
+      'event': 'event',            
       'announcement': 'megaphone',
       'service': 'ibadah',
       'pelprap': 'ibadah', 
@@ -76,200 +236,92 @@ export const getAnnouncementIconUrl = (category) => {
       'ulang_tahun': 'birthday',
       'acara': 'event',
       'pelatar': 'event',
-      
-      // Default
       'default': 'megaphone'
     }
-    
     return categoryMap[cat?.toLowerCase()] || categoryMap['default']
   }
   
   const iconFile = getCategoryIconFile(category)
-  console.log('🔍 [getAnnouncementIconUrl] Mapped', category, 'to', iconFile)
-  
-  // Coba berbagai ekstensi
   const extensions = ['png', 'jpg', 'jpeg', 'svg', 'webp']
   
   for (const ext of extensions) {
     try {
-      // ⭐ PATH YANG BENAR: assets/icons/announcements/
       const iconPath = require(`@/assets/icons/announcements/${iconFile}.${ext}`)
-      console.log(`✅ [getAnnouncementIconUrl] SUCCESS! Found ${iconFile}.${ext}:`, iconPath)
+      console.log(`✅ [getAnnouncementIconUrl] SUCCESS! Found ${iconFile}.${ext}`)
       return iconPath
-      
     } catch (error) {
-      console.log(`⚠️ [getAnnouncementIconUrl] ${iconFile}.${ext} not found`)
       continue
     }
   }
   
-  // Coba fallback icons dalam urutan prioritas
-  const fallbacks = ['megaphone', 'event', 'ibadah', 'birthday']
-  for (const fallback of fallbacks) {
-    if (fallback === iconFile) continue // Skip jika sudah dicoba
-    
-    for (const ext of extensions) {
-      try {
-        const fallbackPath = require(`@/assets/icons/announcements/${fallback}.${ext}`)
-        console.log(`✅ [getAnnouncementIconUrl] Using fallback ${fallback}.${ext}`)
-        return fallbackPath
-      } catch (error) {
-        continue
-      }
-    }
-  }
-  
-  // Final fallback ke emoji
-  console.warn('⚠️ [getAnnouncementIconUrl] All attempts failed, using emoji fallback')
+  console.warn('⚠️ [getAnnouncementIconUrl] Icon not found, using emoji fallback')
   return createEmojiDataUrl(getEmojiForAnnouncement(category), 28)
 }
 
-// ⭐ DAILY VERSE - Simplified, hanya dari assets/daily-verse/ format ayat1.png
+// ⭐ DAILY VERSE (UNCHANGED)
 export const getDailyVerseUrl = (ayatNumber = null) => {
   let ayatIndex = ayatNumber
   
   if (!ayatIndex) {
     const today = new Date()
     const dayOfMonth = today.getDate()
-    
-    // ⭐ CYCLE dengan 5 ayat: tanggal 1-5 → ayat 1-5, tanggal 6-10 → ayat 1-5, dst
-    const totalAyatFiles = 5 // Jumlah file ayat yang tersedia
-    ayatIndex = ((dayOfMonth - 1) % totalAyatFiles) + 1 // Hasil: 1-5 terus cycle
+    const totalAyatFiles = 5
+    ayatIndex = ((dayOfMonth - 1) % totalAyatFiles) + 1
   }
   
-  console.log('🔍 [getDailyVerseUrl] Looking for ayat index:', ayatIndex)
-  
   try {
-    // Coba load file ayat{index}.png dari folder daily-verse
     const ayatPath = require(`@/assets/daily-verse/ayat${ayatIndex}.png`)
-    console.log(`✅ [getDailyVerseUrl] Found ayat${ayatIndex}.png:`, ayatPath)
+    console.log(`✅ [getDailyVerseUrl] Found ayat${ayatIndex}.png`)
     return ayatPath
   } catch (error) {
-    console.error(`❌ [getDailyVerseUrl] ayat${ayatIndex}.png not found:`, error.message)
-    
-    // ⭐ FALLBACK: Coba ayat lain yang ada (1-5)
-    console.log('🔄 [getDailyVerseUrl] Trying fallback files...')
-    
     for (let i = 1; i <= 5; i++) {
-      if (i === ayatIndex) continue // Skip yang sudah dicoba
-      
+      if (i === ayatIndex) continue
       try {
         const fallbackPath = require(`@/assets/daily-verse/ayat${i}.png`)
-        console.log(`✅ [getDailyVerseUrl] Using fallback ayat${i}.png:`, fallbackPath)
+        console.log(`✅ [getDailyVerseUrl] Using fallback ayat${i}.png`)
         return fallbackPath
       } catch (fallbackError) {
-        console.log(`⚠️ [getDailyVerseUrl] ayat${i}.png also not found`)
         continue
       }
     }
-    
-    // Jika semua gagal, throw error supaya HomePage bisa handle
     throw new Error(`No daily verse files found! Please add ayat1.png to ayat5.png in assets/daily-verse/`)
   }
 }
 
-// ⭐ THUMBNAILS - Optimized untuk different content types
-export const getScheduleThumbnail = (schedule, size = 'large') => {
-  console.log('🔍 [getScheduleThumbnail] Getting thumbnail for:', schedule?.title)
+// ⭐ UNIVERSAL THUMBNAIL GETTER - UPDATED untuk routing yang benar
+export const getThumbnail = (category, item, size = 'large') => {
+  console.log('🔍 [getThumbnail] Getting thumbnail for category:', category)
   
-  // Jika ada thumbnail URL langsung dari database
-  if (schedule?.thumbnail) {
-    console.log('✅ [getScheduleThumbnail] Using provided thumbnail:', schedule.thumbnail)
-    return schedule.thumbnail
+  // Route berdasarkan kategori content
+  if (category === 'news' || category === 'berita') {
+    return getNewsThumbnail(item, size)
+  } else if (category === 'schedule' || category === 'jadwal') {
+    return getScheduleThumbnail(item, size)
+  } else if (category === 'devotional' || category === 'renungan') {
+    return getDevotionalThumbnail(item, size)
+  } else {
+    // Default fallback ke schedule
+    console.log('⚠️ [getThumbnail] Unknown category, defaulting to schedule')
+    return getScheduleThumbnail(item, size)
   }
-  
-  // Jika tidak, buat berdasarkan kategori
-  const category = schedule?.category || 'default'
-  const width = size === 'small' ? 80 : 200
-  const height = size === 'small' ? 80 : 200
-  
-  return createPlaceholderDataUrl(
-    getCategoryText(category, 'JADWAL'), 
-    width, 
-    height, 
-    getCategoryColor(category, '#41442A')
-  )
 }
 
-export const getNewsThumbnail = (news, size = 'large') => {
-  console.log('🔍 [getNewsThumbnail] Getting thumbnail for:', news?.title)
-  
-  if (news?.thumbnail) {
-    console.log('✅ [getNewsThumbnail] Using provided thumbnail:', news.thumbnail)
-    return news.thumbnail
-  }
-  
-  const category = news?.category || 'default'
-  const width = size === 'small' ? 80 : 200
-  const height = size === 'small' ? 80 : 200
-  
-  return createPlaceholderDataUrl(
-    getCategoryText(category, 'NEWS'), 
-    width, 
-    height, 
-    getCategoryColor(category, '#2563eb')
-  )
-}
-
-export const getDevotionalThumbnail = (devotional, size = 'large') => {
-  console.log('🔍 [getDevotionalThumbnail] Getting thumbnail for:', devotional?.title)
-  
-  if (devotional?.thumbnail) {
-    console.log('✅ [getDevotionalThumbnail] Using provided thumbnail:', devotional.thumbnail)
-    return devotional.thumbnail
-  }
-  
-  const category = devotional?.category || 'default'
-  const width = size === 'small' ? 80 : 200
-  const height = size === 'small' ? 80 : 200
-  
-  return createPlaceholderDataUrl(
-    getCategoryText(category, 'RENUNGAN'), 
-    width, 
-    height, 
-    getCategoryColor(category, '#7c3aed')
-  )
-}
-
-// ⭐ HELPER FUNCTIONS - Improved and more robust
-
+// ⭐ HELPER FUNCTIONS (UNCHANGED)
 const getEmojiForFeature = (iconName) => {
   const emojiMap = {
-    'News': '📰',
-    'Jadwal': '📅', 
-    'Giving': '💝',
-    'Alkitab Setahun': '📖',
-    'Renungan': '🙏',
-    'Prayer Request': '🤲',
-    // Fallbacks
-    'news': '📰',
-    'jadwal': '📅',
-    'giving': '💝', 
-    'alkitab': '📖',
-    'renungan': '🙏',
-    'prayer': '🤲'
+    'News': '📰', 'Jadwal': '📅', 'Giving': '💝',
+    'Alkitab Setahun': '📖', 'Renungan': '🙏', 'Prayer Request': '🤲',
+    'news': '📰', 'jadwal': '📅', 'giving': '💝', 
+    'alkitab': '📖', 'renungan': '🙏', 'prayer': '🤲'
   }
   return emojiMap[iconName] || emojiMap[iconName?.toLowerCase()] || '❓'
 }
 
 const getEmojiForAnnouncement = (category) => {
   const emojiMap = {
-    // 4 kategori utama
-    'pengumuman': '📢',
-    'birthday': '🎂',
-    'ibadah': '⛪',
-    'event': '✨',
-    
-    // Alias untuk compatibility
-    'announcement': '📢',
-    'service': '⛪',
-    'pelprap': '🙏',
-    'worship': '⛪',
-    'ultah': '🎂',
-    'ulang_tahun': '🎂',
-    'acara': '🎉',
-    'pelatar': '🎓',
-    
+    'pengumuman': '📢', 'birthday': '🎂', 'ibadah': '⛪', 'event': '✨',
+    'announcement': '📢', 'service': '⛪', 'pelprap': '🙏', 'worship': '⛪',
+    'ultah': '🎂', 'ulang_tahun': '🎂', 'acara': '🎉', 'pelatar': '🎓',
     'default': '📢'
   }
   return emojiMap[category?.toLowerCase()] || emojiMap['default']
@@ -277,34 +329,22 @@ const getEmojiForAnnouncement = (category) => {
 
 const getCategoryText = (category, defaultText) => {
   const textMap = {
-    'birthday': 'ULTAH',
-    'service': 'IBADAH', 
-    'ibadah': 'IBADAH',
-    'pelprap': 'PELPRAP',
-    'event': 'EVENT',
-    'pelatar': 'PELATAR',
-    'pengumuman': 'INFO',
-    'kasih': 'KASIH',
-    'iman': 'IMAN',
-    'pengharapan': 'HARAPAN',
-    'doa': 'DOA'
+    'birthday': 'ULTAH', 'service': 'IBADAH', 'ibadah': 'IBADAH',
+    'pelprap': 'PELPRAP', 'event': 'EVENT', 'pelatar': 'PELATAR',
+    'pengumuman': 'INFO', 'kasih': 'KASIH', 'iman': 'IMAN',
+    'pengharapan': 'HARAPAN', 'doa': 'DOA', 'news': 'NEWS',
+    'jadwal': 'JADWAL', 'renungan': 'RENUNGAN', 'undangan': 'UNDANGAN'
   }
   return textMap[category?.toLowerCase()] || defaultText
 }
 
 const getCategoryColor = (category, defaultColor) => {
   const colorMap = {
-    'birthday': '#ec4899',
-    'service': '#f59e0b',
-    'ibadah': '#f59e0b', 
-    'pelprap': '#10b981',
-    'event': '#3b82f6',
-    'pelatar': '#8b5cf6',
-    'pengumuman': '#6366f1',
-    'kasih': '#f43f5e',
-    'iman': '#06b6d4',
-    'pengharapan': '#84cc16',
-    'doa': '#a855f7'
+    'birthday': '#ec4899', 'service': '#f59e0b', 'ibadah': '#f59e0b', 
+    'pelprap': '#10b981', 'event': '#3b82f6', 'pelatar': '#8b5cf6',
+    'pengumuman': '#6366f1', 'kasih': '#f43f5e', 'iman': '#06b6d4',
+    'pengharapan': '#84cc16', 'doa': '#a855f7', 'news': '#2563eb',
+    'jadwal': '#41442A', 'renungan': '#7c3aed', 'undangan': '#8b5cf6'
   }
   return colorMap[category?.toLowerCase()] || defaultColor
 }
@@ -316,11 +356,9 @@ const createEmojiDataUrl = (emoji, size = 40) => {
     canvas.height = size
     const ctx = canvas.getContext('2d')
     
-    // Background
     ctx.fillStyle = '#f8f9fa'
     ctx.fillRect(0, 0, size, size)
     
-    // Emoji
     ctx.font = `${size * 0.6}px Arial, sans-serif`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
@@ -329,7 +367,6 @@ const createEmojiDataUrl = (emoji, size = 40) => {
     return canvas.toDataURL('image/png')
   } catch (error) {
     console.error('❌ [createEmojiDataUrl] Error:', error)
-    // Fallback ke solid color
     return createPlaceholderDataUrl('?', size, size)
   }
 }
@@ -341,18 +378,15 @@ const createPlaceholderDataUrl = (text, width, height, bgColor = '#41442A', text
     canvas.height = height
     const ctx = canvas.getContext('2d')
     
-    // Background
     ctx.fillStyle = bgColor
     ctx.fillRect(0, 0, width, height)
     
-    // Text
     ctx.fillStyle = textColor
     const fontSize = Math.min(width, height) * 0.12
     ctx.font = `bold ${fontSize}px Inter, Arial, sans-serif`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     
-    // Multi-line text handling
     const maxWidth = width * 0.8
     const lines = wrapText(ctx, text, maxWidth)
     const lineHeight = fontSize * 1.2
@@ -366,7 +400,6 @@ const createPlaceholderDataUrl = (text, width, height, bgColor = '#41442A', text
     return canvas.toDataURL('image/png')
   } catch (error) {
     console.error('❌ [createPlaceholderDataUrl] Error:', error)
-    // Return minimal fallback
     return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
   }
 }
@@ -390,85 +423,68 @@ const wrapText = (ctx, text, maxWidth) => {
   return lines
 }
 
-// ⭐ DEBUG FUNCTION - Test semua assets yang ada
-export const debugIconAssets = () => {
-  console.log('🧪 [DEBUG] Testing asset folders...')
+// ⭐ DEBUG FUNCTION - Update dengan folder baru
+export const debugThumbnailAssets = () => {
+  console.log('🧪 [DEBUG] Testing thumbnail folders...')
   
-  // Test feature icons
-  console.log('📁 Testing assets/icons/features/')
-  const featureTests = ['news', 'jadwal', 'giving', 'alkitab', 'renungan', 'prayer']
-  const featureExtensions = ['png', 'jpg', 'jpeg', 'svg']
+  // Test news thumbnails
+  console.log('📁 Testing assets/thumbnails/news/')
+  const newsTests = ['favoredcamp', 'event', 'pengumuman', 'undangan']
+  const sizes = ['small', 'large']
+  const extensions = ['png', 'jpg', 'jpeg', 'webp']
   
-  featureTests.forEach(icon => {
-    featureExtensions.forEach(ext => {
-      try {
-        require(`@/assets/icons/features/${icon}.${ext}`)
-        console.log(`✅ features/${icon}.${ext} -> FOUND`)
-      } catch (error) {
-        console.log(`❌ features/${icon}.${ext} -> NOT FOUND`)
-      }
+  newsTests.forEach(thumb => {
+    sizes.forEach(size => {
+      extensions.forEach(ext => {
+        try {
+          require(`@/assets/thumbnails/news/${size}/${thumb}.${ext}`)
+          console.log(`✅ news/${size}/${thumb}.${ext} -> FOUND`)
+        } catch (error) {
+          console.log(`❌ news/${size}/${thumb}.${ext} -> NOT FOUND`)
+        }
+      })
     })
   })
   
-  // Test announcement icons
-  console.log('📁 Testing assets/icons/announcements/')
-  const announcementTests = ['megaphone', 'birthday', 'ibadah', 'event']
+  // Test jadwal thumbnails
+  console.log('📁 Testing assets/thumbnails/jadwal/')
+  const jadwalTests = ['ibadah', 'event', 'pelatar', 'pelprap']
   
-  announcementTests.forEach(icon => {
-    featureExtensions.forEach(ext => {
-      try {
-        require(`@/assets/icons/announcements/${icon}.${ext}`)
-        console.log(`✅ announcements/${icon}.${ext} -> FOUND`)
-      } catch (error) {
-        console.log(`❌ announcements/${icon}.${ext} -> NOT FOUND`)
-      }
+  jadwalTests.forEach(thumb => {
+    sizes.forEach(size => {
+      extensions.forEach(ext => {
+        try {
+          require(`@/assets/thumbnails/jadwal/${size}/${thumb}.${ext}`)
+          console.log(`✅ jadwal/${size}/${thumb}.${ext} -> FOUND`)
+        } catch (error) {
+          console.log(`❌ jadwal/${size}/${thumb}.${ext} -> NOT FOUND`)
+        }
+      })
     })
   })
   
-  // Test daily verse - hanya test ayat1.png sampai ayat5.png
-  console.log('📁 Testing assets/daily-verse/')
-  for (let i = 1; i <= 5; i++) {
-    try {
-      require(`@/assets/daily-verse/ayat${i}.png`)
-      console.log(`✅ daily-verse/ayat${i}.png -> FOUND`)
-    } catch (error) {
-      console.log(`❌ daily-verse/ayat${i}.png -> NOT FOUND`)
-    }
-  }
+  // Test devotionals thumbnails
+  console.log('📁 Testing assets/thumbnails/devotionals/')
+  const devotionalTests = ['kasih', 'iman', 'pengharapan', 'doa']
+  
+  devotionalTests.forEach(thumb => {
+    sizes.forEach(size => {
+      extensions.forEach(ext => {
+        try {
+          require(`@/assets/thumbnails/devotionals/${size}/${thumb}.${ext}`)
+          console.log(`✅ devotionals/${size}/${thumb}.${ext} -> FOUND`)
+        } catch (error) {
+          console.log(`❌ devotionals/${size}/${thumb}.${ext} -> NOT FOUND`)
+        }
+      })
+    })
+  })
 }
 
-// ⭐ UNIVERSAL THUMBNAIL GETTER (untuk ScheduleCard)
-export const getThumbnail = (category, item, size = 'large') => {
-  console.log('🔍 [getThumbnail] Getting thumbnail for category:', category)
-  
-  // Tentukan berdasarkan kategori atau context
-  if (category === 'schedule' || category === 'jadwal') {
-    return getScheduleThumbnail(item, size)
-  } else if (category === 'news' || category === 'berita') {
-    return getNewsThumbnail(item, size)
-  } else if (category === 'devotional' || category === 'renungan') {
-    return getDevotionalThumbnail(item, size)
-  } else {
-    // Default fallback
-    return getScheduleThumbnail(item, size)
-  }
-}
-
-// ⭐ ERROR HANDLER untuk gambar yang gagal load
-export const handleImageError = (event, fallbackCategory = 'default') => {
-  console.warn('🖼️ [handleImageError] Image failed to load:', event.target.src)
-  
-  const emoji = getEmojiForFeature(fallbackCategory)
-  event.target.src = createEmojiDataUrl(emoji, 40)
-  
-  // Prevent infinite loop
-  event.target.onerror = null
-}
-
-// ⭐ AUTO-RUN DEBUG saat development
+// Auto-run debug di development
 if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [imageUtils] Development mode - running asset debug')
-  debugIconAssets()
+  console.log('🔧 [imageUtils] Development mode - running thumbnail debug')
+  debugThumbnailAssets()
 }
 
-console.log('✅ [imageUtils] Optimized version loaded successfully!')
+console.log('✅ [imageUtils] NEW version loaded dengan folder structure yang benar!')
