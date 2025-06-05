@@ -4,13 +4,15 @@
       <!-- Header with Back Icon -->
       <HeaderWithBack title="Registrasi MyRajawali" />
 
-      <!-- Nama -->
-      <FormInput
+      <!-- AutoCompleteInput -->
+      <AutoCompleteInput
         id="register-name"
         label="Nama"
         placeholder="Ketik nama lengkap Anda"
         v-model="nama"
         :error="namaError"
+        @suggestion-selected="onSuggestionSelected"
+        @nama-validated="onNamaValidated"
       />
 
       <!-- Tanggal Lahir -->
@@ -64,20 +66,27 @@
         :error="confirmPasswordError"
       />
 
-      <!-- Warning -->
+      <!-- Error message -->
       <p v-if="errorMsg" class="warning-text">{{ errorMsg }}</p>
 
-      <!-- Tombol Registrasi -->
-      <ButtonPrimary @click="register">Registrasi Akun</ButtonPrimary>
+      <!-- Submit button -->
+      <ButtonPrimary 
+        @click="register"
+        :disabled="!canSubmit"
+        :class="{ 'disabled': !canSubmit }"
+      >
+        {{ submitButtonText }}
+      </ButtonPrimary>
     </div>
   </div>
 </template>
 
 <script>
-import { registerJemaat, checkJemaatExists } from '@/services/auth'
+import { registerJemaat } from '@/services/auth'
+import { useUserStore } from '@/stores/userStore' // ⭐ TAMBAH: Import userStore
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import FormInput from '@/components/common/FormInput.vue'
+import AutoCompleteInput from '@/components/common/AutoCompleteInput.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
 import SelectDropdown from '@/components/common/SelectDropdown.vue'
@@ -87,7 +96,7 @@ export default {
   name: 'RegisterPage',
   components: {
     VueDatePicker,
-    FormInput,
+    AutoCompleteInput,
     PasswordInput,
     ButtonPrimary,
     SelectDropdown,
@@ -103,75 +112,225 @@ export default {
       confirmPassword: '',
       
       namaError: '',
+      statusError: '',
       passwordError: '',
       confirmPasswordError: '',
       errorMsg: '',
 
       statusOptions: ['Menikah', 'Single', 'Janda/Duda'],
 
-      namaExists: false
+      selectedUserData: null,
+      namaExists: false,
+      isSubmitting: false
     }
   },
+  
+  computed: {
+    canSubmit() {
+      return (
+        this.nama.trim().length > 0 &&
+        this.namaExists &&
+        this.tanggalLahir &&
+        this.status &&
+        this.sektor &&
+        this.password.length >= 6 &&
+        this.confirmPassword.length >= 6 &&
+        this.password === this.confirmPassword &&
+        !this.isSubmitting
+      )
+    },
+    
+    submitButtonText() {
+      if (this.isSubmitting) return 'Mendaftarkan...'
+      if (!this.canSubmit) return 'Lengkapi Data'
+      return 'Registrasi Akun'
+    }
+  },
+
   methods: {
-    async checkNama() {
-      if (!this.nama) return;
+    onSuggestionSelected(suggestion) {
+      console.log('✅ [RegisterPage] Suggestion selected:', suggestion);
       
-      try {
-        const exists = await checkJemaatExists(this.nama);
-        this.namaExists = exists;
+      this.selectedUserData = suggestion;
+      this.nama = suggestion.nama;
+      
+      // Auto-fill sektor jika ada
+      if (suggestion.sektor) {
+        this.sektor = suggestion.sektor;
+      }
+      
+      // Clear errors jika nama valid
+      this.namaError = '';
+      this.errorMsg = '';
+    },
+    
+    onNamaValidated(validation) {
+      console.log('🔍 [RegisterPage] Nama validation:', validation);
+      
+      this.namaExists = validation.exists;
+      
+      if (validation.exists) {
+        this.selectedUserData = validation.userData;
+        this.namaError = '';
+        this.errorMsg = '';
         
-        if (!exists) {
-          this.errorMsg = "Nama anda belum terdaftar, segera hubungi gembala/admin";
-        } else {
-          this.errorMsg = "";
+        // Check jika sudah registrasi
+        if (validation.userData.isRegistered) {
+          this.namaError = 'Nama ini sudah terdaftar. Silakan langsung login.';
         }
-      } catch (error) {
-        console.error("Error checking nama:", error);
+      } else {
+        this.selectedUserData = null;
+        this.namaError = 'Nama anda belum terdaftar, segera hubungi gembala/admin';
       }
     },
+
+    // ⭐ FIXED: Registration dengan proper user save
     async register() {
-      if (
-        !this.nama ||
-        !this.tanggalLahir ||
-        !this.status ||
-        !this.sektor ||
-        !this.password ||
-        !this.confirmPassword
-      ) {
-        this.errorMsg = 'Semua field wajib diisi.';
-        return;
-      }
-
-      if (this.password !== this.confirmPassword) {
-        this.errorMsg = 'Password dan konfirmasi password tidak sama.';
-        return;
-      }
-      
-      if (!this.namaExists) {
-        this.errorMsg = 'Nama anda belum terdaftar, segera hubungi gembala/admin';
-        return;
-      }
-
       try {
+        this.isSubmitting = true;
+        this.clearAllErrors();
+        
+        // Validasi basic
+        if (!this.validateAllFields()) {
+          return;
+        }
+        
+        // Check nama exists
+        if (!this.namaExists || !this.selectedUserData) {
+          this.errorMsg = 'Silakan pilih nama dari suggestion yang tersedia';
+          return;
+        }
+        
+        // Check sudah registrasi
+        if (this.selectedUserData.isRegistered) {
+          this.namaError = 'Nama ini sudah terdaftar. Silakan langsung login.';
+          return;
+        }
+        
+        console.log('✅ [RegisterPage] Starting registration...');
+        
         const userData = {
           tanggalLahir: this.tanggalLahir,
           status: this.status,
           sektor: this.sektor
         };
         
+        // ⭐ STEP 1: Register user di Firebase
         await registerJemaat(this.nama, this.password, userData);
-
-      this.$router.push('/success-register')
+        console.log('🎉 [RegisterPage] Registration successful in Firebase!');
+        
+        // ⭐ STEP 2: Prepare complete user data
+        const completeUserData = {
+          id: this.selectedUserData.id,
+          nama: this.nama,
+          tanggalLahir: this.tanggalLahir,
+          status: this.status,
+          sektor: this.sektor,
+          isRegistered: true,
+          registeredAt: new Date().toISOString()
+        };
+        
+        // ⭐ STEP 3: Save to localStorage
+        localStorage.setItem('user', JSON.stringify(completeUserData));
+        console.log('✅ [RegisterPage] User data saved to localStorage:', completeUserData);
+        
+        // ⭐ STEP 4: Update userStore
+        const userStore = useUserStore();
+        userStore.setUser(completeUserData);
+        console.log('✅ [RegisterPage] UserStore updated');
+        
+        // ⭐ STEP 5: Initialize streak for new user
+        this.initializeNewUserStreak();
+        
+        // ⭐ STEP 6: Redirect
+        console.log('🚀 [RegisterPage] Redirecting to success page...');
+        this.$router.push('/success-register');
+        
       } catch (error) {
-        // Tangani pesan error dari Firebase
-        if (error.message.includes('Nama')) {
-          this.namaError = error.message
-        } else if (error.message.includes('Password')) {
-          this.passwordError = error.message
-        } else {
-          this.errorMsg = error.message
-        }
+        console.error('❌ [RegisterPage] Registration failed:', error);
+        this.handleRegistrationError(error);
+      } finally {
+        this.isSubmitting = false;
       }
+    },
+    
+    // ⭐ NEW: Initialize streak untuk user baru
+    initializeNewUserStreak() {
+      console.log('🔥 [RegisterPage] Initializing streak for new user...');
+      
+      const today = new Date().toDateString();
+      const newStreakData = {
+        lastLoginDate: today,
+        streakCount: 1 // Start dengan streak 1 untuk user baru
+      };
+      
+      localStorage.setItem('streakData', JSON.stringify(newStreakData));
+      console.log('✅ [RegisterPage] New user streak initialized:', newStreakData);
+    },
+    
+    handleRegistrationError(error) {
+      if (error.message.includes('Nama') || error.message.includes('belum terdaftar')) {
+        this.namaError = error.message;
+      } else if (error.message.includes('Password')) {
+        this.passwordError = error.message;
+      } else if (error.message.includes('sudah terdaftar')) {
+        this.namaError = error.message;
+      } else {
+        this.errorMsg = error.message || 'Terjadi kesalahan saat registrasi. Coba lagi.';
+      }
+    },
+
+    validateAllFields() {
+      let isValid = true;
+      
+      if (!this.nama || this.nama.trim().length === 0) {
+        this.namaError = 'Nama harus diisi';
+        isValid = false;
+      }
+      
+      if (!this.tanggalLahir) {
+        this.errorMsg = 'Tanggal lahir harus diisi';
+        isValid = false;
+      }
+      
+      if (!this.status) {
+        this.statusError = 'Status harus dipilih';
+        isValid = false;
+      }
+      
+      if (!this.sektor) {
+        this.errorMsg = 'Sektor harus dipilih';
+        isValid = false;
+      }
+      
+      if (!this.password || this.password.length < 6) {
+        this.passwordError = 'Password minimal 6 karakter';
+        isValid = false;
+      }
+      
+      if (!this.confirmPassword) {
+        this.confirmPasswordError = 'Konfirmasi password harus diisi';
+        isValid = false;
+      }
+      
+      if (this.password !== this.confirmPassword) {
+        this.confirmPasswordError = 'Password dan konfirmasi password tidak sama';
+        isValid = false;
+      }
+      
+      if (!isValid) {
+        this.errorMsg = 'Semua field wajib diisi dengan benar.';
+      }
+      
+      return isValid;
+    },
+
+    clearAllErrors() {
+      this.namaError = '';
+      this.statusError = '';
+      this.passwordError = '';
+      this.confirmPasswordError = '';
+      this.errorMsg = '';
     },
 
     formatDate(date) {
@@ -204,46 +363,6 @@ export default {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-}
-
-.form-header {
-  width: 100%;
-  max-width: 360px;
-  margin-bottom: 18px;
-}
-
-.form-header-inner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.back-button {
-  width: 32px;
-  height: 32px;
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.icon-back {
-  width: 20px;
-  height: 20px;
-  display: block;
-  color: #333;
-}
-
-.register-title {
-  font-family: 'Inter';
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.2;
-  margin: 0;
 }
 
 .form-group {
@@ -354,11 +473,33 @@ input:not(:placeholder-shown) {
   accent-color: #41442A;
 }
 
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .warning-text {
   font-size: 12px;
   color: red;
   margin-top: -10px;
   margin-bottom: 12px;
   font-family: 'Inter';
+  text-align: center;
+  padding: 8px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  border-left: 4px solid #d32f2f;
+}
+
+/* Responsive */
+@media (max-width: 360px) {
+  .register-container {
+    padding: 16px 12px 64px;
+  }
+  
+  .warning-text {
+    font-size: 11px;
+    padding: 6px;
+  }
 }
 </style>

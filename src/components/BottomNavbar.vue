@@ -12,16 +12,17 @@
       <Bell :class="['icon', isActiveRoute('/notifikasi') ? 'icon-active' : '']" />
       <span :class="{ 'text-active': isActiveRoute('/notifikasi') }">Notifikasi</span>
     </router-link>
-    <router-link to="/account" class="nav-item" aria-label="Akun">
+    <!-- ⭐ UBAH: Account jadi clickable dengan @click handler -->
+    <div @click="goToAccount" class="nav-item account-item" :class="{ 'active': isActiveRoute('/account') }" aria-label="Akun">
       <User :class="['icon', isActiveRoute('/account') ? 'icon-active' : '']" />
       <span :class="{ 'text-active': isActiveRoute('/account') }">Profile</span>
-    </router-link>
+    </div>
   </nav>
 </template>
 
 <script>
 import { House, Calendar, Bell, User } from 'lucide-vue-next'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 export default {
   name: 'BottomNavbar',
@@ -39,21 +40,26 @@ export default {
   },
   setup(props) {
     const route = useRoute()
+    const router = useRouter()
     
     // Function untuk cek active route
     const isActiveRoute = (path) => {
-      // Jika ada forceActiveRoute, gunakan itu
       if (props.forceActiveRoute) {
         return props.forceActiveRoute === path
       }
-      
-      // Jika tidak, gunakan route.path biasa
       return route.path === path
+    }
+    
+    // ⭐ TAMBAH: Handler untuk account click
+    const goToAccount = () => {
+      console.log('🔍 [BottomNavbar] Account clicked, navigating to account page')
+      router.push('/account')
     }
     
     return {
       route,
-      isActiveRoute
+      isActiveRoute,
+      goToAccount
     }
   }
 }
@@ -90,6 +96,23 @@ export default {
   text-decoration: none;
   gap: 4px;
   transition: all 0.3s ease;
+}
+
+/* ⭐ TAMBAH: Style khusus untuk account item yang clickable */
+.account-item {
+  cursor: pointer;
+}
+
+.account-item:hover {
+  background-color: rgba(65, 68, 42, 0.05);
+}
+
+.account-item:active {
+  transform: scale(0.95);
+}
+
+.account-item.active {
+  background-color: rgba(65, 68, 42, 0.1);
 }
 
 .icon {

@@ -11,10 +11,11 @@ import JadwalPage from '../views/JadwalPage.vue'
 import DetailJadwal from '../views/DetailJadwal.vue'
 import NewsPage from '../views/NewsPage.vue'
 import DetailNews from '../views/DetailNews.vue'
-// ⭐ TAMBAHAN BARU - IMPORT RENUNGAN PAGES
 import RenunganPage from '../views/RenunganPage.vue'
 import DetailRenungan from '../views/DetailRenungan.vue'
 import BookmarksPage from '../views/BookmarksPage.vue'
+// ⭐ TAMBAH: Import AccountPage
+import AccountPage from '../views/AccountPage.vue'
 
 const routes = [
   { 
@@ -62,7 +63,6 @@ const routes = [
     name: 'DetailNews',
     component: DetailNews
   },
-  // ⭐ TAMBAHAN BARU - ROUTE RENUNGAN
   {
     path: '/renungan',
     name: 'RenunganPage',
@@ -77,6 +77,12 @@ const routes = [
     path: '/renungan/:id',
     name: 'DetailRenungan',
     component: DetailRenungan
+  },
+  // ⭐ TAMBAH: Route untuk Account
+  {
+    path: '/account',
+    name: 'AccountPage',
+    component: AccountPage
   }
 ]
 
@@ -85,16 +91,31 @@ const router = createRouter({
   routes
 })
 
-// Tambahkan route guard
+// ⭐ PERBAIKAN: Update route guard dengan logout otomatis
 router.beforeEach((to, from, next) => {
+  console.log('🔍 [Router] Navigation:', from.path, '→', to.path)
+  
   // Daftar route yang membutuhkan autentikasi
-  const requiresAuth = ['/home', '/jadwal', '/renungan']; // ⭐ TAMBAH /renungan
+  const requiresAuth = ['/home', '/jadwal', '/renungan', '/account', '/news']
   const currentUser = getCurrentJemaat();
   
-  if (requiresAuth.includes(to.path) && !currentUser) {
-    next('/');
+  // ⭐ PERBAIKAN: Jika ke login page, clear semua data dulu
+  if (to.path === '/') {
+    console.log('🔍 [Router] Going to login page, clearing user data...')
+    
+    // Import userStore dan clear data
+    import('@/stores/userStore').then(({ useUserStore }) => {
+      const userStore = useUserStore()
+      userStore.clearUserData() // Clear memory tapi jangan hapus localStorage
+      console.log('✅ [Router] User data cleared for fresh login')
+    })
   }
-  else {
+  
+  if (requiresAuth.some(route => to.path.startsWith(route)) && !currentUser) {
+    console.log('❌ [Router] No authenticated user, redirecting to login')
+    next('/');
+  } else {
+    console.log('✅ [Router] Navigation allowed')
     next();
   }
 });

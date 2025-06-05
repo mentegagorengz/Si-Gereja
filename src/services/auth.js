@@ -5,17 +5,104 @@ import {
 } from 'firebase/firestore';
 import CryptoJS from 'crypto-js';
 
-export async function checkJemaatExists(nama) {
+// ⭐ TAMBAHAN BARU: Function untuk AutoComplete
+export async function getAllJemaatNames() {
   try {
-    console.log('🔍 [checkJemaatExists] Checking nama:', `"${nama}"`);
+    console.log('🔍 [getAllJemaatNames] Fetching all jemaat names for autocomplete...');
     
     const jemaatRef = collection(db, "jemaat");
-    const q = query(jemaatRef, where("nama", "==", nama.trim()));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(jemaatRef);
     
-    console.log('🔍 [checkJemaatExists] Result:', !querySnapshot.empty);
+    const namesList = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.nama) {
+        namesList.push({
+          id: doc.id,
+          nama: data.nama,
+          sektor: data.sektor || null,
+          status: data.status || null,
+          isRegistered: data.isRegistered || false
+        });
+      }
+    });
     
-    return !querySnapshot.empty;
+    // Sort alphabetically
+    namesList.sort((a, b) => a.nama.localeCompare(b.nama));
+    
+    console.log('✅ [getAllJemaatNames] Loaded', namesList.length, 'names for autocomplete');
+    return namesList;
+    
+  } catch (error) {
+    console.error("❌ [getAllJemaatNames] Error:", error);
+    throw error;
+  }
+}
+
+export async function checkJemaatExists(nama) {
+  try {
+    if (!nama || typeof nama !== 'string') {
+      console.error('❌ [checkJemaatExists] Invalid nama parameter:', nama);
+      return false;
+    }
+
+    const cleanNama = nama.trim();
+    console.log('🔍 [checkJemaatExists] Checking nama:', `"${cleanNama}"`);
+    
+    const jemaatRef = collection(db, "jemaat");
+    
+    // ⭐ DEBUGGING: Cek semua data di collection
+    console.log('🔍 [checkJemaatExists] Fetching all documents for debugging...');
+    const allSnapshot = await getDocs(jemaatRef);
+    console.log('🔍 [checkJemaatExists] Total documents in collection:', allSnapshot.size);
+    
+    // Print semua nama yang ada di database
+    const availableNames = [];
+    allSnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.nama) {
+        availableNames.push(data.nama);
+        console.log(`🔍 [checkJemaatExists] Available name: "${data.nama}"`);
+      }
+    });
+    
+    // ⭐ FIX 1: Exact match first
+    const exactQuery = query(jemaatRef, where("nama", "==", cleanNama));
+    const exactSnapshot = await getDocs(exactQuery);
+    
+    if (!exactSnapshot.empty) {
+      console.log('✅ [checkJemaatExists] EXACT MATCH found for:', cleanNama);
+      return true;
+    }
+    
+    // ⭐ FIX 2: Case-insensitive fallback
+    console.log('🔄 [checkJemaatExists] Exact match not found, trying case-insensitive...');
+    
+    const foundMatch = availableNames.find(dbName => 
+      dbName.toLowerCase().trim() === cleanNama.toLowerCase()
+    );
+    
+    if (foundMatch) {
+      console.log('✅ [checkJemaatExists] CASE-INSENSITIVE MATCH found:', foundMatch);
+      return true;
+    }
+    
+    // ⭐ FIX 3: Partial match untuk debugging
+    const partialMatches = availableNames.filter(dbName => 
+      dbName.toLowerCase().includes(cleanNama.toLowerCase()) ||
+      cleanNama.toLowerCase().includes(dbName.toLowerCase())
+    );
+    
+    if (partialMatches.length > 0) {
+      console.log('⚠️ [checkJemaatExists] PARTIAL MATCHES found:', partialMatches);
+      console.log('💡 [checkJemaatExists] Did you mean one of these names?');
+    }
+    
+    console.log('❌ [checkJemaatExists] NO MATCH found for:', cleanNama);
+    console.log('📋 [checkJemaatExists] Available names in database:', availableNames);
+    
+    return false;
+    
   } catch (error) {
     console.error("❌ [checkJemaatExists] Error:", error);
     throw error;
@@ -24,29 +111,64 @@ export async function checkJemaatExists(nama) {
 
 export async function getJemaatDocId(nama) {
   try {
-    console.log('🔍 [getJemaatDocId] Getting doc ID for nama:', `"${nama}"`);
+    if (!nama || typeof nama !== 'string') {
+      throw new Error("Nama parameter tidak valid");
+    }
+
+    const cleanNama = nama.trim();
+    console.log('🔍 [getJemaatDocId] Getting doc ID for nama:', `"${cleanNama}"`);
     
     const jemaatRef = collection(db, "jemaat");
-    const q = query(jemaatRef, where("nama", "==", nama.trim()));
-    const querySnapshot = await getDocs(q);
     
-    if (querySnapshot.empty) {
-      throw new Error("Nama tidak ditemukan");
+    // Try exact match first
+    const exactQuery = query(jemaatRef, where("nama", "==", cleanNama));
+    const exactSnapshot = await getDocs(exactQuery);
+    
+    if (!exactSnapshot.empty) {
+      const docId = exactSnapshot.docs[0].id;
+      console.log('✅ [getJemaatDocId] Found exact match, doc ID:', docId);
+      return docId;
     }
     
-    const docId = querySnapshot.docs[0].id;
-    console.log('✅ [getJemaatDocId] Found doc ID:', docId);
+    // Fallback: case-insensitive search
+    console.log('🔄 [getJemaatDocId] Exact match not found, trying case-insensitive...');
+    const allSnapshot = await getDocs(jemaatRef);
     
-    return docId;
+    let foundDoc = null;
+    allSnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.nama && data.nama.toLowerCase().trim() === cleanNama.toLowerCase()) {
+        foundDoc = doc;
+        console.log('✅ [getJemaatDocId] Found case-insensitive match:', data.nama);
+      }
+    });
+    
+    if (foundDoc) {
+      return foundDoc.id;
+    }
+    
+    throw new Error(`Nama "${nama}" tidak ditemukan di database`);
+    
   } catch (error) {
     console.error("❌ [getJemaatDocId] Error:", error);
     throw error;
   }
 }
 
+
 export async function registerJemaat(nama, password, userData) {
   try {
+    if (!nama || !password) {
+      throw new Error("Nama dan password harus diisi");
+    }
+
     console.log('🔍 [registerJemaat] Starting registration for:', `"${nama}"`);
+    
+    // ⭐ FIX: Cek dulu apakah nama exists
+    const nameExists = await checkJemaatExists(nama);
+    if (!nameExists) {
+      throw new Error("Nama anda belum terdaftar, segera hubungi gembala/admin");
+    }
     
     const docId = await getJemaatDocId(nama);
     
@@ -54,12 +176,13 @@ export async function registerJemaat(nama, password, userData) {
     const jemaatDoc = await getDoc(jemaatRef);
     
     if (!jemaatDoc.exists()) {
-      throw new Error("Nama anda belum terdaftar, segera hubungi gembala/admin");
+      throw new Error("Data jemaat tidak ditemukan");
     }
     
     const jemaatData = jemaatDoc.data();
     
-    if (jemaatData.isRegistered) {
+    // ⭐ FIX: Cek apakah sudah terdaftar
+    if (jemaatData.isRegistered === true) {
       throw new Error("Akun dengan nama ini sudah terdaftar");
     }
     
@@ -72,7 +195,8 @@ export async function registerJemaat(nama, password, userData) {
       isRegistered: true,
       tanggalLahir: userData.tanggalLahir,
       status: userData.status,
-      sektor: userData.sektor
+      sektor: userData.sektor,
+      registeredAt: new Date() // ⭐ TAMBAH: timestamp registrasi
     });
     
     console.log('✅ [registerJemaat] Registration successful');
@@ -86,80 +210,49 @@ export async function registerJemaat(nama, password, userData) {
 // Fungsi untuk login
 export async function loginJemaat(nama, password) {
   try {
-    // ✅ PERBAIKAN: Validasi input dengan syntax yang benar
+    // Validasi input
     if (!nama || typeof nama !== 'string') {
-      console.error('❌ [loginJemaat] Invalid nama parameter:', nama);
       throw new Error("Nama harus diisi dengan benar");
     }
     
     if (!password || typeof password !== 'string') {
-      console.error('❌ [loginJemaat] Invalid password parameter:', password);
       throw new Error("Password harus diisi dengan benar");
-    } // ✅ PERBAIKAN: Tambah closing brace yang hilang
+    }
 
     console.log('🔍 [loginJemaat] Starting login for nama:', `"${nama}"`);
     
     const jemaatRef = collection(db, "jemaat");
-    
-    // Debug - Tampilkan semua data di collection untuk troubleshooting
-    console.log('🔍 [loginJemaat] Fetching all documents for debugging...');
-    const allSnapshot = await getDocs(jemaatRef);
-    console.log('🔍 [loginJemaat] Total documents in collection:', allSnapshot.size);
-    
-    allSnapshot.forEach((doc, index) => {
-      const data = doc.data();
-      console.log(`🔍 [loginJemaat] Doc ${index + 1}:`, {
-        id: doc.id,
-        nama: `"${data.nama}"`,
-        isRegistered: data.isRegistered,
-        hasPassword: !!data.password,
-        sektor: data.sektor || 'N/A'
-      });
-    });
-    
-    // Query dengan trim dan coba case-insensitive jika perlu
     const cleanNama = nama.trim();
-    const q = query(jemaatRef, where("nama", "==", cleanNama));
     
-    console.log('🔍 [loginJemaat] Searching for exact match with nama:', `"${cleanNama}"`);
-    const querySnapshot = await getDocs(q);
+    // Try exact match first
+    const exactQuery = query(jemaatRef, where("nama", "==", cleanNama));
+    const exactSnapshot = await getDocs(exactQuery);
     
-    // Jika tidak ditemukan, coba case-insensitive search
-    if (querySnapshot.empty) {
-      console.log('⚠️ [loginJemaat] Exact match not found, trying case-insensitive search...');
+    let jemaatDoc = null;
+    let jemaatData = null;
+    
+    if (!exactSnapshot.empty) {
+      jemaatDoc = exactSnapshot.docs[0];
+      jemaatData = jemaatDoc.data();
+      console.log('✅ [loginJemaat] Found exact match:', jemaatData.nama);
+    } else {
+      // Fallback: case-insensitive search
+      console.log('🔄 [loginJemaat] Exact match not found, trying case-insensitive...');
+      const allSnapshot = await getDocs(jemaatRef);
       
-      let foundDoc = null;
       allSnapshot.forEach((doc) => {
         const data = doc.data();
         if (data.nama && data.nama.toLowerCase().trim() === cleanNama.toLowerCase()) {
-          foundDoc = { id: doc.id, ...data };
+          jemaatDoc = doc;
+          jemaatData = data;
           console.log('✅ [loginJemaat] Found case-insensitive match:', data.nama);
         }
       });
       
-      if (!foundDoc) {
-        console.log('❌ [loginJemaat] No match found even with case-insensitive search');
-        console.log('🔍 [loginJemaat] Available names in database:');
-        allSnapshot.forEach((doc) => {
-          const data = doc.data();
-          console.log(`   - "${data.nama}"`);
-        });
+      if (!jemaatDoc) {
         throw new Error(`Nama "${nama}" tidak ditemukan di database`);
       }
-      
-      // Gunakan dokumen yang ditemukan dengan case-insensitive
-      const jemaatData = foundDoc;
-      const jemaatDoc = { id: foundDoc.id };
-      
-      // Lanjutkan ke verifikasi
-      return await verifyAndLogin(jemaatDoc, jemaatData, password);
     }
-    
-    // Jika ditemukan dengan exact match
-    const jemaatDoc = querySnapshot.docs[0];
-    const jemaatData = jemaatDoc.data();
-    
-    console.log('✅ [loginJemaat] Found exact match for nama:', jemaatData.nama);
     
     return await verifyAndLogin(jemaatDoc, jemaatData, password);
     
@@ -184,10 +277,6 @@ async function verifyAndLogin(jemaatDoc, jemaatData, password) {
   // Verifikasi password
   const encryptedPassword = CryptoJS.SHA256(password).toString();
   
-  console.log('🔍 [verifyAndLogin] Password hash comparison:');
-  console.log('   - Input password hash:', encryptedPassword.substring(0, 20) + '...');
-  console.log('   - Database password hash:', (jemaatData.password || 'MISSING').substring(0, 20) + '...');
-  
   if (jemaatData.password !== encryptedPassword) {
     console.log('❌ [verifyAndLogin] Password mismatch');
     throw new Error("Password tidak sesuai");
@@ -195,16 +284,13 @@ async function verifyAndLogin(jemaatDoc, jemaatData, password) {
   
   console.log('✅ [verifyAndLogin] Password verified, login successful!');
   
-  // Return data jemaat
+  // Return data jemaat (hapus password untuk keamanan)
   const userData = {
     id: jemaatDoc.id,
     ...jemaatData
   };
   
-  // Jangan return password hash untuk keamanan
   delete userData.password;
-  
-  console.log('✅ [verifyAndLogin] Returning user data (password removed for security)');
   
   return userData;
 }
