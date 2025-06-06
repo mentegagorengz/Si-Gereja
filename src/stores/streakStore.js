@@ -1,44 +1,54 @@
-// 🔧 PERBAIKAN: Update streakStore.js dengan Migrasi Data Lama
-// src/stores/streakStore.js
-
 import { defineStore } from 'pinia'
 
 export const useStreakStore = defineStore('streak', {
-  state: () => {
-    return {
-      streakData: {},
-      migrationCompleted: false // ⭐ TAMBAH: Flag untuk tracking migrasi
-    }
-  },
+  state: () => ({
+    streakData: {},
+    migrationCompleted: false
+  }),
   
   getters: {
+    /**
+     * Get current streak count for a user
+     * @param {string} userId - User ID
+     * @returns {number} Current streak count
+     */
     currentStreak: (state) => (userId) => {
       if (!userId) return 0
       return state.streakData[userId]?.streakCount || 0
+    },
+
+    /**
+     * Get last login date for a user
+     * @param {string} userId - User ID  
+     * @returns {string|null} Last login date or null
+     */
+    lastLoginDate: (state) => (userId) => {
+      if (!userId) return null
+      return state.streakData[userId]?.lastLoginDate || null
     }
   },
   
   actions: {
-    // ⭐ TAMBAHAN: Migrasi data lama ke format baru
+    /**
+     * Migrate old streak data format to new user-specific format
+     * This handles backward compatibility for existing users
+     */
     migrateOldStreakData() {
-      console.log('🔄 [StreakStore] === STARTING MIGRATION ===')
-      
-      // Cek apakah sudah pernah migrasi
+      // Check if migration already completed
       const migrationFlag = localStorage.getItem('streakMigrationCompleted')
       if (migrationFlag === 'true') {
-        console.log('✅ [StreakStore] Migration already completed, skipping')
+        this.migrationCompleted = true
         return
       }
       
-      // Cek data lama dengan key "streakData"
+      // Check for old streak data
       const oldStreakData = localStorage.getItem('streakData')
       
       if (oldStreakData) {
         try {
           const parsedOldData = JSON.parse(oldStreakData)
-          console.log('🔍 [StreakStore] Found old streak data:', parsedOldData)
           
-          // Cek apakah ada user yang sedang login
+          // Check for current user to migrate data
           const currentUserData = localStorage.getItem('user')
           
           if (currentUserData) {
@@ -46,89 +56,72 @@ export const useStreakStore = defineStore('streak', {
             const userId = userData.id || userData.nama
             
             if (userId) {
-              console.log('🔄 [StreakStore] Migrating data for user:', userId)
-              
-              // Migrate data lama ke format baru
               const newStreakKey = `streakData_${userId}`
-              
-              // Cek apakah data baru sudah ada
               const existingNewData = localStorage.getItem(newStreakKey)
               
               if (!existingNewData) {
-                // Simpan data lama ke format baru
+                // Migrate old data to new format
                 localStorage.setItem(newStreakKey, JSON.stringify(parsedOldData))
-                console.log('✅ [StreakStore] Migrated old data to new key:', newStreakKey)
-                console.log('📊 [StreakStore] Migrated streak count:', parsedOldData.streakCount)
-              } else {
-                console.log('ℹ️ [StreakStore] New format data already exists, keeping it')
               }
             }
           } else {
-            console.log('⚠️ [StreakStore] No current user found for migration')
-            
-            // Jika tidak ada user login, simpan data untuk kemungkinan user
-            // Ini untuk kasus dimana ada data streak tapi tidak tahu milik siapa
-            console.log('💡 [StreakStore] Saving old data for potential recovery')
+            // Save as backup if no current user
             localStorage.setItem('streakData_backup', oldStreakData)
           }
           
-          // ⭐ OPSIONAL: Hapus data lama (uncomment jika mau hapus)
+          // Optional: Remove old data (uncomment if needed)
           // localStorage.removeItem('streakData')
-          // console.log('🗑️ [StreakStore] Removed old streak data')
           
         } catch (error) {
-          console.error('❌ [StreakStore] Error during migration:', error)
+          console.error('Error during streak data migration:', error)
         }
-      } else {
-        console.log('ℹ️ [StreakStore] No old streak data found to migrate')
       }
       
-      // Set flag bahwa migrasi sudah selesai
+      // Mark migration as completed
       localStorage.setItem('streakMigrationCompleted', 'true')
       this.migrationCompleted = true
-      
-      console.log('✅ [StreakStore] === MIGRATION COMPLETED ===')
     },
     
-    // ⭐ PERBAIKAN: Load user streak dengan migrasi otomatis
+    /**
+     * Load streak data for a specific user
+     * @param {string} userId - User ID
+     */
     loadUserStreak(userId) {
       if (!userId) return
       
-      console.log('🔍 [StreakStore] Loading streak for user:', userId)
-      
-      // ⭐ JALANKAN MIGRASI DULU (jika belum)
+      // Run migration if not completed
       if (!this.migrationCompleted) {
         this.migrateOldStreakData()
       }
       
-      // Load dari localStorage dengan key yang spesifik per user
+      // Load user-specific streak data
       const userStreakKey = `streakData_${userId}`
       const savedStreak = localStorage.getItem(userStreakKey)
       
       if (savedStreak) {
         try {
           this.streakData[userId] = JSON.parse(savedStreak)
-          console.log('✅ [StreakStore] Loaded streak:', this.streakData[userId])
         } catch (error) {
-          console.error('❌ [StreakStore] Error parsing streak data:', error)
-          this.streakData[userId] = { lastLoginDate: '', streakCount: 0 }
+          console.error('Error parsing streak data:', error)
+          this.streakData[userId] = this.getDefaultStreakData()
         }
       } else {
-        console.log('ℹ️ [StreakStore] No saved streak, creating new')
-        this.streakData[userId] = { lastLoginDate: '', streakCount: 0 }
+        this.streakData[userId] = this.getDefaultStreakData()
       }
     },
     
-    // ⭐ FUNCTION YANG SUDAH ADA: Check streak untuk user tertentu
+    /**
+     * Check and update streak for a user
+     * @param {string} userId - User ID
+     * @returns {number} Updated streak count
+     */
     checkStreak(userId) {
       if (!userId) {
-        console.error('❌ [StreakStore] No userId provided for checkStreak')
+        console.error('No userId provided for checkStreak')
         return 0
       }
       
-      console.log('🔍 [StreakStore] Checking streak for user:', userId)
-      
-      // Pastikan data user sudah di-load
+      // Ensure user data is loaded
       if (!this.streakData[userId]) {
         this.loadUserStreak(userId)
       }
@@ -136,11 +129,12 @@ export const useStreakStore = defineStore('streak', {
       const today = new Date().toDateString()
       const userStreak = this.streakData[userId]
       
+      // Same day login - no change
       if (userStreak.lastLoginDate === today) {
-        console.log('✅ [StreakStore] Same day login, keeping streak:', userStreak.streakCount)
         return userStreak.streakCount
       }
       
+      // Check if consecutive day
       const yesterday = new Date()
       yesterday.setDate(yesterday.getDate() - 1)
       const yesterdayStr = yesterday.toDateString()
@@ -148,79 +142,71 @@ export const useStreakStore = defineStore('streak', {
       if (userStreak.lastLoginDate === yesterdayStr) {
         // Consecutive day - increment streak
         userStreak.streakCount++
-        console.log('🔥 [StreakStore] Consecutive day! New streak:', userStreak.streakCount)
       } else {
-        // Not consecutive - reset to 1
+        // Gap detected - reset to 1
         userStreak.streakCount = 1
-        console.log('🆕 [StreakStore] Non-consecutive day, reset to 1')
       }
       
       userStreak.lastLoginDate = today
+      userStreak.updatedAt = new Date().toISOString()
       
-      // Save ke localStorage dengan key yang spesifik
-      const userStreakKey = `streakData_${userId}`
-      localStorage.setItem(userStreakKey, JSON.stringify(userStreak))
-      
-      console.log('💾 [StreakStore] Saved streak to localStorage with key:', userStreakKey)
+      // Save to localStorage
+      this.saveUserStreak(userId)
       
       return userStreak.streakCount
     },
     
+    /**
+     * Save user streak data to localStorage
+     * @param {string} userId - User ID
+     */
+    saveUserStreak(userId) {
+      if (!userId || !this.streakData[userId]) return
+      
+      const userStreakKey = `streakData_${userId}`
+      localStorage.setItem(userStreakKey, JSON.stringify(this.streakData[userId]))
+    },
+    
+    /**
+     * Clear streak data for a specific user from memory
+     * @param {string} userId - User ID
+     */
     clearUserStreak(userId) {
       if (!userId) return
-      
-      console.log('🧹 [StreakStore] Clearing streak data for user:', userId)
       
       if (this.streakData[userId]) {
         delete this.streakData[userId]
       }
     },
     
+    /**
+     * Clear all streak data from memory
+     */
     clearAllStreaks() {
-      console.log('🧹 [StreakStore] Clearing all streak data from memory')
       this.streakData = {}
     },
-    
-    // ⭐ TAMBAHAN: Function untuk manual recovery jika diperlukan
-    manualDataRecovery() {
-      console.log('🔧 [StreakStore] === MANUAL DATA RECOVERY ===')
-      
-      // Reset migration flag untuk memaksa migrasi ulang
+
+    /**
+     * Get default streak data structure
+     * @returns {Object} Default streak data
+     */
+    getDefaultStreakData() {
+      return {
+        lastLoginDate: '',
+        streakCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    },
+
+    /**
+     * Manual data recovery - force migration again
+     * Use this if streak data seems corrupted
+     */
+    forceDataRecovery() {
       localStorage.removeItem('streakMigrationCompleted')
       this.migrationCompleted = false
-      
-      // Jalankan migrasi lagi
       this.migrateOldStreakData()
-      
-      console.log('✅ [StreakStore] Manual recovery completed')
-    },
-    
-    // ⭐ TAMBAHAN: Debug function untuk lihat semua data
-    debugAllStreakData() {
-      console.log('🧪 [StreakStore] === DEBUG ALL STREAK DATA ===')
-      
-      // Cek data lama
-      const oldData = localStorage.getItem('streakData')
-      console.log('📄 Old format data (streakData):', oldData)
-      
-      // Cek backup data
-      const backupData = localStorage.getItem('streakData_backup')
-      console.log('📄 Backup data (streakData_backup):', backupData)
-      
-      // Cek semua data format baru
-      console.log('📄 New format data:')
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (key && key.startsWith('streakData_') && key !== 'streakData_backup') {
-          const value = localStorage.getItem(key)
-          console.log(`   - ${key}:`, value)
-        }
-      }
-      
-      // Cek data di memory
-      console.log('🧠 Memory data:', this.streakData)
-      
-      console.log('🧪 === DEBUG COMPLETED ===')
     }
   }
 })

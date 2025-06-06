@@ -1,10 +1,5 @@
 <template>
   <div class="schedule-card" @click="goToDetail">
-    <!-- DEBUG INFO - hanya tampil di development -->
-    <div v-if="showDebugInfo" class="debug-info">
-      Path: {{ currentPath }} | Category: {{ schedule?.category || 'NO_CATEGORY' }}
-    </div>
-    
     <!-- Thumbnail (gambar kecil di kiri) -->
     <div class="card-thumbnail">
       <img 
@@ -50,8 +45,7 @@ export default {
   },
   data() {
     return {
-      imageError: false,
-      imageLoaded: false
+      imageError: false
     }
   },
   computed: {
@@ -59,102 +53,63 @@ export default {
       return this.$route.path
     },
     
-    showDebugInfo() {
-      // Hanya tampilkan di development mode
-      return process.env.NODE_ENV === 'development'
-    },
-    
     thumbnailSrc() {
-      const path = this.currentPath
-      
-      console.log('🔍 [ScheduleCard] Getting thumbnail...')
-      console.log('   - Current path:', path)
-      console.log('   - Schedule data:', {
-        id: this.schedule?.id,
-        title: this.schedule?.title,
-        category: this.schedule?.category,
-        thumbnail: this.schedule?.thumbnail
-      })
-      
       try {
-        // ⭐ DETEKSI BERDASARKAN PATH DENGAN PRIORITAS YANG BENAR
-        if (path.includes('/news')) {
-          console.log('✅ [ScheduleCard] Using NEWS thumbnail')
-          return getNewsThumbnail(this.schedule, 'small')
-        } 
-        else if (path.includes('/renungan')) {
-          console.log('✅ [ScheduleCard] Using DEVOTIONAL thumbnail')
-          return getDevotionalThumbnail(this.schedule, 'small')
-        } 
-        else if (path.includes('/jadwal')) {
-          console.log('✅ [ScheduleCard] Using SCHEDULE thumbnail')
-          return getScheduleThumbnail(this.schedule, 'small')
-        }
-        else {
-          // Default untuk halaman lain (seperti home)
-          console.log('⚠️ [ScheduleCard] Unknown path, using default SCHEDULE thumbnail')
-          return getScheduleThumbnail(this.schedule, 'small')
-        }
+        return this.getThumbnailByPath()
       } catch (error) {
-        console.error('❌ [ScheduleCard] Error getting thumbnail:', error)
+        console.error('Error getting thumbnail:', error)
         return null
       }
+    },
+
+    contentType() {
+      const path = this.currentPath
+      if (path.includes('/news')) return 'news'
+      if (path.includes('/renungan')) return 'devotional'
+      if (path.includes('/jadwal')) return 'schedule'
+      return 'schedule' // default
     }
   },
   methods: {
-    getContentType() {
-      const path = this.currentPath
-      if (path.includes('/news')) return 'NEWS'
-      if (path.includes('/renungan')) return 'DEVOTIONAL'
-      if (path.includes('/jadwal')) return 'SCHEDULE'
-      return 'UNKNOWN'
+    getThumbnailByPath() {
+      const thumbnailMap = {
+        'news': () => getNewsThumbnail(this.schedule, 'small'),
+        'devotional': () => getDevotionalThumbnail(this.schedule, 'small'),
+        'schedule': () => getScheduleThumbnail(this.schedule, 'small')
+      }
+      
+      const getThumbnail = thumbnailMap[this.contentType]
+      return getThumbnail ? getThumbnail() : getScheduleThumbnail(this.schedule, 'small')
     },
     
     goToDetail() {
-      // Jangan navigate jika sedang loading
       if (!this.schedule?.id) {
-        console.warn('⚠️ [ScheduleCard] No schedule ID available')
+        console.warn('No schedule ID available')
         return
       }
       
-      const path = this.currentPath
+      const routePath = this.getDetailRoute()
+      this.$router.push(routePath)
+    },
+
+    getDetailRoute() {
       const scheduleId = this.schedule.id
-      
-      console.log('🔍 [ScheduleCard] Navigation triggered...')
-      console.log('   - Current path:', path)
-      console.log('   - Schedule ID:', scheduleId)
-      
-      // ⭐ ROUTING BERDASARKAN PATH YANG SEDANG AKTIF
-      if (path.includes('/news')) {
-        console.log('✅ [ScheduleCard] Navigating to NEWS detail')
-        this.$router.push(`/news/${scheduleId}`)
-      } 
-      else if (path.includes('/renungan')) {
-        console.log('✅ [ScheduleCard] Navigating to RENUNGAN detail')
-        this.$router.push(`/renungan/${scheduleId}`)
-      } 
-      else if (path.includes('/jadwal')) {
-        console.log('✅ [ScheduleCard] Navigating to JADWAL detail')
-        this.$router.push(`/jadwal/${scheduleId}`)
+      const routeMap = {
+        'news': `/news/${scheduleId}`,
+        'devotional': `/renungan/${scheduleId}`,
+        'schedule': `/jadwal/${scheduleId}`
       }
-      else {
-        // Default ke jadwal untuk safety
-        console.log('⚠️ [ScheduleCard] Unknown path, defaulting to JADWAL detail')
-        this.$router.push(`/jadwal/${scheduleId}`)
-      }
+      
+      return routeMap[this.contentType] || `/jadwal/${scheduleId}`
     },
     
     onImageError(event) {
-      console.warn('🖼️ [ScheduleCard] Image failed to load:', event.target?.src)
       this.imageError = true
-      
       // Prevent infinite error loop
       event.target.onerror = null
     },
     
     onImageLoad() {
-      console.log('✅ [ScheduleCard] Image loaded successfully')
-      this.imageLoaded = true
       this.imageError = false
     }
   }
@@ -162,6 +117,7 @@ export default {
 </script>
 
 <style scoped>
+/* Card container */
 .schedule-card {
   display: flex;
   align-items: center;
@@ -175,7 +131,6 @@ export default {
   border: 1px solid #f0f0f0;
   overflow: hidden;
   height: 80px;
-  position: relative; /* untuk debug info */
 }
 
 .schedule-card:hover {
@@ -188,34 +143,16 @@ export default {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-/* Debug info - hanya untuk development */
-.debug-info {
-  position: absolute;
-  top: -25px;
-  left: 0;
-  right: 0;
-  font-size: 9px;
-  background: rgba(255, 255, 0, 0.8);
-  padding: 2px 4px;
-  border-radius: 4px;
-  z-index: 100;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
+/* Thumbnail section */
 .card-thumbnail {
   width: 80px;
   min-width: 80px;
   height: 80px;
-  border-radius: 0;
   overflow: hidden;
-  margin-right: 0;
   background-color: #f5f5f5;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
 }
 
 .thumbnail-img {
@@ -223,10 +160,6 @@ export default {
   height: 100%;
   object-fit: cover;
   transition: opacity 0.2s ease;
-}
-
-.thumbnail-img[src=""] {
-  display: none;
 }
 
 .thumbnail-placeholder {
@@ -242,6 +175,7 @@ export default {
   font-family: 'Inter', sans-serif;
 }
 
+/* Content section */
 .card-content {
   flex: 1;
   display: flex;
@@ -259,19 +193,13 @@ export default {
   font-family: 'Inter';
   line-height: 1.3;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.debug-text {
-  font-size: 10px;
-  color: #666;
-  margin: 4px 0 0 0;
-  font-family: 'Courier New', monospace;
-}
-
+/* Arrow section */
 .card-arrow {
   padding: 16px;
   display: flex;
@@ -290,23 +218,7 @@ export default {
   color: #41442A;
 }
 
-/* Loading state */
-.card-thumbnail.loading {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
-}
-
-@keyframes loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* Responsive */
+/* Responsive design */
 @media (max-width: 360px) {
   .schedule-card {
     height: 70px;
@@ -321,6 +233,23 @@ export default {
   .card-content {
     padding: 12px;
     min-height: 70px;
+  }
+  
+  .thumbnail-placeholder {
+    font-size: 20px;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .schedule-card,
+  .thumbnail-img,
+  .arrow-icon {
+    transition: none;
+  }
+  
+  .schedule-card:hover {
+    transform: none;
   }
 }
 </style>

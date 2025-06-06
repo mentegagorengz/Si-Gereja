@@ -19,51 +19,51 @@
           autocomplete="off"
         />
         
-        <!-- Loading indicator -->
+        <!-- Loading spinner -->
         <div v-if="isLoading" class="loading-spinner">
           <div class="spinner"></div>
         </div>
         
-        <!-- Clear button jika ada text -->
+        <!-- Clear button -->
         <button 
           v-if="modelValue && !isLoading" 
           type="button"
           class="clear-btn"
           @click="clearInput"
+          aria-label="Hapus input"
         >
           ✕
         </button>
       </div>
       
-      <!-- Dropdown suggestions -->
+      <!-- Suggestions dropdown -->
       <div 
         v-if="showSuggestions && suggestions.length > 0" 
         class="suggestions-dropdown"
         ref="dropdownRef"
       >
+        <!-- Search info header -->
         <div class="search-info">
           <span class="search-count">{{ suggestions.length }} nama ditemukan</span>
           <span class="search-query">untuk "{{ searchQuery }}"</span>
         </div>
         
+        <!-- Suggestion items -->
         <div 
           v-for="(suggestion, index) in suggestions" 
           :key="suggestion.id"
           class="suggestion-item"
           :class="{ 
             'active': selectedIndex === index,
-            'registered': suggestion.isRegistered,
-            'not-registered': !suggestion.isRegistered
+            'registered': suggestion.isRegistered
           }"
           @click="selectSuggestion(suggestion)"
           @mouseenter="selectedIndex = index"
         >
-          <!-- Nama dengan highlighting -->
           <div class="suggestion-name">
             <span v-html="highlightMatch(suggestion.nama, searchQuery)"></span>
           </div>
           
-          <!-- Status badge -->
           <div class="suggestion-status">
             <span 
               class="status-badge"
@@ -75,7 +75,7 @@
         </div>
       </div>
       
-      <!-- No results -->
+      <!-- No results state -->
       <div 
         v-if="showSuggestions && suggestions.length === 0 && searchQuery && !isLoading"
         class="no-results"
@@ -98,6 +98,7 @@ import { getAllJemaatNames } from '@/services/auth'
 
 export default {
   name: 'AutoCompleteInput',
+  
   props: {
     id: {
       type: String,
@@ -129,6 +130,8 @@ export default {
     }
   },
   
+  emits: ['update:modelValue', 'suggestion-selected', 'nama-validated'],
+  
   data() {
     return {
       suggestions: [],
@@ -140,8 +143,6 @@ export default {
       allNames: []
     }
   },
-  
-  emits: ['update:modelValue', 'suggestion-selected', 'nama-validated'],
   
   watch: {
     modelValue(newValue) {
@@ -158,21 +159,21 @@ export default {
   },
   
   beforeUnmount() {
-    if (this.searchTimeout) {
-      clearTimeout(this.searchTimeout)
-    }
-    document.removeEventListener('click', this.handleClickOutside)
+    this.cleanup()
   },
   
   methods: {
+    // ⭐ Load all names for searching
     async loadAllNames() {
       try {
         this.allNames = await getAllJemaatNames()
       } catch (error) {
+        console.error('❌ [AutoComplete] Failed to load names:', error)
         this.allNames = []
       }
     },
     
+    // ⭐ Handle input changes
     onInput(event) {
       const value = event.target.value
       this.searchQuery = value
@@ -180,20 +181,21 @@ export default {
       this.selectedIndex = -1
       
       if (value.length < this.minChars) {
-        this.suggestions = []
-        this.showSuggestions = false
+        this.resetSuggestions()
         return
       }
       
       this.debouncedSearch()
     },
     
+    // ⭐ Handle input focus
     onFocus() {
       if (this.searchQuery.length >= this.minChars && this.suggestions.length > 0) {
         this.showSuggestions = true
       }
     },
     
+    // ⭐ Handle input blur (with delay for clicks)
     onBlur() {
       setTimeout(() => {
         this.showSuggestions = false
@@ -201,6 +203,7 @@ export default {
       }, 150)
     },
     
+    // ⭐ Handle keyboard navigation
     onKeydown(event) {
       if (!this.showSuggestions || this.suggestions.length === 0) return
       
@@ -219,19 +222,19 @@ export default {
           
         case 'Enter':
           event.preventDefault()
-          if (this.selectedIndex >= 0 && this.selectedIndex < this.suggestions.length) {
+          if (this.selectedIndex >= 0) {
             this.selectSuggestion(this.suggestions[this.selectedIndex])
           }
           break
           
         case 'Escape':
-          this.showSuggestions = false
-          this.selectedIndex = -1
+          this.resetSuggestions()
           this.$refs.inputRef.blur()
           break
       }
     },
     
+    // ⭐ Debounced search to avoid too many API calls
     debouncedSearch() {
       if (this.searchTimeout) {
         clearTimeout(this.searchTimeout)
@@ -242,10 +245,10 @@ export default {
       }, 300)
     },
     
+    // ⭐ Perform the actual search
     performSearch() {
       if (this.searchQuery.length < this.minChars) {
-        this.suggestions = []
-        this.showSuggestions = false
+        this.resetSuggestions()
         return
       }
       
@@ -253,41 +256,53 @@ export default {
       
       try {
         const query = this.searchQuery.toLowerCase().trim()
+        const filteredNames = this.filterNames(query)
+        const sortedNames = this.sortNames(filteredNames, query)
         
-        const filteredNames = this.allNames.filter(person => {
-          const nama = person.nama.toLowerCase()
-          return (
-            nama.startsWith(query) ||
-            nama.includes(query) ||
-            nama.split(' ').some(word => word.startsWith(query))
-          )
-        })
-        
-        filteredNames.sort((a, b) => {
-          const aName = a.nama.toLowerCase()
-          const bName = b.nama.toLowerCase()
-          
-          if (aName === query) return -1
-          if (bName === query) return 1
-          
-          if (aName.startsWith(query) && !bName.startsWith(query)) return -1
-          if (bName.startsWith(query) && !aName.startsWith(query)) return 1
-          
-          return aName.localeCompare(bName)
-        })
-        
-        this.suggestions = filteredNames.slice(0, 8)
+        this.suggestions = sortedNames.slice(0, 8) // Limit to 8 results
         this.showSuggestions = this.suggestions.length > 0
         this.selectedIndex = -1
         
       } catch (error) {
-        this.suggestions = []
-        this.showSuggestions = false
+        console.error('❌ [AutoComplete] Search error:', error)
+        this.resetSuggestions()
       } finally {
         this.isLoading = false
       }
     },
     
+    // ⭐ Filter names based on query
+    filterNames(query) {
+      return this.allNames.filter(person => {
+        const nama = person.nama.toLowerCase()
+        return (
+          nama.startsWith(query) ||
+          nama.includes(query) ||
+          nama.split(' ').some(word => word.startsWith(query))
+        )
+      })
+    },
+    
+    // ⭐ Sort filtered names by relevance
+    sortNames(filteredNames, query) {
+      return filteredNames.sort((a, b) => {
+        const aName = a.nama.toLowerCase()
+        const bName = b.nama.toLowerCase()
+        
+        // Exact match first
+        if (aName === query) return -1
+        if (bName === query) return 1
+        
+        // Starts with query second
+        if (aName.startsWith(query) && !bName.startsWith(query)) return -1
+        if (bName.startsWith(query) && !aName.startsWith(query)) return 1
+        
+        // Alphabetical order last
+        return aName.localeCompare(bName)
+      })
+    },
+    
+    // ⭐ Select a suggestion
     selectSuggestion(suggestion) {
       this.$emit('update:modelValue', suggestion.nama)
       this.$emit('suggestion-selected', suggestion)
@@ -298,19 +313,19 @@ export default {
         userData: suggestion
       })
       
-      this.showSuggestions = false
-      this.selectedIndex = -1
+      this.resetSuggestions()
       this.$refs.inputRef.blur()
     },
     
+    // ⭐ Clear input field
     clearInput() {
       this.$emit('update:modelValue', '')
-      this.suggestions = []
-      this.showSuggestions = false
+      this.resetSuggestions()
       this.searchQuery = ''
       this.$refs.inputRef.focus()
     },
     
+    // ⭐ Highlight matching text in suggestions
     highlightMatch(text, query) {
       if (!query) return text
       
@@ -318,6 +333,7 @@ export default {
       return text.replace(regex, '<mark>$1</mark>')
     },
     
+    // ⭐ Scroll to selected item in dropdown
     scrollToSelected() {
       if (this.selectedIndex >= 0 && this.$refs.dropdownRef) {
         const dropdown = this.$refs.dropdownRef
@@ -333,17 +349,33 @@ export default {
       }
     },
     
+    // ⭐ Handle clicks outside component
     handleClickOutside(event) {
       if (!this.$el.contains(event.target)) {
-        this.showSuggestions = false
-        this.selectedIndex = -1
+        this.resetSuggestions()
       }
+    },
+    
+    // ⭐ Reset suggestions state
+    resetSuggestions() {
+      this.suggestions = []
+      this.showSuggestions = false
+      this.selectedIndex = -1
+    },
+    
+    // ⭐ Cleanup on component destroy
+    cleanup() {
+      if (this.searchTimeout) {
+        clearTimeout(this.searchTimeout)
+      }
+      document.removeEventListener('click', this.handleClickOutside)
     }
   }
 }
 </script>
 
 <style scoped>
+/* ⭐ CONTAINER & FORM GROUP */
 .autocomplete-container {
   position: relative;
   width: 100%;
@@ -355,14 +387,17 @@ export default {
   margin-bottom: 16px;
 }
 
+/* ⭐ LABEL */
 label {
   display: block;
   font-weight: bold;
   margin-bottom: 6px;
   font-family: 'Inter';
   font-size: 14px;
+  color: #333;
 }
 
+/* ⭐ INPUT WRAPPER */
 .input-wrapper {
   position: relative;
   width: 100%;
@@ -372,6 +407,7 @@ label {
   border-radius: 6px 6px 0 0;
 }
 
+/* ⭐ INPUT FIELD */
 input {
   width: 100%;
   height: 44px;
@@ -383,6 +419,7 @@ input {
   background-color: #fcfcf7;
   box-sizing: border-box;
   transition: all 0.2s ease;
+  color: #777;
 }
 
 input:focus {
@@ -395,22 +432,16 @@ input.filled {
   color: #333;
 }
 
-input:not(.filled) {
-  color: #777;
-}
-
 input.loading {
   padding-right: 70px;
 }
 
+/* ⭐ LOADING SPINNER */
 .loading-spinner {
   position: absolute;
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .spinner {
@@ -427,6 +458,7 @@ input.loading {
   100% { transform: rotate(360deg); }
 }
 
+/* ⭐ CLEAR BUTTON */
 .clear-btn {
   position: absolute;
   right: 12px;
@@ -439,7 +471,6 @@ input.loading {
   color: white;
   border-radius: 50%;
   font-size: 12px;
-  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -451,6 +482,7 @@ input.loading {
   background: #999;
 }
 
+/* ⭐ SUGGESTIONS DROPDOWN */
 .suggestions-dropdown {
   position: absolute;
   top: 100%;
@@ -466,6 +498,7 @@ input.loading {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* ⭐ SEARCH INFO HEADER */
 .search-info {
   padding: 8px 12px;
   background: #f8f9fa;
@@ -486,12 +519,12 @@ input.loading {
   font-style: italic;
 }
 
+/* ⭐ SUGGESTION ITEMS */
 .suggestion-item {
   padding: 12px;
   cursor: pointer;
   border-bottom: 1px solid #f0f0f0;
   transition: all 0.2s ease;
-  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -524,6 +557,7 @@ input.loading {
   font-weight: 700;
 }
 
+/* ⭐ STATUS BADGES */
 .suggestion-status {
   display: flex;
   align-items: center;
@@ -551,6 +585,7 @@ input.loading {
   border: 1px solid #ffeaa7;
 }
 
+/* ⭐ NO RESULTS STATE */
 .no-results {
   padding: 20px;
   text-align: center;
@@ -573,14 +608,16 @@ input.loading {
   color: #333;
 }
 
+/* ⭐ ERROR MESSAGE */
 .error-text {
-  color: red;
+  color: #dc3545;
   font-size: 12px;
   margin-top: 4px;
   margin-bottom: 0;
   font-family: 'Inter';
 }
 
+/* ⭐ RESPONSIVE DESIGN */
 @media (max-width: 360px) {
   .suggestion-item {
     padding: 10px;
@@ -594,8 +631,13 @@ input.loading {
     font-size: 8px;
     padding: 2px 4px;
   }
+  
+  .search-info {
+    font-size: 11px;
+  }
 }
 
+/* ⭐ ACCESSIBILITY - Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .spinner {
     animation: none;

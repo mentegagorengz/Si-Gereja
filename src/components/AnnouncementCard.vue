@@ -1,17 +1,15 @@
 <template>
-  <div class="announcement-card" :class="getCardClass(category)" @click="handleClick">
-    <!-- Icon dengan loading state -->
-    <div class="card-icon" :class="{ 'loading': isLoading, 'error': iconError }">
-      <div v-if="isLoading" class="icon-loading"></div>
+  <div class="announcement-card" :class="cardClass" @click="handleClick">
+    <!-- Icon -->
+    <div class="card-icon" :class="{ 'error': iconError }">
       <img 
-        v-else-if="iconSrc && !iconError"
+        v-if="iconSrc && !iconError"
         :src="iconSrc" 
         :alt="category" 
         class="icon-img" 
         @error="onIconError"
-        @load="onIconLoad"
       />
-      <span v-else class="icon-fallback">{{ getIconFallback() }}</span>
+      <span v-else class="icon-fallback">{{ iconFallback }}</span>
     </div>
     
     <!-- Content -->
@@ -27,6 +25,7 @@ import { getAnnouncementIconUrl } from '@/utils/imageUtils'
 
 export default {
   name: 'AnnouncementCard',
+  
   props: {
     title: {
       type: String,
@@ -49,35 +48,18 @@ export default {
       default: false
     }
   },
+  
+  emits: ['click'],
+  
   data() {
     return {
-      iconError: false,
-      iconLoaded: false,
-      isLoading: true
+      iconError: false
     }
   },
+  
   computed: {
-    iconSrc() {
-      if (this.iconError) return null
-      
-      try {
-        const iconKey = this.category || this.icon || 'default'
-        const iconUrl = getAnnouncementIconUrl(iconKey)
-        return iconUrl
-      } catch (err) {
-        return null
-      }
-    }
-  },
-  mounted() {
-    setTimeout(() => {
-      if (!this.iconLoaded && !this.iconError) {
-        this.isLoading = false
-      }
-    }, 200)
-  },
-  methods: {
-    getCardClass(category) {
+    // ⭐ Dynamic card class based on category
+    cardClass() {
       const classMap = {
         'pengumuman': 'pengumuman-card',
         'birthday': 'birthday-card',
@@ -94,10 +76,28 @@ export default {
         'default': 'pengumuman-card'
       }
       
-      return classMap[category?.toLowerCase()] || classMap['default']
+      const baseClass = classMap[this.category?.toLowerCase()] || classMap['default']
+      
+      return [
+        baseClass,
+        { 'clickable': this.clickable }
+      ]
     },
     
-    getIconFallback() {
+    // ⭐ Get icon source URL
+    iconSrc() {
+      if (this.iconError) return null
+      
+      try {
+        const iconKey = this.category || this.icon || 'default'
+        return getAnnouncementIconUrl(iconKey)
+      } catch (error) {
+        return null
+      }
+    },
+    
+    // ⭐ Fallback emoji icon
+    iconFallback() {
       const emojiMap = {
         'pengumuman': '📢',
         'birthday': '🎂',
@@ -115,20 +115,16 @@ export default {
       }
       
       return emojiMap[this.category?.toLowerCase()] || emojiMap['default']
-    },
-    
+    }
+  },
+  
+  methods: {
+    // ⭐ Handle icon load error
     onIconError() {
       this.iconError = true
-      this.iconLoaded = false
-      this.isLoading = false
     },
     
-    onIconLoad() {
-      this.iconLoaded = true
-      this.iconError = false
-      this.isLoading = false
-    },
-    
+    // ⭐ Handle card click
     handleClick() {
       if (this.clickable) {
         this.$emit('click', {
@@ -143,6 +139,7 @@ export default {
 </script>
 
 <style scoped>
+/* ⭐ CARD BASE */
 .announcement-card {
   display: flex;
   align-items: center;
@@ -150,7 +147,7 @@ export default {
   padding: 16px;
   margin-bottom: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
   cursor: default;
@@ -164,6 +161,7 @@ export default {
   transform: scale(0.98);
 }
 
+/* ⭐ ICON SECTION */
 .card-icon {
   width: 48px;
   height: 48px;
@@ -174,31 +172,12 @@ export default {
   align-items: center;
   background: rgba(255, 255, 255, 0.25);
   margin-right: 14px;
-  position: relative;
-  transition: all 0.2s ease;
-}
-
-.card-icon.loading {
-  background: rgba(255, 255, 255, 0.4);
+  transition: transform 0.2s ease;
 }
 
 .card-icon.error {
   background: rgba(255, 255, 255, 0.2);
   border: 1px dashed rgba(255, 255, 255, 0.5);
-}
-
-.icon-loading {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 .icon-img {
@@ -217,6 +196,7 @@ export default {
   line-height: 1;
 }
 
+/* ⭐ CONTENT SECTION */
 .card-content {
   flex: 1;
   min-width: 0;
@@ -232,6 +212,7 @@ export default {
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   text-overflow: ellipsis;
 }
@@ -245,11 +226,12 @@ export default {
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   text-overflow: ellipsis;
 }
 
-/* Category Styles */
+/* ⭐ CATEGORY STYLES */
 .pengumuman-card {
   background: linear-gradient(135deg, #261b76, #2156a6);
 }
@@ -266,7 +248,7 @@ export default {
   background: linear-gradient(135deg, #7c6b1d, #e0be00);
 }
 
-/* Hover Effects */
+/* ⭐ HOVER EFFECTS */
 .pengumuman-card:hover {
   background: linear-gradient(135deg, #312e81, #3b82f6);
   box-shadow: 0 6px 20px rgba(38, 27, 118, 0.3);
@@ -287,7 +269,7 @@ export default {
   box-shadow: 0 6px 20px rgba(124, 107, 29, 0.3);
 }
 
-/* Responsive */
+/* ⭐ RESPONSIVE DESIGN */
 @media (max-width: 360px) {
   .announcement-card {
     padding: 12px;
@@ -309,11 +291,6 @@ export default {
     font-size: 20px;
   }
   
-  .icon-loading {
-    width: 16px;
-    height: 16px;
-  }
-  
   .card-title {
     font-size: 14px;
   }
@@ -323,17 +300,19 @@ export default {
   }
 }
 
-/* Accessibility */
+/* ⭐ ACCESSIBILITY - Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .announcement-card,
   .card-icon,
-  .icon-img,
-  .icon-loading {
-    animation: none;
+  .icon-img {
     transition: none;
   }
   
   .announcement-card:hover {
+    transform: none;
+  }
+  
+  .announcement-card:hover .icon-img {
     transform: none;
   }
 }

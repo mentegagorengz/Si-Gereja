@@ -23,7 +23,6 @@
 </template>
 
 <script>
-// ⭐ IMPORT OPTIMIZED HELPER
 import { getFeatureIconUrl } from '@/utils/imageUtils'
 
 export default {
@@ -32,16 +31,11 @@ export default {
     name: {
       type: String,
       required: true
-    },
-    iconName: {
-      type: String,
-      default: ''
     }
   },
   data() {
     return {
       iconError: false,
-      iconLoaded: false,
       isLoading: true
     }
   },
@@ -50,85 +44,63 @@ export default {
       return this.name.charAt(0).toUpperCase()
     },
     
-    showDebugInfo() {
-      return false // Matikan debug info
-    },
-    
     iconUrl() {
       if (this.iconError) return null
       
       try {
-        const url = getFeatureIconUrl(this.name)
-        console.log('🔍 [FeatureBox] Final icon URL for', this.name, ':', url)
-        return url
+        return getFeatureIconUrl(this.name)
       } catch (err) {
-        console.warn(`❗ [FeatureBox] Gagal load icon untuk ${this.name}:`, err)
-        // JANGAN ubah data di computed property - biarkan onImageError yang handle
+        console.warn(`Failed to load icon for ${this.name}:`, err)
         return null
       }
     }
   },
   mounted() {
-    // Simulasi loading untuk UX yang lebih baik
+    // Simulasi loading singkat untuk UX yang lebih baik
     setTimeout(() => {
       this.isLoading = false
     }, 100)
   },
   methods: {
     goToPage() {
-      // Jangan navigate jika masih loading
       if (this.isLoading) return
       
-      let path = ''
+      const path = this.getRoutePath()
       
-      // ⭐ MAPPING NAMA KE PATH YANG BENAR
-      switch(this.name) {
-        case 'Renungan':
-          path = '/renungan'
-          break
-        case 'Jadwal':
-          path = '/jadwal'
-          break
-        case 'News':
-          path = '/news'
-          break
-        case 'Giving':
-          path = '/giving'
-          break
-        case 'Alkitab Setahun':
-          path = '/alkitab-setahun'
-          break
-        case 'Prayer Request':
-          path = '/prayer-request'
-          break
-        default:
-          // Fallback: convert nama ke slug
-          path = '/' + this.name.toLowerCase()
-            .replace(/\s+/g, '-')
-            .replace(/[^a-z0-9-]/g, '')
-      }
-      
-      console.log(`🔍 [FeatureBox] Navigating ${this.name} to: ${path}`)
-      
-      // Cek apakah route ada
-      const router = this.$router
-      const route = router.resolve(path)
-      
-      if (route.name !== 'not-found' && route.matched.length > 0) {
-        router.push(path)
+      if (this.isValidRoute(path)) {
+        this.$router.push(path)
       } else {
-        console.warn(`⚠️ [FeatureBox] Route ${path} tidak ditemukan, redirecting ke home`)
-        // Bisa redirect ke halaman "Coming Soon" atau tetap di home
-        router.push('/home')
+        console.warn(`Route ${path} not found, staying on home`)
+        this.$router.push('/home')
       }
     },
 
-    onImageError(event) {
-      console.warn('❗ [FeatureBox] Feature icon failed to load for:', this.name)
-      console.warn('❗ [FeatureBox] Failed URL:', event.target?.src)
+    getRoutePath() {
+      const routeMap = {
+        'Renungan': '/renungan',
+        'Jadwal': '/jadwal',
+        'News': '/news',
+        'Giving': '/giving',
+        'Alkitab Setahun': '/alkitab-setahun',
+        'Prayer Request': '/prayer-request'
+      }
       
+      return routeMap[this.name] || this.createSlugPath()
+    },
+
+    createSlugPath() {
+      return '/' + this.name.toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+    },
+
+    isValidRoute(path) {
+      const route = this.$router.resolve(path)
+      return route.name !== 'not-found' && route.matched.length > 0
+    },
+
+    onImageError(event) {
       this.iconError = true
-      this.iconLoaded = false
       this.isLoading = false
       
       // Prevent infinite error loop
@@ -136,8 +108,6 @@ export default {
     },
     
     onImageLoad() {
-      console.log('✅ [FeatureBox] Icon loaded successfully for:', this.name)
-      this.iconLoaded = true
       this.iconError = false
       this.isLoading = false
     }
@@ -152,7 +122,6 @@ export default {
   flex-direction: column;
   align-items: center;
   transition: transform 0.2s ease;
-  position: relative;
   padding: 8px;
 }
 
@@ -169,6 +138,7 @@ export default {
   opacity: 0.7;
 }
 
+/* Loading state */
 .loading-placeholder {
   width: 64px;
   height: 64px;
@@ -177,8 +147,6 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  position: relative;
-  overflow: hidden;
 }
 
 .loading-icon {
@@ -195,6 +163,7 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
+/* Icon container */
 .icon-placeholder {
   width: 64px;
   height: 64px;
@@ -202,13 +171,8 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: bold;
-  font-size: 20px;
-  color: rgb(32, 32, 32);
-  overflow: hidden;
   background: rgba(65, 68, 42, 0.1);
   transition: all 0.2s ease;
-  position: relative;
 }
 
 .icon-placeholder.error {
@@ -220,7 +184,7 @@ export default {
   width: 40px;
   height: 40px;
   object-fit: contain;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
 .feature-box:hover .feature-icon {
@@ -238,6 +202,7 @@ export default {
   color: #dc2626;
 }
 
+/* Label */
 .label {
   font-size: 14px;
   margin-top: 8px;
@@ -250,7 +215,7 @@ export default {
   word-wrap: break-word;
 }
 
-/* Responsive */
+/* Responsive design */
 @media (max-width: 360px) {
   .feature-box {
     padding: 6px;
@@ -283,7 +248,7 @@ export default {
   }
 }
 
-/* Accessibility */
+/* Accessibility - untuk user yang tidak suka animasi */
 @media (prefers-reduced-motion: reduce) {
   .feature-box,
   .feature-icon,

@@ -52,8 +52,8 @@
           <slot name="extra-content"></slot>
         </div>
 
-         <!-- Closing -->
-         <div class="detail-closing">
+        <!-- Closing -->
+        <div v-if="closing" class="detail-closing">
           <p>{{ closing }}</p>
         </div>
       </div>
@@ -63,7 +63,6 @@
 
 <script>
 import HeaderWithBack from '@/components/layout/HeaderWithBack.vue'
-// ⭐ IMPORT SPECIFIC FUNCTIONS - tidak pakai getThumbnail yang ambiguous
 import { getNewsThumbnail, getScheduleThumbnail, getDevotionalThumbnail } from '@/utils/imageUtils'
 
 export default {
@@ -93,11 +92,9 @@ export default {
       type: String,
       default: ''
     },
-    
-    // ⭐ NEW PROP: Content type untuk detect dari mana asalnya
     contentType: {
       type: String,
-      default: '', // 'news', 'schedule', 'devotional'
+      default: '',
       validator: (value) => ['', 'news', 'schedule', 'devotional', 'jadwal', 'renungan'].includes(value)
     },
     
@@ -118,8 +115,6 @@ export default {
       type: String,
       default: ''
     },
-    
-    // Optional props
     closing: {
       type: String,
       default: ''
@@ -132,16 +127,9 @@ export default {
   },
   computed: {
     thumbnailSrc() {
-      console.log('🔍 [DetailLayout] Getting thumbnail...')
-      console.log('   - Content Type:', this.contentType)
-      console.log('   - Category:', this.category)
-      console.log('   - Thumbnail:', this.thumbnail)
-      console.log('   - Title:', this.title)
-      
-      // ⭐ STEP 1: Detect berdasarkan contentType prop
       let detectedType = this.contentType
       
-      // ⭐ STEP 2: Auto-detect dari headerTitle jika contentType kosong
+      // Auto-detect dari headerTitle jika contentType kosong
       if (!detectedType && this.headerTitle) {
         if (this.headerTitle.toLowerCase().includes('news')) {
           detectedType = 'news'
@@ -152,7 +140,7 @@ export default {
         }
       }
       
-      // ⭐ STEP 3: Fallback detect dari route
+      // Auto-detect dari route
       if (!detectedType && this.$route) {
         const currentPath = this.$route.path
         if (currentPath.includes('/news')) {
@@ -164,33 +152,23 @@ export default {
         }
       }
       
-      console.log('✅ [DetailLayout] Detected type:', detectedType)
-      
-      // ⭐ STEP 4: Prepare item object
       const item = {
         thumbnail: this.thumbnail,
         category: this.category,
         title: this.title
       }
       
-      // ⭐ STEP 5: Call appropriate function with LARGE size
       try {
         if (detectedType === 'news') {
-          console.log('📰 [DetailLayout] Using getNewsThumbnail for LARGE')
           return getNewsThumbnail(item, 'large')
         } else if (detectedType === 'schedule' || detectedType === 'jadwal') {
-          console.log('📅 [DetailLayout] Using getScheduleThumbnail for LARGE')
           return getScheduleThumbnail(item, 'large')
         } else if (detectedType === 'devotional' || detectedType === 'renungan') {
-          console.log('🙏 [DetailLayout] Using getDevotionalThumbnail for LARGE')
           return getDevotionalThumbnail(item, 'large')
         } else {
-          // Default fallback
-          console.log('⚠️ [DetailLayout] No type detected, using default getScheduleThumbnail')
           return getScheduleThumbnail(item, 'large')
         }
       } catch (error) {
-        console.error('❌ [DetailLayout] Error getting thumbnail:', error)
         return null
       }
     },
@@ -214,12 +192,6 @@ export default {
   },
   methods: {
     onImageError() {
-      console.log('🖼️ [DetailLayout] Image failed to load, showing placeholder')
-      this.imageError = true
-    },
-    
-    handleThumbnailError() {
-      console.warn(`❗ [DetailLayout] Thumbnail ${this.thumbnail} gagal dimuat`)
       this.imageError = true
     }
   }

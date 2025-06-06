@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { getCurrentJemaat } from '../services/auth';
+import { getCurrentJemaat } from '../services/auth'
 
 // Import halaman-halaman
 import LoginPage from '../views/LoginPage.vue'
@@ -14,10 +14,10 @@ import DetailNews from '../views/DetailNews.vue'
 import RenunganPage from '../views/RenunganPage.vue'
 import DetailRenungan from '../views/DetailRenungan.vue'
 import BookmarksPage from '../views/BookmarksPage.vue'
-// ⭐ TAMBAH: Import AccountPage
 import AccountPage from '../views/AccountPage.vue'
 
 const routes = [
+  // Public routes (tidak perlu login)
   { 
     path: '/', 
     name: 'LoginPage',
@@ -29,60 +29,79 @@ const routes = [
     component: RegisterPage
   },
   {
-    path: '/home',
-    name: 'HomePage',
-    component: HomePage
-  },
-  {
     path: '/success-register',
     name: 'SuccessRegister',
     component: SuccessRegister
   },
+  
+  // Protected routes (perlu login)
   {
-    path: '/firebase-test',
-    name: 'FirebaseTestPage',
-    component: FirebaseTestPage
+    path: '/home',
+    name: 'HomePage',
+    component: HomePage,
+    meta: { requiresAuth: true }
   },
+  {
+    path: '/account',
+    name: 'AccountPage',
+    component: AccountPage,
+    meta: { requiresAuth: true }
+  },
+  
+  // Jadwal routes
   {
     path: '/jadwal',
     name: 'JadwalPage',
-    component: JadwalPage
+    component: JadwalPage,
+    meta: { requiresAuth: true }
   },
   {
     path: '/jadwal/:id',
     name: 'DetailJadwal',
-    component: DetailJadwal
+    component: DetailJadwal,
+    meta: { requiresAuth: true }
   },
+  
+  // News routes
   {
     path: '/news',
     name: 'NewsPage',
-    component: NewsPage
+    component: NewsPage,
+    meta: { requiresAuth: true }
   },
   {
     path: '/news/:id',
     name: 'DetailNews',
-    component: DetailNews
+    component: DetailNews,
+    meta: { requiresAuth: true }
   },
+  
+  // Renungan routes
   {
     path: '/renungan',
     name: 'RenunganPage',
-    component: RenunganPage
+    component: RenunganPage,
+    meta: { requiresAuth: true }
   },
   {
     path: '/renungan/bookmarks',
     name: 'BookmarksPage',
-    component: BookmarksPage
+    component: BookmarksPage,
+    meta: { requiresAuth: true }
   },
   {
     path: '/renungan/:id',
     name: 'DetailRenungan',
-    component: DetailRenungan
+    component: DetailRenungan,
+    meta: { requiresAuth: true }
   },
-  // ⭐ TAMBAH: Route untuk Account
+  
+  // Development/Testing routes
   {
-    path: '/account',
-    name: 'AccountPage',
-    component: AccountPage
+    path: '/firebase-test',
+    name: 'FirebaseTestPage',
+    component: FirebaseTestPage,
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -91,33 +110,32 @@ const router = createRouter({
   routes
 })
 
-// ⭐ PERBAIKAN: Update route guard dengan logout otomatis
-router.beforeEach((to, from, next) => {
-  console.log('🔍 [Router] Navigation:', from.path, '→', to.path)
+// Route guard untuk proteksi halaman
+router.beforeEach(async (to, from, next) => {
+  const currentUser = getCurrentJemaat()
   
-  // Daftar route yang membutuhkan autentikasi
-  const requiresAuth = ['/home', '/jadwal', '/renungan', '/account', '/news']
-  const currentUser = getCurrentJemaat();
-  
-  // ⭐ PERBAIKAN: Jika ke login page, clear semua data dulu
+  // Jika pergi ke login page, bersihkan data user di memory
   if (to.path === '/') {
-    console.log('🔍 [Router] Going to login page, clearing user data...')
-    
-    // Import userStore dan clear data
-    import('@/stores/userStore').then(({ useUserStore }) => {
-      const userStore = useUserStore()
-      userStore.clearUserData() // Clear memory tapi jangan hapus localStorage
-      console.log('✅ [Router] User data cleared for fresh login')
-    })
+    await clearUserDataFromMemory()
   }
   
-  if (requiresAuth.some(route => to.path.startsWith(route)) && !currentUser) {
-    console.log('❌ [Router] No authenticated user, redirecting to login')
-    next('/');
+  // Cek apakah route memerlukan autentikasi
+  if (to.meta.requiresAuth && !currentUser) {
+    next('/')
   } else {
-    console.log('✅ [Router] Navigation allowed')
-    next();
+    next()
   }
-});
+})
+
+// Helper function untuk clear user data dari memory
+async function clearUserDataFromMemory() {
+  try {
+    const { useUserStore } = await import('@/stores/userStore')
+    const userStore = useUserStore()
+    userStore.clearUserData()
+  } catch (error) {
+    console.error('Error clearing user data:', error)
+  }
+}
 
 export default router

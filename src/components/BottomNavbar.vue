@@ -1,71 +1,84 @@
 <template>
   <nav class="bottom-navbar">
+    <!-- Home -->
     <router-link to="/home" class="nav-item" exact aria-label="Beranda">
-      <House :class="['icon', isActiveRoute('/home') ? 'icon-active' : '']" />
-      <span :class="{ 'text-active': isActiveRoute('/home') }">Home</span>
+      <House :class="iconClasses('/home')" />
+      <span :class="textClasses('/home')">Home</span>
     </router-link>
+    
+    <!-- Kalender/Jadwal -->
     <router-link to="/jadwal" class="nav-item" aria-label="Kalender">
-      <Calendar :class="['icon', isActiveRoute('/jadwal') ? 'icon-active' : '']" />
-      <span :class="{ 'text-active': isActiveRoute('/jadwal') }">Kalender</span>
+      <Calendar :class="iconClasses('/jadwal')" />
+      <span :class="textClasses('/jadwal')">Kalender</span>
     </router-link>
+    
+    <!-- Notifikasi -->
     <router-link to="/notifikasi" class="nav-item" aria-label="Notifikasi">
-      <Bell :class="['icon', isActiveRoute('/notifikasi') ? 'icon-active' : '']" />
-      <span :class="{ 'text-active': isActiveRoute('/notifikasi') }">Notifikasi</span>
+      <Bell :class="iconClasses('/notifikasi')" />
+      <span :class="textClasses('/notifikasi')">Notifikasi</span>
     </router-link>
-    <!-- ⭐ UBAH: Account jadi clickable dengan @click handler -->
-    <div @click="goToAccount" class="nav-item account-item" :class="{ 'active': isActiveRoute('/account') }" aria-label="Akun">
-      <User :class="['icon', isActiveRoute('/account') ? 'icon-active' : '']" />
-      <span :class="{ 'text-active': isActiveRoute('/account') }">Profile</span>
-    </div>
+    
+    <!-- Profile/Account -->
+    <router-link to="/account" class="nav-item" aria-label="Profile">
+      <User :class="iconClasses('/account')" />
+      <span :class="textClasses('/account')">Profile</span>
+    </router-link>
   </nav>
 </template>
 
 <script>
 import { House, Calendar, Bell, User } from 'lucide-vue-next'
-import { useRoute, useRouter } from 'vue-router'
 
 export default {
   name: 'BottomNavbar',
+  
   components: {
     House,
     Calendar,
     Bell,
     User
   },
+  
   props: {
     forceActiveRoute: {
       type: String,
       default: null
     }
   },
-  setup(props) {
-    const route = useRoute()
-    const router = useRouter()
+  
+  computed: {
+    // ⭐ Current active route
+    currentRoute() {
+      return this.forceActiveRoute || this.$route.path
+    }
+  },
+  
+  methods: {
+    // ⭐ Check if route is active
+    isActiveRoute(path) {
+      return this.currentRoute === path
+    },
     
-    // Function untuk cek active route
-    const isActiveRoute = (path) => {
-      if (props.forceActiveRoute) {
-        return props.forceActiveRoute === path
+    // ⭐ Get icon classes
+    iconClasses(path) {
+      return [
+        'icon',
+        { 'icon-active': this.isActiveRoute(path) }
+      ]
+    },
+    
+    // ⭐ Get text classes
+    textClasses(path) {
+      return {
+        'text-active': this.isActiveRoute(path)
       }
-      return route.path === path
-    }
-    
-    // ⭐ TAMBAH: Handler untuk account click
-    const goToAccount = () => {
-      console.log('🔍 [BottomNavbar] Account clicked, navigating to account page')
-      router.push('/account')
-    }
-    
-    return {
-      route,
-      isActiveRoute,
-      goToAccount
     }
   }
 }
 </script>
 
 <style scoped>
+/* ⭐ NAVBAR CONTAINER */
 .bottom-navbar {
   position: fixed;
   bottom: 0;
@@ -82,6 +95,7 @@ export default {
   transition: box-shadow 0.3s ease;
 }
 
+/* ⭐ NAVIGATION ITEMS */
 .nav-item {
   display: flex;
   flex-direction: column;
@@ -92,34 +106,34 @@ export default {
   text-align: center;
   font-size: 12px;
   color: #777;
-  font-family: 'Inter';
+  font-family: 'Inter', sans-serif;
   text-decoration: none;
   gap: 4px;
   transition: all 0.3s ease;
-}
-
-/* ⭐ TAMBAH: Style khusus untuk account item yang clickable */
-.account-item {
   cursor: pointer;
+  border-radius: 8px;
+  margin: 0 2px;
 }
 
-.account-item:hover {
+.nav-item:hover {
   background-color: rgba(65, 68, 42, 0.05);
 }
 
-.account-item:active {
+.nav-item:active {
   transform: scale(0.95);
 }
 
-.account-item.active {
-  background-color: rgba(65, 68, 42, 0.1);
+.nav-item.router-link-active {
+  background-color: rgba(127, 132, 88, 0.1);
 }
 
+/* ⭐ ICONS */
 .icon {
   width: 20px;
   height: 20px;
   color: #777;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .icon-active {
@@ -127,8 +141,78 @@ export default {
   transform: scale(1.2);
 }
 
+/* ⭐ TEXT LABELS */
+.nav-item span {
+  font-size: 12px;
+  line-height: 1;
+  margin-top: 2px;
+}
+
 .text-active {
   color: #41442A;
-  font-weight: bold;
+  font-weight: 600;
+}
+
+/* ⭐ RESPONSIVE DESIGN */
+@media (max-width: 360px) {
+  .bottom-navbar {
+    height: 56px;
+  }
+  
+  .nav-item {
+    height: 56px;
+    font-size: 11px;
+    gap: 2px;
+  }
+  
+  .icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .nav-item span {
+    font-size: 10px;
+  }
+}
+
+/* ⭐ ACCESSIBILITY - High contrast mode */
+@media (prefers-contrast: high) {
+  .bottom-navbar {
+    border-top-width: 2px;
+    border-top-color: #000;
+  }
+  
+  .nav-item {
+    border: 1px solid transparent;
+  }
+  
+  .nav-item:focus {
+    border-color: #41442A;
+    outline: 2px solid #41442A;
+  }
+  
+  .icon-active {
+    color: #000;
+  }
+  
+  .text-active {
+    color: #000;
+  }
+}
+
+/* ⭐ ACCESSIBILITY - Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .nav-item,
+  .icon {
+    transition: none;
+  }
+  
+  .nav-item:active {
+    transform: none;
+  }
+  
+  .icon-active {
+    transform: none;
+  }
 }
 </style>
