@@ -11,14 +11,6 @@
         Klik lanjutkan untuk jelajahi aplikasi MyRajawali.<br />
         Tuhan Yesus Memberkati
       </p>
-      
-      <!-- ⭐ DEBUG INFO (hanya di development) -->
-      <div v-if="showDebugInfo" class="debug-info">
-        <p><strong>Debug Info:</strong></p>
-        <p>User: {{ userName || 'No user found' }}</p>
-        <p>Streak: {{ userStreak }}</p>
-        <p>Registered: {{ registrationTime }}</p>
-      </div>
     </div>
     
     <ButtonPrimary @click="goToHome">Lanjutkan</ButtonPrimary>
@@ -154,37 +146,10 @@ h2 {
   color: black;
 }
 
-/* ⭐ DEBUG: Development info styling */
-.debug-info {
-  background-color: #f0f8ff;
-  border: 1px solid #41442A;
-  border-radius: 8px;
-  padding: 12px;
-  margin-top: 16px;
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
-  text-align: left;
-  max-width: 280px;
-}
-
-.debug-info p {
-  margin: 4px 0;
-  color: #333;
-}
-
-.debug-info strong {
-  color: #41442A;
-}
-
 /* Responsive */
 @media (max-width: 360px) {
   .success-container {
     padding: 48px 12px;
-  }
-  
-  .debug-info {
-    font-size: 11px;
-    padding: 10px;
   }
 }
 </style>

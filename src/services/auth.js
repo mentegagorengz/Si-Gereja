@@ -155,15 +155,23 @@ export async function registerJemaat(nama, password, userData) {
     
     const encryptedPassword = CryptoJS.SHA256(password).toString()
     
-    // Update data jemaat
+
+    // Update data jemaat Include role in registration
     await updateDoc(jemaatRef, {
       password: encryptedPassword,
       isRegistered: true,
       tanggalLahir: userData.tanggalLahir,
       status: userData.status,
       sektor: userData.sektor,
-      registeredAt: new Date()
+      registeredAt: new Date(),
+      
+      role: userData.role || 'jemaat', // Default role untuk user baru
+      roleAssignedAt: new Date(),
+      roleAssignedBy: 'registration'
     })
+    
+    console.log(`✅ [Auth] Registrasi berhasil untuk ${nama} dengan role: ${userData.role || 'jemaat'}`)
+    
     
     return true
   } catch (error) {
@@ -288,7 +296,7 @@ function findCaseInsensitiveMatch(snapshot, nama) {
 }
 
 /**
- * Verifikasi dan proses login
+ * Verifikasi dan proses login dengan role handling
  * @param {Object} jemaatDoc - Document jemaat
  * @param {Object} jemaatData - Data jemaat
  * @param {string} password - Password
@@ -307,13 +315,154 @@ async function verifyAndLogin(jemaatDoc, jemaatData, password) {
     throw new Error('Password tidak sesuai')
   }
   
+  // Handle role
+  let userRole = jemaatData.role || 'jemaat'
+  let needsRoleUpdate = false
+  
+  // Jika belum ada role di database, set default dan update
+  if (!jemaatData.role) {
+    console.log(`🔧 [Auth] User ${jemaatData.nama} belum ada role, setting default 'jemaat'`)
+    needsRoleUpdate = true
+    userRole = 'jemaat'
+  }
+  
+  // Update role di Firebase jika diperlukan
+  if (needsRoleUpdate) {
+    try {
+      await updateDoc(jemaatDoc.ref, {
+        role: 'jemaat',
+        roleAssignedAt: new Date(),
+        roleAssignedBy: 'auto_assignment'
+      })
+      
+      console.log(`✅ [Auth] Role default berhasil disimpan untuk ${jemaatData.nama}`)
+      
+    } catch (updateError) {
+      console.warn('⚠️ [Auth] Gagal update role ke Firebase, menggunakan default:', updateError)
+    }
+  }
+  
   // Return data jemaat (hapus password untuk keamanan)
   const userData = {
     id: jemaatDoc.id,
-    ...jemaatData
+    ...jemaatData,
+    role: userRole
   }
   
+  // Hapus password untuk keamanan
   delete userData.password
   
+  console.log(`✅ [Auth] Login berhasil untuk ${userData.nama} dengan role: ${userData.role}`)
+  
   return userData
+}
+
+// src/services/auth.js - TAMBAH di akhir file
+
+/**
+ * Update role user (khusus admin)
+ * @param {string} userId - ID user yang akan diupdate
+ * @param {string} newRole - Role baru
+ * @param {string} adminUserId - ID admin yang melakukan update
+ * @returns {Promise<boolean>} Success status
+ */
+export async function updateUserRole(userId, newRole, adminUserId) {
+  try {
+    if (!userId || !newRole) {
+      throw new Error('User ID dan role harus diisi')
+    }
+    
+    const validRoles = ['jemaat', 'pengurus', 'admin']
+    if (!validRoles.includes(newRole)) {
+      throw new Error(`Role tidak valid. Harus salah satu dari: ${validRoles.join(', ')}`)
+    }
+    
+    console.log(`🔄 [Auth] Updating user ${userId} role to ${newRole}`)
+    
+    const userRef = doc(db, COLLECTION_NAME, userId)
+    
+    // Cek apakah user exists
+    const userDoc = await getDoc(userRef)
+    if (!userDoc.exists()) {
+      throw new Error('User tidak ditemukan')
+    }
+    
+    // Update role
+    await updateDoc(userRef, {
+      role: newRole,
+      roleAssignedAt: new Date(),
+      roleAssignedBy: adminUserId || 'admin'
+    })
+    
+    console.log(`✅ [Auth] User ${userId} role berhasil diupdate ke ${newRole}`)
+    return true
+    
+  } catch (error) {
+    console.error('❌ [Auth] Error updating user role:', error)
+    throw error
+  }
+}
+
+/**
+ * Get user role by ID (helper function)
+ * @param {string} userId - User ID
+ * @returns {Promise<string>} User role
+ */
+export async function getUserRole(userId) {
+  try {
+    if (!userId) {
+      throw new Error('User ID harus diisi')
+    }
+    
+    const userRef = doc(db, COLLECTION_NAME, userId)
+    const userDoc = await getDoc(userRef)
+    
+    if (!userDoc.exists()) {
+      throw new Error('User tidak ditemukan')
+    }
+    
+    const userData = userDoc.data()
+    return userData.role || 'jemaat'
+    
+  } catch (error) {
+    console.error('Error getting user role:', error)
+    throw error
+  }
+}
+
+/**
+ * Get all users with their roles (untuk admin)
+ * @returns {Promise<Array>} Array users dengan role info
+ */
+export async function getAllUsersWithRoles() {
+  try {
+    const jemaatRef = collection(db, COLLECTION_NAME)
+    const querySnapshot = await getDocs(jemaatRef)
+    
+    const users = []
+    querySnapshot.forEach((doc) => {
+      const data = doc.data()
+      if (data.nama) {
+        // Hapus password untuk keamanan
+        const userData = { ...data }
+        delete userData.password
+        
+        users.push({
+          id: doc.id,
+          ...userData,
+          role: data.role || 'jemaat' // Ensure role exists
+        })
+      }
+    })
+    
+    // Sort by name
+    users.sort((a, b) => a.nama.localeCompare(b.nama))
+    
+    console.log(`📊 [Auth] Loaded ${users.length} users with roles`)
+    return users
+    
+  } catch (error) {
+    console.error('Error getting users with roles:', error)
+    throw error
+  }
 }

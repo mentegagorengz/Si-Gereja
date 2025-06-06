@@ -75,6 +75,7 @@ export default {
       currentUserId: null
     }
   },
+
   async created() {
     await this.initializeUserData()
     this.loadDailyVerse()
@@ -355,20 +356,20 @@ export default {
           }
         ];
       }
-    }
-  },
+    },
 
-  // ⭐ EXPOSE: Enhanced debug functions
-  mounted() {
-    if (process.env.NODE_ENV === 'development') {
-      window.debugHomePage = () => this.debugUserStreakComplete();
-      window.forceStreakRecalc = () => this.forceStreakRecalculation();
-      window.loadExistingStreak = () => this.loadExistingUserStreak();
-      
-      console.log('🔧 [HomePage] Enhanced debug functions:');
-      console.log('   - window.debugHomePage() // Complete debug');
-      console.log('   - window.forceStreakRecalc() // Force recalculation');
-      console.log('   - window.loadExistingStreak() // Reload streak data');
+    // ⭐ EXPOSE: Enhanced debug functions
+    mounted() {
+      if (process.env.NODE_ENV === 'development') {
+        window.debugHomePage = () => this.debugUserStreakComplete();
+        window.forceStreakRecalc = () => this.forceStreakRecalculation();
+        window.loadExistingStreak = () => this.loadExistingUserStreak();
+        
+        console.log('🔧 [HomePage] Enhanced debug functions:');
+        console.log('   - window.debugHomePage() // Complete debug');
+        console.log('   - window.forceStreakRecalc() // Force recalculation');
+        console.log('   - window.loadExistingStreak() // Reload streak data');
+      }
     }
   }
 }

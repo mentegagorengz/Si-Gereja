@@ -5,7 +5,8 @@ import { useStreakStore } from './streakStore'
 export const useUserStore = defineStore('user', {
   state: () => ({
     user: null,
-    isLoggedIn: false
+    isLoggedIn: false,
+    userRole: 'jemaat'
   }),
   
   getters: {
@@ -35,7 +36,55 @@ export const useUserStore = defineStore('user', {
      * Get user status
      * @returns {string} User status or empty string
      */
-    statusUser: (state) => state.user?.status || ''
+    statusUser: (state) => state.user?.status || '',
+
+    /**
+     * Check if user is admin
+     * @returns {boolean} True if user is admin
+     */
+    isAdmin: (state) => {
+      return state.userRole === 'admin' || state.user?.role === 'admin'
+    },
+
+    /**
+     * Check if user is pengurus
+     * @returns {boolean} True if user is pengurus or admin
+     */
+    isPengurus: (state) => {
+      const role = state.userRole || state.user?.role
+      return role === 'pengurus' || role === 'admin'
+    },
+
+    /**
+     * Check if user is jemaat (basic role)
+     * @returns {boolean} True if user is jemaat
+     */
+    isJemaat: (state) => {
+      const role = state.userRole || state.user?.role || 'jemaat'
+      return ['jemaat', 'pengurus', 'admin'].includes(role)
+    },
+
+    /**
+     * Get user role display name
+     * @returns {string} Human readable role name
+     */
+    roleDisplayName: (state) => {
+      const role = state.userRole || state.user?.role || 'jemaat'
+      const roleMap = {
+        'admin': 'Administrator',
+        'pengurus': 'Pengurus',
+        'jemaat': 'Jemaat'
+      }
+      return roleMap[role] || 'Jemaat'
+    },
+
+    /**
+     * Get current user role
+     * @returns {string} Current role
+     */
+    currentRole: (state) => {
+      return state.userRole || state.user?.role || 'jemaat'
+    }
   },
   
   actions: {
@@ -57,6 +106,9 @@ export const useUserStore = defineStore('user', {
         this.user = userData
         this.isLoggedIn = true
         
+        this.userRole = userData.role || 'jemaat'
+        console.log('✅ [UserStore] User role set to:', this.userRole)
+
         // Save to localStorage
         localStorage.setItem('user', JSON.stringify(userData))
         
@@ -103,6 +155,9 @@ export const useUserStore = defineStore('user', {
       
       this.user = userData
       this.isLoggedIn = true
+
+      this.userRole = userData.role || 'jemaat'
+      console.log('✅ [UserStore] User role set to:', this.userRole)
       
       // Initialize user-specific data
       this.initializeUserData(userData.id || userData.nama)
@@ -141,6 +196,69 @@ export const useUserStore = defineStore('user', {
       }
     },
     
+    // 👈 TAMBAHAN BARU - Role Management Actions:
+    /**
+     * Set user role
+     * @param {string} role - New role for user
+     */
+    setUserRole(role) {
+      const validRoles = ['jemaat', 'pengurus', 'admin']
+      
+      if (!validRoles.includes(role)) {
+        console.error('Invalid role:', role)
+        return false
+      }
+      
+      console.log(`🔄 [UserStore] Setting user role from ${this.userRole} to ${role}`)
+      
+      this.userRole = role
+      
+      // Update user object if exists
+      if (this.user) {
+        this.user.role = role
+        // Update localStorage
+        localStorage.setItem('user', JSON.stringify(this.user))
+      }
+      
+      console.log('✅ [UserStore] Role updated successfully')
+      return true
+    },
+
+    /**
+     * Switch user role (for development/testing)
+     * @param {string} newRole - New role to switch to
+     */
+    switchRole(newRole) {
+      console.log(`🔄 [UserStore] === ROLE SWITCHING ===`)
+      console.log(`👤 User: ${this.namaUser}`)
+      console.log(`🔄 Switching from: ${this.userRole} → ${newRole}`)
+      
+      const success = this.setUserRole(newRole)
+      
+      if (success) {
+        console.log(`✅ [UserStore] Role switch successful!`)
+        console.log(`🎯 New role: ${this.userRole}`)
+        console.log(`🔍 Permissions:`, {
+          isAdmin: this.isAdmin,
+          isPengurus: this.isPengurus,
+          isJemaat: this.isJemaat
+        })
+      } else {
+        console.error(`❌ [UserStore] Role switch failed!`)
+      }
+      
+      return success
+    },
+
+    /**
+     * Reset role to default based on user data
+     */
+    resetRole() {
+      const defaultRole = this.user?.role || 'jemaat'
+      console.log(`🔄 [UserStore] Resetting role to default: ${defaultRole}`)
+      this.setUserRole(defaultRole)
+    },
+
     /**
      * Initialize user-specific data
      * @param {string} userId - User ID
@@ -176,6 +294,7 @@ export const useUserStore = defineStore('user', {
     clearUserData() {
       this.user = null
       this.isLoggedIn = false
+      this.userRole = 'jemaat'
       
       // Clear all store data from memory
       const streakStore = useStreakStore()
