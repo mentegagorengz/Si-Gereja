@@ -15,6 +15,7 @@ import RenunganPage from '../views/RenunganPage.vue'
 import DetailRenungan from '../views/DetailRenungan.vue'
 import BookmarksPage from '../views/BookmarksPage.vue'
 import AccountPage from '../views/AccountPage.vue'
+import PengurusMode from '../views/PengurusMode.vue' // ⭐ TAMBAHAN BARU
 
 const routes = [
   // Public routes (tidak perlu login)
@@ -46,6 +47,14 @@ const routes = [
     name: 'AccountPage',
     component: AccountPage,
     meta: { requiresAuth: true }
+  },
+  
+  // ⭐ TAMBAHAN BARU: Pengurus Mode
+  {
+    path: '/mode',
+    name: 'PengurusMode',
+    component: PengurusMode,
+    meta: { requiresAuth: true, requiresPengurus: true }
   },
   
   // Jadwal routes
@@ -96,6 +105,14 @@ const routes = [
     meta: { requiresAuth: true }
   },
   
+  // ⭐ TAMBAHAN BARU: Route Notifikasi (untuk mengatasi error)
+  {
+    path: '/notifikasi',
+    name: 'NotifikasiPage',
+    component: () => import('../views/NotifikasiPage.vue'), // Lazy loading
+    meta: { requiresAuth: true }
+  },
+  
   // Development/Testing routes
   {
     path: '/firebase-test',
@@ -122,10 +139,25 @@ router.beforeEach(async (to, from, next) => {
   // Cek apakah route memerlukan autentikasi
   if (to.meta.requiresAuth && !currentUser) {
     next('/')
-  } else {
+  } 
+  // ⭐ TAMBAHAN BARU: Cek role pengurus
+  else if (to.meta.requiresPengurus && !isPengurus(currentUser)) {
+    // Redirect ke home jika bukan pengurus
+    next('/home')
+  } 
+  else {
     next()
   }
 })
+
+// ⭐ TAMBAHAN BARU: Helper function untuk cek role pengurus
+function isPengurus(user) {
+  if (!user) return false
+  
+  // Cek apakah user memiliki role pengurus
+  // Sesuaikan dengan struktur data user di aplikasi kamu
+  return user.role === 'pengurus' || user.role === 'admin'
+}
 
 // Helper function untuk clear user data dari memory
 async function clearUserDataFromMemory() {
