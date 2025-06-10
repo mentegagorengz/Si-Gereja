@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { getCurrentJemaat } from '../services/auth'
 
-// Import halaman-halaman
+// Import components
 import LoginPage from '../views/LoginPage.vue'
 import RegisterPage from '../views/RegisterPage.vue'
 import HomePage from '../views/HomePage.vue'
@@ -15,10 +15,12 @@ import RenunganPage from '../views/RenunganPage.vue'
 import DetailRenungan from '../views/DetailRenungan.vue'
 import BookmarksPage from '../views/BookmarksPage.vue'
 import AccountPage from '../views/AccountPage.vue'
-import PengurusMode from '../views/PengurusMode.vue' // ⭐ TAMBAHAN BARU
+import PengurusMode from '../views/PengurusMode.vue'
+import DetailProfile from '../views/DetailProfile.vue'
+
 
 const routes = [
-  // Public routes (tidak perlu login)
+  // Public routes
   { 
     path: '/', 
     name: 'LoginPage',
@@ -35,7 +37,7 @@ const routes = [
     component: SuccessRegister
   },
   
-  // Protected routes (perlu login)
+  // Protected routes
   {
     path: '/home',
     name: 'HomePage',
@@ -49,12 +51,15 @@ const routes = [
     meta: { requiresAuth: true }
   },
   
-  // ⭐ TAMBAHAN BARU: Pengurus Mode
+  // Pengurus routes
   {
-    path: '/mode',
+    path: '/pengurus/mode',
     name: 'PengurusMode',
     component: PengurusMode,
-    meta: { requiresAuth: true, requiresPengurus: true }
+    meta: { 
+      requiresAuth: true,
+      requiresPengurus: true 
+    }
   },
   
   // Jadwal routes
@@ -105,21 +110,25 @@ const routes = [
     meta: { requiresAuth: true }
   },
   
-  // ⭐ TAMBAHAN BARU: Route Notifikasi (untuk mengatasi error)
+  // Other routes
   {
     path: '/notifikasi',
     name: 'NotifikasiPage',
-    component: () => import('../views/NotifikasiPage.vue'), // Lazy loading
+    component: () => import('../views/NotifikasiPage.vue'),
     meta: { requiresAuth: true }
   },
-  
-  // Development/Testing routes
   {
     path: '/firebase-test',
     name: 'FirebaseTestPage',
     component: FirebaseTestPage,
     meta: { requiresAuth: true }
-  }
+  },
+  {
+  path: '/detail-profile',
+  name: 'DetailProfile',
+  component: DetailProfile,
+  meta: { requiresAuth: true }
+}
 ]
 
 const router = createRouter({
@@ -127,39 +136,59 @@ const router = createRouter({
   routes
 })
 
-// Route guard untuk proteksi halaman
+// Route guard
 router.beforeEach(async (to, from, next) => {
   const currentUser = getCurrentJemaat()
   
-  // Jika pergi ke login page, bersihkan data user di memory
+  // Clear user data when going to login
   if (to.path === '/') {
     await clearUserDataFromMemory()
   }
   
-  // Cek apakah route memerlukan autentikasi
+  // Check authentication
   if (to.meta.requiresAuth && !currentUser) {
     next('/')
-  } 
-  // ⭐ TAMBAHAN BARU: Cek role pengurus
-  else if (to.meta.requiresPengurus && !isPengurus(currentUser)) {
-    // Redirect ke home jika bukan pengurus
-    next('/home')
-  } 
-  else {
-    next()
+    return
   }
+  
+  // Check pengurus permission
+  if (to.meta.requiresPengurus) {
+    if (!currentUser) {
+      next('/home')
+      return
+    }
+    
+    const userRole = currentUser.role || 'jemaat'
+    const isPengurus = userRole === 'pengurus' || userRole === 'admin'
+    
+    if (!isPengurus) {
+      // Development bypass
+      if (process.env.NODE_ENV === 'development') {
+        const localUser = localStorage.getItem('user')
+        if (localUser) {
+          try {
+            const parsedUser = JSON.parse(localUser)
+            const localRole = parsedUser.role
+            if (localRole === 'pengurus' || localRole === 'admin') {
+              next()
+              return
+            }
+          } catch (error) {
+            // Silent fail in production
+          }
+        }
+      }
+      
+      alert('❌ Akses ditolak! Anda tidak memiliki permission sebagai pengurus.')
+      next('/home')
+      return
+    }
+  }
+  
+  next()
 })
 
-// ⭐ TAMBAHAN BARU: Helper function untuk cek role pengurus
-function isPengurus(user) {
-  if (!user) return false
-  
-  // Cek apakah user memiliki role pengurus
-  // Sesuaikan dengan struktur data user di aplikasi kamu
-  return user.role === 'pengurus' || user.role === 'admin'
-}
-
-// Helper function untuk clear user data dari memory
+// Helper function
 async function clearUserDataFromMemory() {
   try {
     const { useUserStore } = await import('@/stores/userStore')

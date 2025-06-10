@@ -1,4 +1,4 @@
-<!-- src/views/AccountPage.vue - UPDATED FOR NEW USERSTORE -->
+<!-- src/views/AccountPage.vue - SIMPLE UI LIKE WIREFRAME -->
 <template>
   <div class="account-container">
     <div class="account-wrapper">
@@ -7,84 +7,63 @@
         <h1 class="page-title">Profile</h1>
       </div>
 
-      <!-- User Info Section -->
-      <div class="user-info-section">
+      <!-- User Info Section (Style Lama - Clickable) -->
+      <div class="user-info-section" @click="goToProfileDetail">
         <div class="user-avatar">
           <span class="avatar-text">{{ userInitial }}</span>
         </div>
         
         <div class="user-details">
           <h2 class="user-name">{{ userName }}</h2>
-          <p class="user-subtitle">{{ userStore.roleDisplayName }}</p>
-          <!-- ⭐ DEBUG INFO (development only) -->
-          <div v-if="isDevelopment" class="debug-info">
-            <p>Role: {{ userStore.userRole }}</p>
-            <p>isPengurus: {{ userStore.isPengurus }}</p>
-            <p>isAdmin: {{ userStore.isAdmin }}</p>
-          </div>
+          <p class="user-subtitle">Lihat dan edit Profil</p>
         </div>
+        
+        <ChevronRight class="profile-arrow" />
       </div>
 
-      <!-- Menu Items -->
-      <div class="menu-list">
-        <!-- ⭐ PENGURUS MODE (only for pengurus/admin) -->
-        <div 
-          v-if="userStore.isPengurus" 
-          class="menu-item pengurus-mode" 
-          @click="switchToPengurusMode"
-        >
-          <div class="menu-icon">👨‍💼</div>
-          <span class="menu-text">Beralih ke mode Pengurus</span>
-          <div class="menu-arrow">></div>
-        </div>
+      <!-- Mode Pengurus (Terpisah dengan style colorful) -->
+      <div 
+        v-if="userStore.isPengurus" 
+        class="pengurus-card" 
+        @click="switchToPengurusMode"
+      >
+        <div class="pengurus-icon">👨‍💼</div>
+        <span class="pengurus-text">Beralih ke mode Pengurus</span>
+        <ChevronRight class="pengurus-arrow" />
+      </div>
 
-        <!-- ⭐ DEVELOPMENT TOOLS -->
-        <div v-if="isDevelopment" class="debug-section">
-          <p class="debug-title">🧪 Development Tools:</p>
-          <div class="debug-buttons">
-            <button @click="setRoleAdmin" class="debug-btn admin-btn">Admin</button>
-            <button @click="setRolePengurus" class="debug-btn pengurus-btn">Pengurus</button>
-            <button @click="setRoleJemaat" class="debug-btn jemaat-btn">Jemaat</button>
-          </div>
-          <button @click="userStore.debugUser()" class="debug-btn debug-btn-full">Debug User Info</button>
-        </div>
-
-        <!-- Regular Menu Items -->
-        <div class="menu-item" @click="goToBookmarks">
-          <div class="menu-icon">🔖</div>
-          <span class="menu-text">Bookmark Renungan</span>
-          <div class="menu-arrow">></div>
-        </div>
-
+      <!-- Menu List (Style Baru - Simple) -->
+      <div class="menu-container">
         <div class="menu-item" @click="goToScheduleSettings">
-          <div class="menu-icon">📅</div>
-          <span class="menu-text">Jadwal Pelayan Altar</span>
-          <div class="menu-arrow">></div>
+          <div class="menu-left">
+            <Calendar class="menu-icon" />
+            <span class="menu-text">Jadwal Pelayan Altar</span>
+          </div>
+          <ChevronRight class="menu-arrow" />
         </div>
 
         <div class="menu-item" @click="goToPasswordChange">
-          <div class="menu-icon">🔒</div>
-          <span class="menu-text">Ganti password</span>
-          <div class="menu-arrow">></div>
+          <div class="menu-left">
+            <Lock class="menu-icon" />
+            <span class="menu-text">Ganti password</span>
+          </div>
+          <ChevronRight class="menu-arrow" />
         </div>
 
         <div class="menu-item" @click="goToReportsHelp">
-          <div class="menu-icon">📊</div>
-          <span class="menu-text">Laporan dan Bantuan</span>
-          <div class="menu-arrow">></div>
+          <div class="menu-left">
+            <HelpCircle class="menu-icon" />
+            <span class="menu-text">Laporan dan Bantuan</span>
+          </div>
+          <ChevronRight class="menu-arrow" />
         </div>
 
-        <!-- ⭐ DEVELOPMENT: Firebase Test -->
-        <div v-if="isDevelopment" class="menu-item" @click="goToFirebaseTest">
-          <div class="menu-icon">🔧</div>
-          <span class="menu-text">Test Koneksi Firebase</span>
-          <div class="menu-arrow">></div>
-        </div>
-
-        <div class="menu-item logout-item" @click="showLogoutConfirm = true">
-          <div class="menu-icon">🚪</div>
-          <span class="menu-text">Keluar</span>
-          <div class="menu-arrow">></div>
+        <div class="menu-item" @click="showLogoutModal">
+          <div class="menu-left">
+            <LogOut class="menu-icon" />
+            <span class="menu-text">Keluar</span>
+          </div>
+          <ChevronRight class="menu-arrow" />
         </div>
       </div>
 
@@ -92,8 +71,8 @@
       <BottomNavbar forceActiveRoute="/account" />
     </div>
 
-    <!-- Logout Modal (same as before) -->
-    <div v-if="showLogoutConfirm" class="modal-overlay" @click="cancelLogout">
+    <!-- Logout Confirmation Modal -->
+    <div v-if="showLogoutConfirm" class="modal-overlay" @click="hideLogoutModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
           <LogOut class="modal-icon" />
@@ -107,7 +86,7 @@
         </p>
         
         <div class="modal-actions">
-          <button class="cancel-btn" @click="cancelLogout">Batal</button>
+          <button class="cancel-btn" @click="hideLogoutModal">Batal</button>
           <button class="logout-confirm-btn" @click="confirmLogout" :disabled="isLoggingOut">
             <span v-if="isLoggingOut">Keluar...</span>
             <span v-else>Ya, Keluar</span>
@@ -121,20 +100,26 @@
 <script>
 import { useUserStore } from '@/stores/userStore'
 import BottomNavbar from '@/components/BottomNavbar.vue'
-import { LogOut } from 'lucide-vue-next'
+import { LogOut, ChevronRight, Calendar, Lock, HelpCircle } from 'lucide-vue-next'
 
 export default {
   name: 'AccountPage',
   components: {
     BottomNavbar,
-    LogOut
+    LogOut,
+    ChevronRight,
+    Calendar,
+    Lock,
+    HelpCircle
   },
+  
   data() {
     return {
       showLogoutConfirm: false,
       isLoggingOut: false
     }
   },
+  
   computed: {
     userStore() {
       return useUserStore()
@@ -146,20 +131,17 @@ export default {
     
     userInitial() {
       return this.userName.charAt(0).toUpperCase()
-    },
-
-    isDevelopment() {
-      return process.env.NODE_ENV === 'development'
     }
   },
-  created() {
-    console.log('🔍 [AccountPage] User data on load:', this.userStore.getDebugInfo())
-  },
+  
   methods: {
-    // ⭐ PENGURUS MODE
+    // Navigation ke Profile Detail
+    goToProfileDetail() {
+      this.$router.push('/detail-profile')
+    },
+
+    // Navigation ke Mode Pengurus
     switchToPengurusMode() {
-      console.log('🚀 [AccountPage] Switching to pengurus mode...')
-      
       if (!this.userStore.isPengurus) {
         alert('❌ Anda tidak memiliki akses sebagai pengurus!')
         return
@@ -168,30 +150,7 @@ export default {
       this.$router.push('/pengurus/mode')
     },
 
-    // ⭐ DEVELOPMENT TOOLS (Simplified)
-    setRoleAdmin() {
-      this.userStore.setAsAdmin()
-      this.$forceUpdate() // Force UI update
-      alert('✅ Role set to Admin!')
-    },
-
-    setRolePengurus() {
-      this.userStore.setAsPengurus()
-      this.$forceUpdate() // Force UI update  
-      alert('✅ Role set to Pengurus!')
-    },
-
-    setRoleJemaat() {
-      this.userStore.setAsJemaat()
-      this.$forceUpdate() // Force UI update
-      alert('✅ Role set to Jemaat!')
-    },
-
-    // ⭐ NAVIGATION
-    goToBookmarks() {
-      this.$router.push('/renungan/bookmarks')
-    },
-    
+    // Navigation ke halaman lain
     goToScheduleSettings() {
       alert('📅 Fitur Jadwal Pelayan Altar akan tersedia setelah development selesai!')
     },
@@ -204,12 +163,12 @@ export default {
       alert('📊 Fitur Laporan dan Bantuan akan tersedia setelah development selesai!')
     },
 
-    goToFirebaseTest() {
-      this.$router.push('/firebase-test')
+    // Logout functions
+    showLogoutModal() {
+      this.showLogoutConfirm = true
     },
-
-    // ⭐ LOGOUT
-    cancelLogout() {
+    
+    hideLogoutModal() {
       this.showLogoutConfirm = false
       this.isLoggingOut = false
     },
@@ -220,7 +179,7 @@ export default {
       try {
         this.isLoggingOut = true
         this.userStore.logout()
-        this.showLogoutConfirm = false
+        this.hideLogoutModal()
         await this.$router.replace('/')
       } catch (error) {
         console.error('Logout error:', error)
@@ -235,11 +194,11 @@ export default {
 </script>
 
 <style scoped>
-/* Same CSS as before, with additions for debug section */
 .account-container {
   background: #fcfcf7;
   min-height: 100vh;
-  padding-bottom: 80px;
+  padding-bottom: 64px; /* Dikurangi dari 80px ke 64px sesuai navbar height */
+  box-sizing: border-box; /* Ensure padding included in height calculation */
 }
 
 .account-wrapper {
@@ -248,6 +207,7 @@ export default {
   margin: 0 auto;
 }
 
+/* Header */
 .account-header {
   text-align: center;
   padding: 20px 0;
@@ -261,6 +221,7 @@ export default {
   margin: 0;
 }
 
+/* User Info Section (Style Lama - Clickable) */
 .user-info-section {
   display: flex;
   align-items: center;
@@ -269,6 +230,13 @@ export default {
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-info-section:hover {
+  background: #ddd;
+  transform: translateY(-1px);
 }
 
 .user-avatar {
@@ -308,124 +276,40 @@ export default {
   margin: 0;
 }
 
-/* ⭐ DEBUG INFO */
-.debug-info {
-  font-family: 'Courier New', monospace;
-  font-size: 10px;
-  color: #41442A;
-  background: rgba(65, 68, 42, 0.1);
-  padding: 6px 8px;
-  border-radius: 4px;
-  margin: 6px 0 0 0;
+.profile-arrow {
+  width: 16px;
+  height: 16px;
+  color: #999;
+  flex-shrink: 0;
 }
 
-.debug-info p {
-  margin: 2px 0;
-}
-
-/* ⭐ DEBUG SECTION */
-.debug-section {
-  background: #fff3cd;
-  border: 1px dashed #ffc107;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 12px;
-}
-
-.debug-title {
-  font-family: 'Inter';
-  font-size: 12px;
-  font-weight: 600;
-  color: #856404;
-  margin: 0 0 8px 0;
-}
-
-.debug-buttons {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.debug-btn {
-  flex: 1;
-  padding: 6px 8px;
-  border: none;
-  border-radius: 4px;
-  font-family: 'Inter';
-  font-size: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.debug-btn-full {
-  width: 100%;
-  background: #6c757d;
-  color: white;
-}
-
-.admin-btn {
-  background: #dc3545;
-  color: white;
-}
-
-.pengurus-btn {
-  background: #ffc107;
-  color: #333;
-}
-
-.jemaat-btn {
-  background: #28a745;
-  color: white;
-}
-
-.debug-btn:hover {
-  opacity: 0.8;
-  transform: translateY(-1px);
-}
-
-/* Menu List */
-.menu-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.menu-item {
+/* Pengurus Card (Style Colorful) */
+.pengurus-card {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: white;
-  border-radius: 8px;
-  padding: 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid #E8E8E8;
-}
-
-.menu-item:hover {
-  background: #f8f9fa;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.menu-item.pengurus-mode {
   background: #FFF9C4;
   border: 1px solid #FFE082;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.menu-item.pengurus-mode:hover {
+.pengurus-card:hover {
   background: #FFF59D;
+  transform: translateY(-1px);
   box-shadow: 0 2px 12px rgba(255, 193, 7, 0.3);
 }
 
-.menu-icon {
+.pengurus-icon {
   font-size: 20px;
   width: 24px;
   text-align: center;
 }
 
-.menu-text {
+.pengurus-text {
   flex: 1;
   font-family: 'Inter';
   font-size: 14px;
@@ -433,17 +317,73 @@ export default {
   font-weight: 500;
 }
 
-.menu-arrow {
-  font-size: 14px;
+.pengurus-arrow {
+  width: 16px;
+  height: 16px;
   color: #999;
-  font-weight: bold;
+  flex-shrink: 0;
 }
 
-.menu-item.logout-item:hover {
-  background: #ffebee;
+/* Menu Container (Style Simple dengan icon) */
+.menu-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-/* Modal styles (same as before) */
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.menu-item:hover {
+  background: #f8f9fa;
+}
+
+.menu-item:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.menu-item:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.menu-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-icon {
+  width: 20px;
+  height: 20px;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.menu-text {
+  font-family: 'Inter';
+  font-size: 16px;
+  color: #333;
+  font-weight: 400;
+}
+
+.menu-arrow {
+  width: 20px;
+  height: 20px;
+  color: #999;
+  flex-shrink: 0;
+}
+
+/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -551,17 +491,22 @@ export default {
   cursor: not-allowed;
 }
 
+/* Responsive */
 @media (max-width: 360px) {
   .account-wrapper {
     padding: 12px;
   }
   
-  .user-info-section {
-    padding: 12px;
+  .profile-section {
+    padding: 16px 0;
   }
   
   .menu-item {
-    padding: 12px;
+    padding: 14px 16px;
+  }
+  
+  .menu-text {
+    font-size: 15px;
   }
 }
 </style>

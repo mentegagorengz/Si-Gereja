@@ -154,6 +154,24 @@ export const useUserStore = defineStore('user', {
       return true
     },
     
+    getSavedUserData() {
+      try {
+        // Check localStorage directly
+        const userDataString = localStorage.getItem('user')
+        if (userDataString) {
+          const userData = JSON.parse(userDataString)
+          if (userData && userData.nama) {
+            console.log('📋 [UserStore] Found saved user:', userData.nama)
+            return userData
+          }
+        }
+        return null
+      } catch (error) {
+        console.error('❌ [UserStore] Error getting saved user:', error)
+        return null
+      }
+    },
+    
     /**
      * Check and restore login status from localStorage
      * @returns {boolean} Login status
