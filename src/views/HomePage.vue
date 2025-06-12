@@ -67,7 +67,7 @@ export default {
         { name: "News", icon: "news" },
         { name: "Jadwal", icon: "jadwal" },
         { name: "Giving", icon: "giving" },
-        { name: "Alkitab Setahun", icon: "alkitab" },
+        { name: "Tentang Gereja", icon: "tentang-gereja" },
         { name: "Renungan", icon: "renungan" },
         { name: "Prayer Request", icon: "prayer" }
       ],

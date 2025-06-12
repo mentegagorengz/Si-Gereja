@@ -17,6 +17,9 @@ import BookmarksPage from '../views/BookmarksPage.vue'
 import AccountPage from '../views/AccountPage.vue'
 import PengurusMode from '../views/PengurusMode.vue'
 import DetailProfile from '../views/DetailProfile.vue'
+import TentangGereja from '../views/TentangGereja.vue'
+import PrayerRequest from '../views/PrayerRequest.vue'
+import AddPrayerReq from '../views/AddPrayerReq.vue'
 
 
 const routes = [
@@ -109,7 +112,21 @@ const routes = [
     component: DetailRenungan,
     meta: { requiresAuth: true }
   },
-  
+
+  // Prayer Request routes (NEW)
+  {
+    path: '/prayer-request',
+    name: 'PrayerRequest',
+    component: PrayerRequest,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/prayer-request/add',
+    name: 'AddPrayerReq', 
+    component: AddPrayerReq,
+    meta: { requiresAuth: true }
+  },
+
   // Other routes
   {
     path: '/notifikasi',
@@ -128,7 +145,13 @@ const routes = [
   name: 'DetailProfile',
   component: DetailProfile,
   meta: { requiresAuth: true }
-}
+  },
+  {
+    path: '/tentang-gereja',
+    name: 'TentangGereja',
+    component: TentangGereja,
+    meta: { requiresAuth: true }
+  }
 ]
 
 const router = createRouter({

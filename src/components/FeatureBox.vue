@@ -81,7 +81,7 @@ export default {
         'Jadwal': '/jadwal',
         'News': '/news',
         'Giving': '/giving',
-        'Alkitab Setahun': '/alkitab-setahun',
+        'Tentang Gereja': '/tentang-gereja',
         'Prayer Request': '/prayer-request'
       }
       

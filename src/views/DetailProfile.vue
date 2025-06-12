@@ -120,7 +120,7 @@
   import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
   import { Edit, Check, X } from 'lucide-vue-next'
   import { useUserStore } from '@/stores/userStore'
-  import { updateUserProfile } from '@/services/profileService'
+  import { updateUserProfile } from '@/services/profile.js'
   
   export default {
     name: 'DetailProfile',

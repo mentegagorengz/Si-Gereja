@@ -133,7 +133,7 @@ export const getFeatureIconUrl = (iconName) => {
     'News': 'news',
     'Jadwal': 'jadwal', 
     'Giving': 'giving',
-    'Alkitab Setahun': 'alkitab',
+    'Tentang Gereja': 'tentang-gereja',
     'Renungan': 'renungan',
     'Prayer Request': 'prayer'
   }
@@ -234,9 +234,9 @@ export const getThumbnail = (category, item, size = 'large') => {
 const getEmojiForFeature = (iconName) => {
   const emojiMap = {
     'News': '📰', 'Jadwal': '📅', 'Giving': '💝',
-    'Alkitab Setahun': '📖', 'Renungan': '🙏', 'Prayer Request': '🤲',
+    'Tentang Gereja': '📖', 'Renungan': '🙏', 'Prayer Request': '🤲',
     'news': '📰', 'jadwal': '📅', 'giving': '💝', 
-    'alkitab': '📖', 'renungan': '🙏', 'prayer': '🤲'
+    'tentang-gereja': '📖', 'renungan': '🙏', 'prayer': '🤲'
   }
   return emojiMap[iconName] || emojiMap[iconName?.toLowerCase()] || '❓'
 }
