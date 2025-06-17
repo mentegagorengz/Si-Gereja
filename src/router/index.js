@@ -20,6 +20,7 @@ import DetailProfile from '../views/DetailProfile.vue'
 import TentangGereja from '../views/TentangGereja.vue'
 import PrayerRequest from '../views/PrayerRequest.vue'
 import AddPrayerReq from '../views/AddPrayerReq.vue'
+import PrayerDetail from '../views/PrayerDetail.vue'
 
 
 const routes = [
@@ -113,7 +114,7 @@ const routes = [
     meta: { requiresAuth: true }
   },
 
-  // Prayer Request routes (NEW)
+  // Prayer Detail Route
   {
     path: '/prayer-request',
     name: 'PrayerRequest',
@@ -124,6 +125,12 @@ const routes = [
     path: '/prayer-request/add',
     name: 'AddPrayerReq', 
     component: AddPrayerReq,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/prayer-request/:id',
+    name: 'PrayerDetail',
+    component: PrayerDetail,
     meta: { requiresAuth: true }
   },
 

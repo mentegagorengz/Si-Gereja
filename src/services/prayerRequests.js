@@ -1,4 +1,5 @@
-// src/services/prayerRequests.js
+// src/services/prayerRequests.js - COMPLETELY FIXED VERSION
+
 import { db } from './firebase'
 import { 
   collection, 
@@ -6,8 +7,7 @@ import {
   getDocs, 
   getDoc, 
   addDoc, 
-  updateDoc, 
-  deleteDoc,
+  updateDoc,
   query, 
   orderBy, 
   limit, 
@@ -18,13 +18,194 @@ import {
 const COLLECTION_NAME = 'prayer_requests'
 
 /**
- * Mendapatkan semua prayer requests, diurutkan dari yang terbaru
- * @param {number} limitCount - Jumlah maksimal prayer requests yang diambil
- * @returns {Promise<Array>} Array prayer requests
+ * 🎯 SCHEMA BARU untuk Prayer Request:
+ * {
+ *   id: string,
+ *   title: string,
+ *   description: string,
+ *   category: string,
+ *   userId: string,
+ *   userName: string,
+ *   isAnonymous: boolean,
+ *   isUrgent: boolean,
+ *   
+ *   // STATUS TRACKING
+ *   status: 'waiting' | 'prayed' | 'answered' | 'closed',
+ *   
+ *   // ADMIN ACTIONS
+ *   isPrayedByAdmin: boolean,
+ *   prayedByAdminAt: Date,
+ *   prayedByAdminId: string,
+ *   adminNotes: string,
+ *   
+ *   // TESTIMONY
+ *   hasTestimony: boolean,
+ *   testimonies: [
+ *     {
+ *       id: string,
+ *       content: string,
+ *       createdAt: Date,
+ *       createdBy: string
+ *     }
+ *   ],
+ *   
+ *   createdAt: Date,
+ *   updatedAt: Date
+ * }
+ */
+
+/**
+ * 📝 Tambah prayer request baru (untuk JEMAAT)
+ */
+export async function addPrayerRequest(prayerData, userId) {
+  try {
+    console.log('📝 [PrayerService] Adding prayer request:', prayerData)
+    console.log('👤 [PrayerService] User ID:', userId)
+    
+    if (!prayerData || typeof prayerData !== 'object') {
+      throw new Error('Data prayer request tidak valid')
+    }
+
+    // ⭐ VALIDASI SIMPLE: Cuma butuh description dan userId
+    if (!prayerData.description && !prayerData.prayerText) {
+      throw new Error('Deskripsi prayer request harus diisi')
+    }
+
+    if (!userId) {
+      throw new Error('User ID harus diisi')
+    }
+    
+    console.log('➕ [PrayerService] Adding new prayer request...')
+    
+    const prayerRequestsRef = collection(db, COLLECTION_NAME)
+    
+    // ⭐ HANDLE BOTH OLD AND NEW FORMAT
+    const description = prayerData.description || prayerData.prayerText
+    const title = prayerData.title || `Permintaan Doa - ${prayerData.category || 'Umum'}`
+    
+    // ⭐ SIMPLE DATA: Support both formats
+    const newDoc = await addDoc(prayerRequestsRef, {
+      title: title.trim(),
+      description: description.trim(),
+      category: prayerData.category || 'other',
+      isAnonymous: Boolean(prayerData.isAnonymous),
+      isUrgent: Boolean(prayerData.isUrgent),
+      userId: userId,
+      status: 'active',
+      isPrayed: false,
+      prayedBy: [],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    })
+    
+    console.log('✅ [PrayerService] Prayer request added with ID:', newDoc.id)
+    return newDoc.id
+    
+  } catch (error) {
+    console.error('❌ [PrayerService] Error adding prayer request:', error)
+    throw error
+  }
+}
+
+/**
+ * 🔍 Get prayer requests untuk user tertentu
+ */
+export async function getPrayerRequestsByUser(userId, limitCount = 10) {
+  try {
+    if (!userId) {
+      throw new Error('User ID harus diisi')
+    }
+    
+    console.log('🔍 [PrayerService] Fetching prayer requests for user:', userId)
+    
+    const prayerRequestsRef = collection(db, COLLECTION_NAME)
+    const q = query(
+      prayerRequestsRef, 
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    )
+    
+    const querySnapshot = await getDocs(q)
+    const prayerRequests = []
+    
+    // ⭐ KALAU EMPTY: Tidak masalah, return array kosong
+    if (querySnapshot.empty) {
+      console.log('ℹ️ [PrayerService] No prayer requests found for user:', userId)
+      return [] // ✅ Return array kosong, bukan error
+    }
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data()
+      
+      // ⭐ SAFETY CHECK: Validasi data dengan benar
+      if (!data) {
+        console.warn('❌ [PrayerService] Document has no data:', doc.id)
+        return // Skip document kosong
+      }
+      
+      // ⭐ SAFETY CHECK: Pastikan field penting ada
+      if (!data.description && !data.title) {
+        console.warn('❌ [PrayerService] Document missing description/title:', doc.id, data)
+        return // Skip document yang tidak ada description
+      }
+      
+      // ⭐ HANDLE TIMESTAMP: Aman dari error
+      let createdAtISO
+      try {
+        const createdAt = data.createdAt?.toDate?.() || new Date()
+        createdAtISO = createdAt.toISOString()
+      } catch (timestampError) {
+        console.warn('⚠️ [PrayerService] Invalid timestamp for doc:', doc.id, timestampError)
+        createdAtISO = new Date().toISOString() // Fallback ke sekarang
+      }
+      
+      // ⭐ BUILD SAFE OBJECT
+      const safeData = {
+        id: doc.id,
+        title: (data.title || data.description || '').toString().trim() || 'No title',
+        description: (data.description || '').toString().trim() || 'No description',
+        userId: data.userId || userId,
+        status: data.status || 'active',
+        isPrayed: Boolean(data.isPrayed),
+        prayedBy: Array.isArray(data.prayedBy) ? data.prayedBy : [],
+        category: data.category || 'other',
+        isAnonymous: Boolean(data.isAnonymous),
+        isUrgent: Boolean(data.isUrgent),
+        createdAt: createdAtISO
+      }
+      
+      prayerRequests.push(safeData)
+    })
+    
+    console.log(`✅ [PrayerService] Loaded ${prayerRequests.length} prayer requests for user:`, userId)
+    return prayerRequests
+    
+  } catch (error) {
+    console.error('❌ [PrayerService] Error getting user prayer requests:', error)
+    
+    // ⭐ GRACEFUL ERROR: Jangan throw error untuk hal sepele
+    if (error.message.includes('permission-denied')) {
+      console.warn('⚠️ [PrayerService] Permission denied, returning empty array')
+      return [] // Return kosong daripada crash app
+    }
+    
+    if (error.message.includes('offline')) {
+      console.warn('⚠️ [PrayerService] Offline mode, returning empty array')
+      return [] // Return kosong saat offline
+    }
+    
+    // Untuk error serius, baru throw
+    throw new Error(`Gagal memuat prayer requests: ${error.message}`)
+  }
+} // ⭐ FIXED: Tambah closing bracket yang hilang
+
+/**
+ * 🔍 Get ALL prayer requests (untuk public display di PrayerRequest.vue)
  */
 export async function getPrayerRequests(limitCount = 10) {
   try {
-    console.log('🔍 [PrayerService] Fetching prayer requests...')
+    console.log('🔍 [PrayerService] Fetching all prayer requests...')
     
     const prayerRequestsRef = collection(db, COLLECTION_NAME)
     const q = query(
@@ -56,106 +237,6 @@ export async function getPrayerRequests(limitCount = 10) {
     console.error('❌ [PrayerService] Error getting prayer requests:', error)
     throw error
   }
-}
-
-/**
- * Mendapatkan prayer requests berdasarkan user ID
- * @param {string} userId - ID user
- * @param {number} limitCount - Jumlah maksimal prayer requests
- * @returns {Promise<Array>} Array prayer requests
- */
-export async function getPrayerRequestsByUser(userId, limitCount = 10) {
-  try {
-    if (!userId) {
-      throw new Error('User ID harus diisi')
-    }
-    
-    console.log('🔍 [PrayerService] Fetching prayer requests for user:', userId)
-    
-    const prayerRequestsRef = collection(db, COLLECTION_NAME)
-    const q = query(
-      prayerRequestsRef, 
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc'),
-      limit(limitCount)
-    )
-    
-    const querySnapshot = await getDocs(q)
-    const prayerRequests = []
-    
-    querySnapshot.forEach((doc) => {
-      const data = doc.data()
-      const createdAt = data.createdAt?.toDate?.() || new Date()
-      
-      prayerRequests.push({
-        id: doc.id,
-        ...data,
-        createdAt: createdAt.toISOString()
-      })
-    })
-    
-    console.log('✅ [PrayerService] User prayer requests loaded:', prayerRequests.length)
-    return prayerRequests
-    
-  } catch (error) {
-    console.error('❌ [PrayerService] Error getting user prayer requests:', error)
-    throw error
-  }
-}
-
-/**
- * Mendapatkan kategori-kategori prayer request
- * @returns {Array} Array kategori prayer request
- */
-export function getPrayerCategories() {
-  // ⭐ FIXED: Struktur yang sesuai dengan AddPrayerReq.vue
-  return [
-    {
-      value: 'health',
-      label: 'Kesehatan',
-      icon: '🏥'
-    },
-    {
-      value: 'work',
-      label: 'Pekerjaan',
-      icon: '💼'
-    },
-    {
-      value: 'family',
-      label: 'Keluarga',
-      icon: '👨‍👩‍👧‍👦'
-    },
-    {
-      value: 'finances',
-      label: 'Keuangan',
-      icon: '💰'
-    },
-    {
-      value: 'education',
-      label: 'Pendidikan',
-      icon: '🎓'
-    },
-    {
-      value: 'spiritual',
-      label: 'Spiritual',
-      icon: '🙏'
-    },
-    {
-      value: 'relationship',
-      label: 'Hubungan',
-      icon: '💕'
-    },
-    {
-      value: 'guidance',
-      label: 'Bimbingan',
-      icon: '🧭'
-    },
-    {
-      value: 'other',
-      label: 'Lainnya',
-      icon: '📝'
-    }
-  ]
 }
 
 /**
@@ -197,84 +278,113 @@ export async function getPrayerRequest(id) {
 }
 
 /**
- * Menambahkan prayer request baru
- * @param {Object} prayerData - Data prayer request baru
- * @param {string} userId - ID user yang membuat prayer request
- * @returns {Promise<string>} ID prayer request yang baru dibuat
+ * 📋 Get ALL prayer requests untuk ADMIN/GEMBALA
  */
-export async function addPrayerRequest(prayerData, userId) {
+export async function getAllPrayerRequestsForAdmin(limitCount = 50) {
   try {
-    if (!prayerData || typeof prayerData !== 'object') {
-      throw new Error('Data prayer request tidak valid')
-    }
-
-    if (!prayerData.title || !prayerData.title.trim()) {
-      throw new Error('Judul prayer request harus diisi')
-    }
-
-    if (!prayerData.description || !prayerData.description.trim()) {
-      throw new Error('Deskripsi prayer request harus diisi')
-    }
-
-    if (!userId) {
-      throw new Error('User ID harus diisi')
-    }
-    
-    console.log('➕ [PrayerService] Adding new prayer request...')
+    console.log('🔍 [PrayerService] Getting all prayer requests for admin...')
     
     const prayerRequestsRef = collection(db, COLLECTION_NAME)
+    const q = query(
+      prayerRequestsRef,
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    )
     
-    // ⭐ AUTOMATIC: Collection akan otomatis dibuat kalau belum ada!
-    const newDoc = await addDoc(prayerRequestsRef, {
-      title: prayerData.title.trim(),
-      description: prayerData.description.trim(),
-      userId: userId,
-      status: 'active',
-      isPrayed: false,
-      prayedBy: [], // Array user yang sudah mendoakan
-      createdAt: serverTimestamp(), // Timestamp dari server Firebase
-      updatedAt: serverTimestamp()
+    const querySnapshot = await getDocs(q)
+    const prayers = []
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data()
+      const createdAt = data.createdAt?.toDate?.() || new Date()
+      
+      prayers.push({
+        id: doc.id,
+        ...data,
+        createdAt: createdAt.toISOString(),
+        statusText: getStatusText(data.status, data.isPrayedByAdmin),
+        categoryIcon: getCategoryIcon(data.category)
+      })
     })
     
-    console.log('✅ [PrayerService] Prayer request added with ID:', newDoc.id)
-    return newDoc.id
+    console.log('✅ [PrayerService] Admin prayers loaded:', prayers.length)
+    return prayers
     
   } catch (error) {
-    console.error('❌ [PrayerService] Error adding prayer request:', error)
+    console.error('❌ [PrayerService] Error getting admin prayers:', error)
     throw error
   }
 }
 
 /**
- * Update prayer request (toggle prayer status, edit content, dll)
- * @param {string} id - ID prayer request
- * @param {Object} updateData - Data yang akan diupdate
- * @returns {Promise<boolean>} Success status
+ * 🙏 Admin tandai doa sudah didoakan
  */
-export async function updatePrayerRequest(id, updateData) {
+export async function markPrayerAsPrayed(prayerId, adminId, adminNotes = '') {
   try {
-    if (!id) {
-      throw new Error('ID prayer request harus diisi')
-    }
-
-    if (!updateData || typeof updateData !== 'object') {
-      throw new Error('Data update tidak valid')
-    }
+    console.log('🙏 [PrayerService] Marking prayer as prayed:', prayerId)
     
-    console.log('🔄 [PrayerService] Updating prayer request:', id)
+    const prayerRef = doc(db, COLLECTION_NAME, prayerId)
     
-    const prayerRequestRef = doc(db, COLLECTION_NAME, id)
-    
-    await updateDoc(prayerRequestRef, {
-      ...updateData,
+    await updateDoc(prayerRef, {
+      status: 'prayed',
+      isPrayedByAdmin: true,
+      prayedByAdminAt: serverTimestamp(),
+      prayedByAdminId: adminId,
+      adminNotes: adminNotes,
       updatedAt: serverTimestamp()
     })
     
-    console.log('✅ [PrayerService] Prayer request updated successfully')
+    console.log('✅ [PrayerService] Prayer marked as prayed')
     return true
     
   } catch (error) {
-    console.error('❌ [PrayerService] Error updating prayer request:', error)
+    console.error('❌ [PrayerService] Error marking prayer as prayed:', error)
+    throw error
+  }
+}
+
+/**
+ * 📝 Tambah testimoni untuk prayer request
+ */
+export async function addTestimony(prayerId, testimonyContent, userId) {
+  try {
+    console.log('📝 [PrayerService] Adding testimony to prayer:', prayerId)
+    
+    // Get existing prayer data
+    const prayerRef = doc(db, COLLECTION_NAME, prayerId)
+    const prayerSnap = await getDoc(prayerRef)
+    
+    if (!prayerSnap.exists()) {
+      throw new Error('Prayer request tidak ditemukan')
+    }
+    
+    const prayerData = prayerSnap.data()
+    const existingTestimonies = prayerData.testimonies || []
+    
+    // Create new testimony
+    const newTestimony = {
+      id: Date.now().toString(), // Simple ID
+      content: testimonyContent,
+      createdAt: new Date().toISOString(),
+      createdBy: userId
+    }
+    
+    // Add to testimonies array
+    const updatedTestimonies = [...existingTestimonies, newTestimony]
+    
+    // Update prayer request
+    await updateDoc(prayerRef, {
+      testimonies: updatedTestimonies,
+      hasTestimony: true,
+      status: 'answered', // Auto update status ke answered
+      updatedAt: serverTimestamp()
+    })
+    
+    console.log('✅ [PrayerService] Testimony added successfully')
+    return true
+    
+  } catch (error) {
+    console.error('❌ [PrayerService] Error adding testimony:', error)
     throw error
   }
 }
@@ -314,9 +424,11 @@ export async function togglePrayerStatus(prayerRequestId, userId) {
     isPrayed = prayedBy.length > 0
     
     // Update di Firebase
-    await updatePrayerRequest(prayerRequestId, {
+    const prayerRef = doc(db, COLLECTION_NAME, prayerRequestId)
+    await updateDoc(prayerRef, {
       prayedBy: prayedBy,
-      isPrayed: isPrayed
+      isPrayed: isPrayed,
+      updatedAt: serverTimestamp()
     })
     
     return true
@@ -328,72 +440,53 @@ export async function togglePrayerStatus(prayerRequestId, userId) {
 }
 
 /**
- * Hapus prayer request (hanya untuk pembuat atau admin)
- * @param {string} id - ID prayer request yang akan dihapus
- * @returns {Promise<boolean>} Success status
+ * 🏷️ Helper function untuk status text
  */
-export async function deletePrayerRequest(id) {
-  try {
-    if (!id) {
-      throw new Error('ID prayer request harus diisi')
-    }
-    
-    console.log('🗑️ [PrayerService] Deleting prayer request:', id)
-    
-    const prayerRequestRef = doc(db, COLLECTION_NAME, id)
-    await deleteDoc(prayerRequestRef)
-    
-    console.log('✅ [PrayerService] Prayer request deleted successfully')
-    return true
-    
-  } catch (error) {
-    console.error('❌ [PrayerService] Error deleting prayer request:', error)
-    throw error
+function getStatusText(status, isPrayedByAdmin) {
+  switch (status) {
+    case 'waiting':
+      return 'Menunggu'
+    case 'prayed':
+      return 'Sudah Didoakan'
+    case 'answered':
+      return 'Dijawab'
+    case 'closed':
+      return 'Ditutup'
+    default:
+      return isPrayedByAdmin ? 'Sudah Didoakan' : 'Menunggu'
   }
 }
 
 /**
- * Get statistics untuk dashboard admin
- * @returns {Promise<Object>} Stats prayer requests
+ * 🎨 Helper function untuk category icon
  */
-export async function getPrayerRequestStats() {
-  try {
-    console.log('📊 [PrayerService] Getting prayer request statistics...')
-    
-    const prayerRequestsRef = collection(db, COLLECTION_NAME)
-    
-    // Get all prayer requests (might want to limit this in production)
-    const querySnapshot = await getDocs(prayerRequestsRef)
-    
-    let totalRequests = 0
-    let activeRequests = 0
-    let prayedRequests = 0
-    
-    querySnapshot.forEach((doc) => {
-      const data = doc.data()
-      totalRequests++
-      
-      if (data.status === 'active') {
-        activeRequests++
-      }
-      
-      if (data.isPrayed) {
-        prayedRequests++
-      }
-    })
-    
-    const stats = {
-      totalRequests,
-      activeRequests,
-      prayedRequests,
-      prayerRate: totalRequests > 0 ? Math.round((prayedRequests / totalRequests) * 100) : 0
-    }
-    
-    console.log('✅ [PrayerService] Stats loaded:', stats)
-    return stats
-    
-  } catch (error) {
-    console.error('❌ [PrayerService] Error getting stats:', error)
-    throw error
+function getCategoryIcon(category) {
+  const icons = {
+    'health': '🏥',
+    'work': '💼',
+    'family': '👨‍👩‍👧‍👦',
+    'finances': '💰',
+    'education': '🎓',
+    'spiritual': '🙏',
+    'relationship': '💕',
+    'guidance': '🧭',
+    'other': '📝'
   }
+  return icons[category] || '🙏'
+}
+
+/**
+ * 📊 Get prayer categories dengan icon
+ */
+export function getPrayerCategories() {
+  return [
+    { value: 'health', label: 'Kesehatan', icon: '🏥' },
+    { value: 'work', label: 'Pekerjaan', icon: '💼' },
+    { value: 'family', label: 'Keluarga', icon: '👨‍👩‍👧‍👦' },
+    { value: 'finances', label: 'Keuangan', icon: '💰' },
+    { value: 'education', label: 'Pendidikan', icon: '🎓' },
+    { value: 'spiritual', label: 'Spiritual', icon: '🙏' },
+    { value: 'relationship', label: 'Hubungan', icon: '💕' },
+    { value: 'other', label: 'Lainnya', icon: '📝' }
+  ]
 }

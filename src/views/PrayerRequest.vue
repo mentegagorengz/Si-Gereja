@@ -1,4 +1,4 @@
-<!-- src/views/PrayerRequestPage.vue -->
+<!-- src/views/PrayerRequestPage.vue - SIMPLE WIREFRAME -->
 <template>
   <div class="prayer-request-container">
     <div class="prayer-wrapper">
@@ -7,89 +7,96 @@
 
       <!-- Loading state -->
       <div v-if="loading" class="loading-container">
+        <div class="loading-spinner"></div>
         <p>Memuat daftar doa...</p>
       </div>
 
       <!-- Error state -->
       <div v-else-if="error" class="error-container">
+        <div class="error-icon">😞</div>
+        <h3>Terjadi Kesalahan</h3>
         <p class="error-text">{{ error }}</p>
-        <ButtonPrimary @click="fetchPrayerRequests">Coba Lagi</ButtonPrimary>
+        <ButtonPrimary @click="fetchMyPrayerRequests">Coba Lagi</ButtonPrimary>
       </div>
 
-      <!-- Content ketika ada data -->
-      <div v-else class="prayer-content">  
-        <!-- Tombol Tambah Doa Baru -->
-        <div class="add-prayer-section">
-          <ButtonPrimary @click="showAddModal = true">
-            <Plus class="btn-icon" />
-            Tambah Permintaan Doa
-          </ButtonPrimary>
-        </div>
-
-        <!-- Daftar Prayer Request -->
-        <div v-if="prayerRequests.length > 0" class="prayers-list">
+      <!-- Content ketika ada doa user -->
+      <div v-else-if="myPrayerRequests.length > 0" class="prayers-content">  
+        <!-- Daftar Prayer Cards SIMPLE sesuai wireframe -->
+        <div class="prayers-list">
           <div 
-            v-for="prayer in prayerRequests" 
+            v-for="prayer in myPrayerRequests" 
             :key="prayer.id"
             class="prayer-card"
+            @click="goToPrayerDetail(prayer)"
           >
-            <div class="prayer-header">
-              <h3 class="prayer-title">{{ prayer.title }}</h3>
-              <span class="prayer-status" :class="prayer.status">
-                {{ getStatusText(prayer.status) }}
-              </span>
+            <!-- Header: Category Badge dan Date sejajar -->
+            <div class="card-header">
+              <div class="category-badge" :class="getCategoryClass(prayer.category)">
+                {{ getCategoryLabel(prayer.category) }}
+              </div>
+              
+              <div class="prayer-date">
+                {{ formatDate(prayer.createdAt) }}
+              </div>
             </div>
-            
-            <p class="prayer-description">{{ prayer.description }}</p>
-            
-            <div class="prayer-footer">
-              <span class="prayer-date">{{ formatDate(prayer.createdAt) }}</span>
-              <button @click="togglePrayerStatus(prayer)" class="pray-btn">
-                <Heart :class="{ 'filled': prayer.isPrayed }" />
-                {{ prayer.isPrayed ? 'Sudah Didoakan' : 'Doakan' }}
-              </button>
-            </div>
-          </div>
-        </div>
 
-        <!-- Empty state -->
-        <div v-else class="empty-container">
-          <div class="empty-content">
-            <MessageCircle class="empty-icon" />
-            <h3>Belum Ada Permintaan Doa</h3>
-            <p>Belum ada permintaan doa yang dibagikan. Mulai berbagi permintaan doa Anda!</p>
+            <!-- Prayer Content -->
+            <div class="prayer-content">
+              {{ prayer.description }}
+            </div>
+
+            <!-- Tambah Testimoni Button -->
+            <button 
+              class="testimony-btn" 
+              @click.stop="openTestimonyModal(prayer)"
+            >
+              Tambah Testimoni
+            </button>
           </div>
         </div>
       </div>
+
+      <!-- Empty state sesuai wireframe -->
+      <div v-else class="empty-container">
+        <div class="empty-content">
+          <div class="empty-icon">🙏</div>
+          <h3>Belum Ada Permintaan Doa</h3>
+          <p>Anda belum memiliki permintaan doa. Mulai berbagi pergumulan Anda dengan jemaat!</p>
+        </div>
+      </div>
+
+      <!-- ⭐ FLOATING ACTION BUTTON - sesuai wireframe -->
+      <button class="floating-add-btn" @click="goToAddPrayer" aria-label="Tambah Permintaan Doa">
+        <Plus class="fab-icon" />
+      </button>
     </div>
 
-    <!-- Modal Tambah Doa -->
-    <div v-if="showAddModal" class="modal-overlay" @click="closeAddModal">
+    <!-- ⭐ TESTIMONY MODAL -->
+    <div v-if="showTestimonyModal" class="modal-overlay" @click="closeTestimonyModal">
       <div class="modal-content" @click.stop>
-        <h3>Tambah Permintaan Doa</h3>
+        <h3>Tambah Testimoni</h3>
+        <p class="modal-subtitle">Ceritakan bagaimana Tuhan menjawab doa Anda</p>
         
-        <FormInput
-          id="prayer-title"
-          label="Judul Doa"
-          v-model="newPrayer.title"
-          placeholder="Contoh: Kesembuhan untuk keluarga"
-        />
+        <textarea 
+          v-model="testimonyText"
+          placeholder="Tulis testimoni Anda di sini..."
+          class="testimony-textarea"
+          rows="4"
+          maxlength="500"
+        ></textarea>
         
-        <div class="form-group">
-          <label for="prayer-description">Deskripsi</label>
-          <textarea 
-            id="prayer-description"
-            v-model="newPrayer.description"
-            placeholder="Jelaskan permintaan doa Anda..."
-            class="prayer-textarea"
-          ></textarea>
+        <div class="char-counter">
+          {{ testimonyText.length }}/500 karakter
         </div>
         
         <div class="modal-actions">
-          <button class="cancel-btn" @click="closeAddModal">Batal</button>
-          <ButtonPrimary @click="submitPrayer" :loading="isSubmitting">
-            <span v-if="isSubmitting">Mengirim...</span>
-            <span v-else>Kirim Doa</span>
+          <button class="cancel-btn" @click="closeTestimonyModal">Batal</button>
+          <ButtonPrimary 
+            @click="submitTestimony" 
+            :loading="isSubmittingTestimony"
+            :disabled="!testimonyText.trim() || isSubmittingTestimony"
+          >
+            {{ isSubmittingTestimony ? 'Mengirim...' : 'Kirim Testimoni' }}
           </ButtonPrimary>
         </div>
       </div>
@@ -100,22 +107,18 @@
 <script>
 import HeaderWithBack from '@/components/layout/HeaderWithBack.vue'
 import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
-import FormInput from '@/components/common/FormInput.vue'
-import { Plus, Heart, MessageCircle } from 'lucide-vue-next'
+import { Plus } from 'lucide-vue-next'
 import { useUserStore } from '@/stores/userStore.js'
 
-// ⭐ REAL SERVICE: Import Firebase service
-import { getPrayerRequests, addPrayerRequest, togglePrayerStatus } from '@/services/prayerRequests.js'
+// ⭐ IMPORT PERSONAL FUNCTIONS - hanya untuk user sendiri
+import { getPrayerRequestsByUser, addTestimony, getPrayerCategories } from '@/services/prayerRequests.js'
 
 export default {
   name: 'PrayerRequestPage',
   components: {
     HeaderWithBack,
     ButtonPrimary,
-    FormInput,
-    Plus,
-    Heart,
-    MessageCircle
+    Plus
   },
 
   computed: {
@@ -124,137 +127,137 @@ export default {
     },
     
     currentUserId() {
-      return this.userStore.userId || 'anonymous'
+      return this.userStore.userId || this.userStore.user?.id || this.userStore.user?.nama || 'anonymous'
     }
   },
   
   data() {
     return {
-      prayerRequests: [],
+      myPrayerRequests: [], // ⭐ PERSONAL: Hanya doa milik user
       loading: true,
       error: null,
-      showAddModal: false,
-      isSubmitting: false,
-      newPrayer: {
-        title: '',
-        description: ''
-      }
+      
+      // Testimony Modal
+      showTestimonyModal: false,
+      selectedPrayer: null,
+      testimonyText: '',
+      isSubmittingTestimony: false,
+      
+      // Categories
+      categories: getPrayerCategories()
     }
   },
   
   async created() {
-    await this.fetchPrayerRequests()
+    await this.fetchMyPrayerRequests() // ⭐ FETCH PERSONAL PRAYERS
   },
   
   methods: {
-    async fetchPrayerRequests() {
+    // ⭐ FETCH PERSONAL PRAYERS - hanya milik user yang login
+    async fetchMyPrayerRequests() {
       try {
         this.loading = true
         this.error = null
         
-        console.log('🔍 [PrayerRequest] Fetching prayer requests...')
+        if (!this.currentUserId || this.currentUserId === 'anonymous') {
+          throw new Error('User tidak terdeteksi. Silakan login ulang.')
+        }
         
-        // ⭐ REAL: Ambil data dari Firebase
-        const prayerRequestsData = await getPrayerRequests(20) // Ambil maksimal 20 prayer requests
+        console.log('🔍 [PrayerRequest] Fetching personal prayers for user:', this.currentUserId)
         
-        console.log('✅ [PrayerRequest] Prayer requests loaded:', prayerRequestsData.length)
+        // ⭐ PERSONAL: Ambil hanya doa milik user yang login
+        const userPrayersData = await getPrayerRequestsByUser(this.currentUserId, 50) // Max 50 doa user
         
-        this.prayerRequests = prayerRequestsData
+        console.log('✅ [PrayerRequest] Personal prayers loaded:', userPrayersData.length)
+        
+        this.myPrayerRequests = userPrayersData
         
       } catch (error) {
-        console.error('❌ [PrayerRequest] Error loading prayer requests:', error)
-        this.error = 'Gagal memuat daftar doa. Pastikan koneksi internet Anda stabil.'
+        console.error('❌ [PrayerRequest] Error loading personal prayers:', error)
+        this.error = 'Gagal memuat daftar doa Anda. Pastikan koneksi internet stabil.'
       } finally {
         this.loading = false
       }
     },
     
-    async submitPrayer() {
-      if (!this.newPrayer.title.trim() || !this.newPrayer.description.trim()) {
-        alert('Judul dan deskripsi harus diisi!')
-        return
-      }
+    // ⭐ GO TO ADD PRAYER - floating button action
+    goToAddPrayer() {
+      this.$router.push('/prayer-request/add')
+    },
+
+    // ⭐ GO TO PRAYER DETAIL - card click action
+    goToPrayerDetail(prayer) {
+      console.log('🔍 [PrayerRequest] Opening prayer detail:', prayer.id)
+      // TODO: Implement detail page route
+      // this.$router.push(`/prayer-request/${prayer.id}`)
       
+      // Sementara show modal dengan detail lengkap
+      alert(`Detail Doa:\n\nKategori: ${this.getCategoryLabel(prayer.category)}\nTanggal: ${this.formatDate(prayer.createdAt)}\n\nIsi Doa:\n${prayer.description}\n\n(Halaman detail akan segera tersedia!)`)
+    },
+
+    // ⭐ TESTIMONY FUNCTIONS
+    openTestimonyModal(prayer) {
+      this.selectedPrayer = prayer
+      this.testimonyText = ''
+      this.showTestimonyModal = true
+    },
+
+    closeTestimonyModal() {
+      this.showTestimonyModal = false
+      this.selectedPrayer = null
+      this.testimonyText = ''
+    },
+
+    async submitTestimony() {
       try {
-        this.isSubmitting = true
-        
-        console.log('➕ [PrayerRequest] Submitting new prayer...')
-        
-        // ⭐ REAL: Simpan ke Firebase
-        const newPrayerId = await addPrayerRequest({
-          title: this.newPrayer.title,
-          description: this.newPrayer.description
-        }, this.currentUserId)
-        
-        console.log('✅ [PrayerRequest] Prayer request submitted with ID:', newPrayerId)
-        
-        // Reset form
-        this.newPrayer = { title: '', description: '' }
-        this.closeAddModal()
-        
-        // Refresh data
-        await this.fetchPrayerRequests()
-        
-        alert('✅ Permintaan doa berhasil ditambahkan!')
-        
-      } catch (error) {
-        console.error('❌ Error submitting prayer:', error)
-        
-        if (error.message.includes('Judul')) {
-          alert('❌ ' + error.message)
-        } else if (error.message.includes('Deskripsi')) {
-          alert('❌ ' + error.message)
-        } else {
-          alert('❌ Gagal menambahkan permintaan doa! Error: ' + error.message)
+        if (!this.testimonyText.trim()) {
+          alert('Testimoni tidak boleh kosong!')
+          return
         }
-      } finally {
-        this.isSubmitting = false
-      }
-    },
-    
-    async togglePrayerStatus(prayer) {
-      try {
-        console.log('🙏 [PrayerRequest] Toggling prayer status for:', prayer.title)
+
+        this.isSubmittingTestimony = true
+
+        await addTestimony(
+          this.selectedPrayer.id, 
+          this.testimonyText.trim(), 
+          this.currentUserId
+        )
+
+        // Refresh data
+        await this.fetchMyPrayerRequests()
         
-        // ⭐ REAL: Update status di Firebase
-        await togglePrayerStatus(prayer.id, this.currentUserId)
-        
-        // Refresh data untuk sinkronisasi
-        await this.fetchPrayerRequests()
-        
-        console.log('✅ [PrayerRequest] Prayer status updated successfully')
-        
+        this.closeTestimonyModal()
+        alert('✅ Testimoni berhasil ditambahkan!')
+
       } catch (error) {
-        console.error('❌ Error updating prayer status:', error)
-        alert('❌ Gagal mengupdate status doa!')
+        console.error('Error submitting testimony:', error)
+        alert('❌ Gagal menambahkan testimoni: ' + error.message)
+      } finally {
+        this.isSubmittingTestimony = false
       }
     },
-    
-    closeAddModal() {
-      this.showAddModal = false
-      this.newPrayer = { title: '', description: '' }
-    },
-    
-    getStatusText(status) {
-      const statusMap = {
-        'active': 'Aktif',
-        'answered': 'Terjawab',
-        'closed': 'Ditutup'
-      }
-      return statusMap[status] || 'Aktif'
-    },
-    
+
+    // ⭐ HELPER FUNCTIONS
     formatDate(dateString) {
       try {
         const date = new Date(dateString)
         return date.toLocaleDateString('id-ID', {
           day: 'numeric',
-          month: 'long',
+          month: 'short',
           year: 'numeric'
         })
       } catch {
         return 'Tanggal tidak valid'
       }
+    },
+
+    getCategoryLabel(category) {
+      const category_obj = this.categories.find(cat => cat.value === category)
+      return category_obj ? category_obj.label : 'Lainnya'
+    },
+
+    getCategoryClass(category) {
+      return `category-${category || 'other'}`
     }
   }
 }
@@ -264,6 +267,8 @@ export default {
 .prayer-request-container {
   background: #fcfcf7;
   min-height: 100vh;
+  position: relative;
+  padding-bottom: 100px; /* Space for floating button */
 }
 
 .prayer-wrapper {
@@ -272,34 +277,66 @@ export default {
   margin: 0 auto;
 }
 
-/* Loading & Error States */
-.loading-container, .error-container {
+/* Loading State */
+.loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  padding: 32px 16px;
+  padding: 40px 16px;
   text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f0f0f0;
+  border-top: 4px solid #41442A;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-container p {
+  font-family: 'Inter';
+  color: #666;
+  margin: 0;
+}
+
+/* Error State */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 16px;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 48px;
+}
+
+.error-container h3 {
+  font-family: 'Inter';
+  font-size: 18px;
+  font-weight: 600;
+  color: #41442A;
+  margin: 0;
 }
 
 .error-text {
   color: #d32f2f;
   font-family: 'Inter';
   font-size: 14px;
+  margin: 0;
 }
 
-/* Add Prayer Section */
-.add-prayer-section {
-  margin-bottom: 24px;
-}
-
-.btn-icon {
-  width: 16px;
-  height: 16px;
-  margin-right: 8px;
-}
-
-/* Prayers List */
+/* Prayer Cards - SIMPLE sesuai wireframe */
 .prayers-list {
   display: flex;
   flex-direction: column;
@@ -307,110 +344,111 @@ export default {
 }
 
 .prayer-card {
-  background: white;
+  background: #e5e7eb;
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #f0f0f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.prayer-header {
+.prayer-card:hover {
+  background: #d1d5db;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.prayer-card:active {
+  transform: translateY(0);
+}
+
+/* Card Header - Category dan Date sejajar */
+.card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 12px;
 }
 
-.prayer-title {
-  font-family: 'Inter';
-  font-size: 16px;
-  font-weight: 600;
-  color: #41442A;
-  margin: 0;
-  flex: 1;
-  line-height: 1.3;
-}
-
-.prayer-status {
+/* Category Badge - SIMPLE */
+.category-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
   font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 4px;
   font-weight: 600;
+  font-family: 'Inter';
   text-transform: uppercase;
 }
 
-.prayer-status.active {
-  background: #e3f2fd;
-  color: #1976d2;
+.category-health { background: #fecaca; color: #991b1b; }
+.category-work { background: #fed7aa; color: #9a3412; }
+.category-family { background: #bbf7d0; color: #14532d; }
+.category-finances { background: #a7f3d0; color: #064e3b; }
+.category-education { background: #bfdbfe; color: #1e3a8a; }
+.category-spiritual { background: #ddd6fe; color: #5b21b6; }
+.category-relationship { background: #fce7f3; color: #be185d; }
+.category-other { background: #e2e8f0; color: #475569; }
+
+/* Date - SIMPLE */
+.prayer-date {
+  font-family: 'Inter';
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
 }
 
-.prayer-description {
+/* Prayer Content - SIMPLE */
+.prayer-content {
   font-family: 'Inter';
   font-size: 14px;
-  color: #666;
+  color: #374151;
   line-height: 1.5;
-  margin: 0 0 16px 0;
+  margin-bottom: 16px;
 }
 
-.prayer-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.prayer-date {
-  font-size: 12px;
-  color: #999;
-  font-family: 'Inter';
-}
-
-.pray-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: none;
-  border: 1px solid #41442A;
+/* Tambah Testimoni Button - SIMPLE */
+.testimony-btn {
+  width: 100%;
+  padding: 10px;
+  background: #d1d5db;
+  color: #374151;
+  border: none;
   border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 12px;
-  color: #41442A;
+  font-family: 'Inter';
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Inter';
 }
 
-.pray-btn:hover {
-  background: #41442A;
-  color: white;
+.testimony-btn:hover {
+  background: #9ca3af;
+  color: #111827;
 }
 
-.pray-btn .filled {
-  fill: currentColor;
+/* Prevent button from triggering card click */
+.testimony-btn:active {
+  transform: scale(0.98);
 }
 
-/* Empty State */
+/* Empty State - SIMPLE */
 .empty-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 300px;
+  min-height: 400px;
   padding: 32px 16px;
 }
 
 .empty-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
   text-align: center;
   max-width: 280px;
 }
 
 .empty-icon {
-  width: 64px;
-  height: 64px;
-  color: #ccc;
-  margin-bottom: 8px;
+  font-size: 64px;
+  margin-bottom: 16px;
 }
 
 .empty-content h3 {
@@ -418,7 +456,7 @@ export default {
   font-size: 18px;
   font-weight: 600;
   color: #41442A;
-  margin: 0;
+  margin: 0 0 12px 0;
 }
 
 .empty-content p {
@@ -427,6 +465,41 @@ export default {
   color: #666;
   line-height: 1.4;
   margin: 0;
+}
+
+/* ⭐ FLOATING ACTION BUTTON - sesuai wireframe */
+.floating-add-btn {
+  position: fixed;
+  bottom: 80px; /* Above bottom navbar */
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  background: #41442A;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(65, 68, 42, 0.3);
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+
+.floating-add-btn:hover {
+  background: #2d2f1c;
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(65, 68, 42, 0.4);
+}
+
+.floating-add-btn:active {
+  transform: scale(0.95);
+}
+
+.fab-icon {
+  width: 24px;
+  height: 24px;
+  color: white;
 }
 
 /* Modal Styles */
@@ -469,47 +542,52 @@ export default {
   font-size: 18px;
   font-weight: 600;
   color: #41442A;
-  margin: 0 0 20px 0;
-  text-align: center;
+  margin: 0 0 8px 0;
 }
 
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 6px;
+.modal-subtitle {
   font-family: 'Inter';
   font-size: 14px;
+  color: #666;
+  margin: 0 0 16px 0;
 }
 
-.prayer-textarea {
+.testimony-textarea {
   width: 100%;
   min-height: 80px;
   padding: 12px;
-  font-size: 14px;
   font-family: 'Inter';
-  border: 2px solid #41442A;
-  border-radius: 6px;
-  background-color: #fcfcf7;
-  box-sizing: border-box;
+  font-size: 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
   resize: vertical;
+  box-sizing: border-box;
+}
+
+.testimony-textarea:focus {
+  outline: none;
+  border-color: #41442A;
+}
+
+.char-counter {
+  text-align: right;
+  font-family: 'Inter';
+  font-size: 12px;
+  color: #666;
+  margin: 6px 0 16px 0;
 }
 
 .modal-actions {
   display: flex;
   gap: 12px;
-  margin-top: 20px;
 }
 
 .cancel-btn {
   flex: 1;
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
-  background: #f5f5f5;
+  background: white;
   color: #666;
   font-family: 'Inter';
   font-size: 14px;
@@ -517,7 +595,7 @@ export default {
 }
 
 .cancel-btn:hover {
-  background: #e0e0e0;
+  background: #f9fafb;
 }
 
 /* Responsive */
@@ -530,9 +608,16 @@ export default {
     padding: 12px;
   }
   
-  .modal-content {
-    padding: 20px;
-    margin: 10px;
+  .floating-add-btn {
+    width: 48px;
+    height: 48px;
+    bottom: 70px;
+    right: 16px;
+  }
+  
+  .fab-icon {
+    width: 20px;
+    height: 20px;
   }
 }
 </style>
