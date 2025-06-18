@@ -327,22 +327,20 @@ export default {
   min-height: 100vh;
   background: linear-gradient(135deg, #fcfcf7 0%, #f5f5f0 100%);
   display: flex;
-  align-items: center;
+  align-items: stretch; /* Changed from center to stretch */
   justify-content: center;
-  padding: 20px;
+  padding: 0; /* Removed padding */
   box-sizing: border-box;
 }
 
 .desktop-layout {
   width: 100%;
-  max-width: 1200px;
   height: 100vh;
-  max-height: 800px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border-radius: 20px;
+  border-radius: 0; /* Removed border radius */
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: none; /* Removed shadow */
   background: white;
 }
 
@@ -457,11 +455,11 @@ export default {
 }
 
 .login-card {
-  background: white;
-  border-radius: 16px;
+  background: transparent; /* Removed white background */
+  border-radius: 0; /* Removed border radius */
   padding: 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  border: 1px solid #f0f0f0;
+  box-shadow: none; /* Removed shadow */
+  border: none; /* Removed border */
 }
 
 .card-header {
@@ -568,7 +566,7 @@ export default {
 /* Tablet */
 @media (max-width: 1024px) {
   .desktop-layout {
-    max-height: 700px;
+    height: 100vh; /* Keep full height */
   }
   
   .branding-section {
@@ -577,10 +575,6 @@ export default {
   
   .church-name {
     font-size: 32px;
-  }
-  
-  .welcome-title {
-    font-size: 24px;
   }
   
   .login-section {

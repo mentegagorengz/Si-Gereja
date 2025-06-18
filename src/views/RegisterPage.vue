@@ -1,106 +1,147 @@
+<!-- RegisterPage.vue - Clean & Simple -->
 <template>
-  <div class="register-container">
-    <div class="form-wrapper">
-      <!-- Header with Back Icon -->
-      <HeaderWithBack title="Registrasi MyRajawali" />
-
-      <!-- AutoCompleteInput -->
-      <AutoCompleteInput
-        id="register-name"
-        label="Nama"
-        placeholder="Ketik nama lengkap Anda"
-        v-model="nama"
-        :error="namaError"
-        @suggestion-selected="onSuggestionSelected"
-        @nama-validated="onNamaValidated"
-      />
-
-      <!-- Tanggal Lahir -->
-      <div class="form-group">
-        <label for="tanggalLahir">Tanggal lahir</label>
-        <VueDatePicker
-          v-model="tanggalLahir"
-          :format="formatDate"
-          input-class-name="date-input"
-          placeholder="mm/dd/yyyy"
-          :enable-time-picker="false"
-          :teleport="false"
-          :hide-input-icon="true"
-        />
-      </div>
-
-      <!-- Status -->
-      <SelectDropdown
-        id="status"
-        label="Status"
-        placeholder="Pilih salah satu"
-        :options="statusOptions"
-        v-model="status"
-        :error="statusError"
-      />
-
-      <!-- Sektor -->
-      <div class="form-group">
-        <label>Sektor</label>
-        <div class="radio-group">
-          <label><input type="radio" value="Tesalonika" v-model="sektor" /> Sektor Tesalonika</label>
-          <label><input type="radio" value="Anugerah" v-model="sektor" /> Sektor Anugerah</label>
+  <div class="register-page">
+    <!-- Left Side - Branding (Desktop Only) -->
+    <div class="branding-section">
+      <div class="branding-content">
+        <div class="church-info">
+          <div class="church-logo">
+            <img src="@/assets/logos/logo-MyRajawali.png" alt="MyRajawali" class="logo-large"/>
+          </div>
+          <h1 class="church-name">Welcome to MyRajawali</h1>
+          <p class="church-tagline">Melayani dengan Kasih Kristus</p>
         </div>
       </div>
+      
+      <!-- Decorative Elements -->
+      <div class="decorative-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+      </div>
+    </div>
+    
+    <!-- Right Side - Register Form -->
+    <div class="register-section">
+      <div class="register-container">
+        <div class="card-header">
+          <h3 class="register-title">Buat Akun Baru</h3>
+          <p class="register-subtitle">Silakan lengkapi data diri Anda</p>
+        </div>
+        
+        <div class="form-wrapper">
+          <!-- Input Nama - Back to AutoComplete -->
+          <div class="form-group">
+            <AutoCompleteInput
+              id="nama"
+              label="Nama"
+              placeholder="Ketik nama lengkap Anda"
+              v-model="nama"
+              :error="namaError"
+              @suggestion-selected="onSuggestionSelected"
+              @nama-validated="onNamaValidated"
+            />
+          </div>
 
-      <!-- Password -->
-      <PasswordInput
-        id="password"
-        label="Password"
-        placeholder="Masukan kata sandi Anda"
-        v-model="password"
-        :error="passwordError"
-      />
+          <!-- Input Tanggal Lahir - HTML5 Date -->
+          <div class="form-group">
+            <label for="tanggalLahir">Tanggal lahir</label>
+            <input
+              type="date"
+              id="tanggalLahir"
+              v-model="tanggalLahir"
+              class="form-input"
+              placeholder="Pilih tanggal lahir"
+            />
+          </div>
 
-      <!-- Konfirmasi Password -->
-      <PasswordInput
-        id="confirmPassword"
-        label="Konfirmasi Password"
-        placeholder="Konfirmasi kata sandi Anda"
-        v-model="confirmPassword"
-        :error="confirmPasswordError"
-      />
+          <!-- Select Status - Back to SelectDropdown -->
+          <div class="form-group">
+            <SelectDropdown
+              id="status"
+              label="Status"
+              placeholder="Pilih status"
+              v-model="status"
+              :options="statusOptions"
+              :error="statusError"
+            />
+          </div>
 
-      <!-- Error message -->
-      <p v-if="errorMsg" class="warning-text">{{ errorMsg }}</p>
+          <!-- Select Sektor - Back to SelectDropdown -->
+          <div class="form-group">
+            <SelectDropdown
+              id="sektor"
+              label="Sektor"
+              placeholder="Pilih sektor"
+              v-model="sektor"
+              :options="sektorOptions"
+            />
+          </div>
 
-      <!-- Submit button -->
-      <ButtonPrimary 
-        @click="register"
-        :disabled="!canSubmit"
-        :class="{ 'disabled': !canSubmit }"
-      >
-        {{ submitButtonText }}
-      </ButtonPrimary>
+          <!-- Input Password -->
+          <div class="form-group">
+            <PasswordInput
+              id="password"
+              label="Password"
+              placeholder="Masukan password Anda"
+              v-model="password"
+              :error="passwordError"
+            />
+          </div>
+
+          <!-- Konfirmasi Password -->
+          <div class="form-group">
+            <PasswordInput
+              id="confirmPassword"
+              label="Konfirmasi Password"
+              placeholder="Konfirmasi kata sandi Anda"
+              v-model="confirmPassword"
+              :error="confirmPasswordError"
+            />
+          </div>
+
+          <!-- Error message -->
+          <p v-if="errorMsg" class="warning-text">{{ errorMsg }}</p>
+
+          <!-- Submit button -->
+          <ButtonPrimary 
+            @click="register"
+            :disabled="!canSubmit"
+            :class="{ 'disabled': !canSubmit }"
+            size="large"
+            full-width
+          >
+            {{ submitButtonText }}
+          </ButtonPrimary>
+          
+          <!-- Login Link -->
+          <div class="login-section">
+            <p class="login-text">
+              Sudah punya akun?
+              <router-link to="/" class="login-link">Masuk sekarang</router-link>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import { registerJemaat } from '@/services/auth'
-import { useUserStore } from '@/stores/userStore' // ⭐ TAMBAH: Import userStore
-import VueDatePicker from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
+import { useUserStore } from '@/stores/userStore'
 import AutoCompleteInput from '@/components/common/AutoCompleteInput.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
 import SelectDropdown from '@/components/common/SelectDropdown.vue'
-import HeaderWithBack from '@/components/layout/HeaderWithBack.vue'
 
 export default {
   name: 'RegisterPage',
   components: {
-    VueDatePicker,
     AutoCompleteInput,
     PasswordInput,
     ButtonPrimary,
-    SelectDropdown,
-    HeaderWithBack
+    SelectDropdown
   },
   data() {
     return {
@@ -118,6 +159,7 @@ export default {
       errorMsg: '',
 
       statusOptions: ['Menikah', 'Single', 'Janda/Duda'],
+      sektorOptions: ['Sektor Tesalonika', 'Sektor Anugerah'],
 
       selectedUserData: null,
       namaExists: false,
@@ -149,24 +191,18 @@ export default {
 
   methods: {
     onSuggestionSelected(suggestion) {
-      console.log('✅ [RegisterPage] Suggestion selected:', suggestion);
-      
       this.selectedUserData = suggestion;
       this.nama = suggestion.nama;
       
-      // Auto-fill sektor jika ada
       if (suggestion.sektor) {
         this.sektor = suggestion.sektor;
       }
       
-      // Clear errors jika nama valid
       this.namaError = '';
       this.errorMsg = '';
     },
     
     onNamaValidated(validation) {
-      console.log('🔍 [RegisterPage] Nama validation:', validation);
-      
       this.namaExists = validation.exists;
       
       if (validation.exists) {
@@ -174,7 +210,6 @@ export default {
         this.namaError = '';
         this.errorMsg = '';
         
-        // Check jika sudah registrasi
         if (validation.userData.isRegistered) {
           this.namaError = 'Nama ini sudah terdaftar. Silakan langsung login.';
         }
@@ -184,30 +219,24 @@ export default {
       }
     },
 
-    // ⭐ FIXED: Registration dengan proper user save
     async register() {
       try {
         this.isSubmitting = true;
         this.clearAllErrors();
         
-        // Validasi basic
         if (!this.validateAllFields()) {
           return;
         }
         
-        // Check nama exists
         if (!this.namaExists || !this.selectedUserData) {
           this.errorMsg = 'Silakan pilih nama dari suggestion yang tersedia';
           return;
         }
         
-        // Check sudah registrasi
         if (this.selectedUserData.isRegistered) {
           this.namaError = 'Nama ini sudah terdaftar. Silakan langsung login.';
           return;
         }
-        
-        console.log('✅ [RegisterPage] Starting registration...');
         
         const userData = {
           tanggalLahir: this.tanggalLahir,
@@ -215,11 +244,8 @@ export default {
           sektor: this.sektor
         };
         
-        // ⭐ STEP 1: Register user di Firebase
         await registerJemaat(this.nama, this.password, userData);
-        console.log('🎉 [RegisterPage] Registration successful in Firebase!');
         
-        // ⭐ STEP 2: Prepare complete user data
         const completeUserData = {
           id: this.selectedUserData.id,
           nama: this.nama,
@@ -230,42 +256,30 @@ export default {
           registeredAt: new Date().toISOString()
         };
         
-        // ⭐ STEP 3: Save to localStorage
         localStorage.setItem('user', JSON.stringify(completeUserData));
-        console.log('✅ [RegisterPage] User data saved to localStorage:', completeUserData);
         
-        // ⭐ STEP 4: Update userStore
         const userStore = useUserStore();
         userStore.setUser(completeUserData);
-        console.log('✅ [RegisterPage] UserStore updated');
         
-        // ⭐ STEP 5: Initialize streak for new user
         this.initializeNewUserStreak();
         
-        // ⭐ STEP 6: Redirect
-        console.log('🚀 [RegisterPage] Redirecting to success page...');
         this.$router.push('/success-register');
         
       } catch (error) {
-        console.error('❌ [RegisterPage] Registration failed:', error);
         this.handleRegistrationError(error);
       } finally {
         this.isSubmitting = false;
       }
     },
     
-    // ⭐ NEW: Initialize streak untuk user baru
     initializeNewUserStreak() {
-      console.log('🔥 [RegisterPage] Initializing streak for new user...');
-      
       const today = new Date().toDateString();
       const newStreakData = {
         lastLoginDate: today,
-        streakCount: 1 // Start dengan streak 1 untuk user baru
+        streakCount: 1
       };
       
       localStorage.setItem('streakData', JSON.stringify(newStreakData));
-      console.log('✅ [RegisterPage] New user streak initialized:', newStreakData);
     },
     
     handleRegistrationError(error) {
@@ -282,44 +296,40 @@ export default {
 
     validateAllFields() {
       let isValid = true;
-      
-      if (!this.nama || this.nama.trim().length === 0) {
+
+      if (!this.nama.trim()) {
         this.namaError = 'Nama harus diisi';
         isValid = false;
       }
-      
+
       if (!this.tanggalLahir) {
         this.errorMsg = 'Tanggal lahir harus diisi';
         isValid = false;
       }
-      
+
       if (!this.status) {
         this.statusError = 'Status harus dipilih';
         isValid = false;
       }
-      
+
       if (!this.sektor) {
         this.errorMsg = 'Sektor harus dipilih';
         isValid = false;
       }
-      
-      if (!this.password || this.password.length < 6) {
+
+      if (this.password.length < 6) {
         this.passwordError = 'Password minimal 6 karakter';
         isValid = false;
       }
-      
-      if (!this.confirmPassword) {
-        this.confirmPasswordError = 'Konfirmasi password harus diisi';
+
+      if (this.confirmPassword.length < 6) {
+        this.confirmPasswordError = 'Konfirmasi password minimal 6 karakter';
         isValid = false;
       }
-      
+
       if (this.password !== this.confirmPassword) {
-        this.confirmPasswordError = 'Password dan konfirmasi password tidak sama';
+        this.confirmPasswordError = 'Password tidak sama';
         isValid = false;
-      }
-      
-      if (!isValid) {
-        this.errorMsg = 'Semua field wajib diisi dengan benar.';
       }
       
       return isValid;
@@ -331,146 +341,232 @@ export default {
       this.passwordError = '';
       this.confirmPasswordError = '';
       this.errorMsg = '';
-    },
-
-    formatDate(date) {
-      if (!date) return ''
-      const d = new Date(date)
-      const mm = String(d.getMonth() + 1).padStart(2, '0')
-      const dd = String(d.getDate()).padStart(2, '0')
-      const yyyy = d.getFullYear()
-      return `${mm}/${dd}/${yyyy}`
     }
   }
 }
 </script>
       
 <style scoped>
-.register-container {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24px 16px 64px;
+/* === MAIN LAYOUT === */
+.register-page {
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   background-color: #fcfcf7;
-  box-sizing: border-box;
 }
 
-.form-wrapper {
+/* === BRANDING SECTION (LEFT) === */
+.branding-section {
+  background: linear-gradient(135deg, #41442A 0%, #5a5e3d 50%, #6b7042 100%);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  color: white;
+  overflow: hidden;
+}
+
+.branding-content {
+  text-align: center;
+  z-index: 2;
+  position: relative;
+}
+
+.church-logo {
+  margin-bottom: 24px;
+}
+
+.logo-large {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
+.church-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.5px;
+}
+
+.church-tagline {
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  margin: 0;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+/* Decorative shapes */
+.decorative-shapes {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.shape-1 {
+  width: 200px;
+  height: 200px;
+  top: -100px;
+  right: -100px;
+}
+
+.shape-2 {
+  width: 150px;
+  height: 150px;
+  bottom: -75px;
+  left: -75px;
+}
+
+.shape-3 {
+  width: 100px;
+  height: 100px;
+  top: 50%;
+  left: -50px;
+  opacity: 0.05;
+}
+
+/* === REGISTER SECTION (RIGHT) === */
+.register-section {
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+.register-container {
   width: 100%;
-  max-width: 360px;
+  max-width: 400px;
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.register-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.register-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* === FORM STYLES === */
+.form-wrapper {
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
+  gap: 20px;
+}
+
+/* Fix button alignment */
+:deep(.button-container) {
+  width: 100% !important;
+  max-width: 360px !important;
 }
 
 .form-group {
   width: 100%;
-  max-width: 360px;
-  margin-bottom: 16px;
 }
 
 label {
   display: block;
-  font-weight: bold;
-  margin-bottom: 6px;
-  font-family: 'Inter';
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
-}
-
-.date-input {
-  width: 100%;
-  height: 44px;
-  padding: 12px;
-  font-size: 14px;
-  font-family: 'Inter';
-  border: 2px solid #41442A;
-  border-radius: 6px;
-  background-color: #fcfcf7;
-  color: #777;
-  box-sizing: border-box;
-}
-
-:deep(.date-input::placeholder) {
-  font-family: 'Inter';
-  font-size: 14px;
-  color: #777;
-}
-
-input,
-select,
-textarea,
-.date-input,
-:deep(.dp__input) {
-  width: 100%;
-  height: 44px;
-  padding: 12px;
-  font-size: 14px;
-  font-family: 'Inter' !important;
-  border: 2px solid #41442A;
-  border-radius: 6px;
-  background-color: #fcfcf7;
-  box-sizing: border-box;
-  color: #777 !important;
-}
-
-:deep(.dp__input:not(:placeholder-shown)) {
-  color: #333 !important;
-}
-
-:deep(input.filled) {
-  color: #333 !important;
-}
-
-:deep(.dp__input::placeholder) {
-  font-family: 'Inter' !important;
-  font-size: 14px !important;
-  color: #777 !important;
-  opacity: 1;
-}
-
-:deep(.dp__input_icon) {
-  display: none !important;
-}
-
-select {
-  color: #777;
-}
-
-:deep(select:valid) {
-  color: #333 !important;
-}
-
-input[readonly].empty-input,
-select:invalid {
-  color: #777;
-}
-
-input:not(:placeholder-shown) {
   color: #333;
 }
 
-.radio-group {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding-left: 4px;
+/* UNIFORM INPUT STYLING - FORCE SAME AS COMPONENTS */
+.uniform-input {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 46px !important;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  font-family: 'Inter', sans-serif !important;
+  border: 2px solid #e1e5e9 !important;
+  border-radius: 8px !important;
+  background-color: white !important;
+  box-sizing: border-box !important;
+  color: #333 !important;
+  transition: all 0.2s ease !important;
 }
 
-.radio-group label {
-  font-weight: normal;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'Inter';
+.uniform-input:focus {
+  border-color: #41442A !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(65, 68, 42, 0.1) !important;
+}
+
+.uniform-input:not(:focus):invalid {
+  color: #999 !important;
+}
+
+.uniform-input:valid {
+  color: #333 !important;
+}
+
+.warning-text {
+  font-size: 13px;
+  color: #dc3545;
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+  padding: 12px 16px;
+  background-color: #fdf2f2;
+  border-radius: 8px;
+  border-left: 4px solid #dc3545;
+  margin: 0;
+}
+
+.login-section {
+  text-align: center;
+  padding-top: 24px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 8px;
+}
+
+.login-text {
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
+  color: #666;
+  margin: 0;
 }
 
-.radio-group input[type="radio"] {
-  width: 20px;
-  height: 20px;
-  accent-color: #41442A;
+.login-link {
+  color: #41442A;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.login-link:hover {
+  color: #5a5e3d;
+  text-decoration: underline;
 }
 
 .disabled {
@@ -478,28 +574,183 @@ input:not(:placeholder-shown) {
   cursor: not-allowed;
 }
 
-.warning-text {
-  font-size: 12px;
-  color: red;
-  margin-top: -10px;
-  margin-bottom: 12px;
-  font-family: 'Inter';
-  text-align: center;
-  padding: 8px;
-  background-color: #ffebee;
-  border-radius: 4px;
-  border-left: 4px solid #d32f2f;
+/* MATCH ALL COMPONENTS TO FORMINPUT STYLING */
+.form-group {
+  width: 100%;
+  max-width: 360px;
+  margin-bottom: 16px;
 }
 
-/* Responsive */
-@media (max-width: 360px) {
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Force all inputs to match FormInput style */
+.form-group input,
+.form-group select,
+:deep(.autocomplete-container input),
+:deep(.select-dropdown select),
+:deep(.password-input-wrapper input) {
+  width: 100% !important;
+  max-width: 360px !important;
+  height: 44px !important;
+  padding: 12px !important;
+  font-size: 14px !important;
+  font-family: 'Inter', sans-serif !important;
+  border: 2px solid #41442A !important;
+  border-radius: 6px !important;
+  background-color: #fcfcf7 !important;
+  box-sizing: border-box !important;
+  color: #777 !important;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+:deep(.autocomplete-container input:focus),
+:deep(.select-dropdown select:focus),
+:deep(.password-input-wrapper input:focus) {
+  border-color: #5a5e3d !important;
+  box-shadow: 0 0 0 3px rgba(65, 68, 42, 0.1) !important;
+  color: #333 !important;
+}
+
+.form-group input:not(:placeholder-shown),
+:deep(.autocomplete-container input:not(:placeholder-shown)),
+:deep(.select-dropdown select:valid),
+:deep(.password-input-wrapper input:not(:placeholder-shown)) {
+  color: #333 !important;
+}
+
+/* Force containers to match */
+:deep(.autocomplete-container),
+:deep(.select-dropdown),
+:deep(.password-input-wrapper) {
+  width: 100% !important;
+  max-width: 360px !important;
+}
+
+/* Fix password input padding for icon */
+:deep(.password-input-wrapper input) {
+  padding-right: 40px !important;
+}
+
+/* Fix select dropdown styling */
+:deep(.select-dropdown select) {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>') !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 12px !important;
+  padding-right: 40px !important;
+}
+
+/* === RESPONSIVE DESIGN === */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .branding-section {
+    padding: 40px 30px;
+  }
+  
+  .church-name {
+    font-size: 32px;
+  }
+  
+  .register-section {
+    padding: 30px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .register-page {
+    display: block;
+    background: #fcfcf7;
+  }
+  
+  .branding-section {
+    display: none;
+  }
+  
+  .register-section {
+    padding: 24px 16px;
+    background: #fcfcf7;
+    min-height: 100vh;
+  }
+  
   .register-container {
-    padding: 16px 12px 64px;
+    max-width: 360px;
+    margin: 0 auto;
+  }
+  
+  .register-title {
+    font-size: 20px;
+  }
+  
+  .register-subtitle {
+    font-size: 14px;
+  }
+  
+  label {
+    font-weight: bold;
+  }
+  
+  /* Mobile uniform styling */
+  .uniform-input,
+  :deep(.autocomplete-container input),
+  :deep(.select-dropdown select),
+  :deep(.password-input-wrapper input) {
+    height: 44px !important;
+    padding: 12px !important;
+    border: 2px solid #41442A !important;
+    border-radius: 6px !important;
+    background-color: #fcfcf7 !important;
+    color: #777 !important;
+  }
+  
+  .uniform-input:focus,
+  :deep(.autocomplete-container input:focus),
+  :deep(.select-dropdown select:focus),
+  :deep(.password-input-wrapper input:focus) {
+    border-color: #41442A !important;
+    box-shadow: none !important;
+    color: #333 !important;
   }
   
   .warning-text {
-    font-size: 11px;
-    padding: 6px;
+    font-size: 12px;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #ffebee;
+    border-left: 4px solid #d32f2f;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 360px) {
+  .register-section {
+    padding: 16px 12px;
+  }
+  
+  .register-title {
+    font-size: 18px;
+  }
+  
+  .register-subtitle {
+    font-size: 13px;
+  }
+  
+  .form-wrapper {
+    gap: 18px;
   }
 }
 </style>
