@@ -1,27 +1,31 @@
-<!-- src/views/AccountPage.vue - SIMPLE UI LIKE WIREFRAME -->
+<!-- AccountPage.vue - Halaman Profile User -->
 <template>
   <div class="account-container">
     <div class="account-wrapper">
-      <!-- Header -->
+      
+      <!-- Header dengan judul halaman -->
       <div class="account-header">
         <h1 class="page-title">Profile</h1>
       </div>
 
-      <!-- User Info Section (Style Lama - Clickable) -->
+      <!-- Section Info User - Bisa diklik untuk edit profile -->
       <div class="user-info-section" @click="goToProfileDetail">
+        <!-- Avatar dengan initial nama user -->
         <div class="user-avatar">
           <span class="avatar-text">{{ userInitial }}</span>
         </div>
         
+        <!-- Detail user (nama dan subtitle) -->
         <div class="user-details">
           <h2 class="user-name">{{ userName }}</h2>
           <p class="user-subtitle">Lihat dan edit Profil</p>
         </div>
         
+        <!-- Icon panah untuk indikasi bisa diklik -->
         <ChevronRight class="profile-arrow" />
       </div>
 
-      <!-- Mode Pengurus (Terpisah dengan style colorful) -->
+      <!-- Card Mode Pengurus - Hanya muncul jika user adalah pengurus/admin -->
       <div 
         v-if="userStore.isPengurus" 
         class="pengurus-card" 
@@ -32,8 +36,10 @@
         <ChevronRight class="pengurus-arrow" />
       </div>
 
-      <!-- Menu List (Style Baru - Simple) -->
+      <!-- Daftar Menu Utama -->
       <div class="menu-container">
+        
+        <!-- Menu Jadwal Pelayan Altar -->
         <div class="menu-item" @click="goToScheduleSettings">
           <div class="menu-left">
             <Calendar class="menu-icon" />
@@ -42,6 +48,7 @@
           <ChevronRight class="menu-arrow" />
         </div>
 
+        <!-- Menu Ganti Password -->
         <div class="menu-item" @click="goToPasswordChange">
           <div class="menu-left">
             <Lock class="menu-icon" />
@@ -50,6 +57,7 @@
           <ChevronRight class="menu-arrow" />
         </div>
 
+        <!-- Menu Laporan dan Bantuan -->
         <div class="menu-item" @click="goToReportsHelp">
           <div class="menu-left">
             <HelpCircle class="menu-icon" />
@@ -58,6 +66,7 @@
           <ChevronRight class="menu-arrow" />
         </div>
 
+        <!-- Menu Logout -->
         <div class="menu-item" @click="showLogoutModal">
           <div class="menu-left">
             <LogOut class="menu-icon" />
@@ -67,31 +76,42 @@
         </div>
       </div>
 
-      <!-- Bottom Navbar -->
+      <!-- Bottom Navigation Bar -->
       <BottomNavbar forceActiveRoute="/account" />
     </div>
 
-    <!-- Logout Confirmation Modal -->
+    <!-- Modal Konfirmasi Logout -->
     <div v-if="showLogoutConfirm" class="modal-overlay" @click="hideLogoutModal">
       <div class="modal-content" @click.stop>
+        
+        <!-- Header modal dengan icon dan judul -->
         <div class="modal-header">
           <LogOut class="modal-icon" />
           <h3>Keluar dari Akun?</h3>
         </div>
         
+        <!-- Pesan konfirmasi -->
         <p class="modal-message">
           Apakah kamu yakin ingin keluar dari akun <strong>{{ userName }}</strong>?
           <br><br>
           Data streak dan bookmark akan tetap tersimpan untuk login berikutnya.
         </p>
         
+        <!-- Tombol aksi modal -->
         <div class="modal-actions">
-          <button class="cancel-btn" @click="hideLogoutModal">Batal</button>
-          <button class="logout-confirm-btn" @click="confirmLogout" :disabled="isLoggingOut">
+          <button class="cancel-btn" @click="hideLogoutModal">
+            Batal
+          </button>
+          <button 
+            class="logout-confirm-btn" 
+            @click="confirmLogout" 
+            :disabled="isLoggingOut"
+          >
             <span v-if="isLoggingOut">Keluar...</span>
             <span v-else>Ya, Keluar</span>
           </button>
         </div>
+        
       </div>
     </div>
   </div>
@@ -104,6 +124,7 @@ import { LogOut, ChevronRight, Calendar, Lock, HelpCircle } from 'lucide-vue-nex
 
 export default {
   name: 'AccountPage',
+  
   components: {
     BottomNavbar,
     LogOut,
@@ -115,90 +136,156 @@ export default {
   
   data() {
     return {
+      // State untuk mengontrol tampilan modal logout
       showLogoutConfirm: false,
+      // State untuk menunjukkan proses logout sedang berjalan
       isLoggingOut: false
     }
   },
   
   computed: {
+    // Mendapatkan akses ke user store (data user global)
     userStore() {
       return useUserStore()
     },
     
+    // Mendapatkan nama user dari store
     userName() {
       return this.userStore.namaUser
     },
     
+    // Mendapatkan huruf pertama nama untuk avatar
     userInitial() {
       return this.userName.charAt(0).toUpperCase()
     }
   },
   
   methods: {
-    // Navigation ke Profile Detail
+    
+    // === NAVIGATION METHODS ===
+    
+    /**
+     * Navigasi ke halaman detail profile
+     * User bisa edit nama, foto, dll di sini
+     */
     goToProfileDetail() {
       this.$router.push('/detail-profile')
     },
 
-    // Navigation ke Mode Pengurus
+    /**
+     * Beralih ke mode pengurus (khusus untuk pengurus/admin)
+     * Ada pengecekan role sebelum mengizinkan akses
+     */
     switchToPengurusMode() {
+      // Cek apakah user punya akses sebagai pengurus
       if (!this.userStore.isPengurus) {
-        alert('❌ Anda tidak memiliki akses sebagai pengurus!')
+        this.showNotification('Anda tidak memiliki akses sebagai pengurus!', 'error')
         return
       }
-      
+      // Jika punya akses, pindah ke halaman pengurus
       this.$router.push('/pengurus/mode')
     },
 
-    // Navigation ke halaman lain
+    /**
+     * Menu Jadwal Pelayan Altar
+     * Saat ini masih dalam pengembangan
+     */
     goToScheduleSettings() {
-      alert('📅 Fitur Jadwal Pelayan Altar akan tersedia setelah development selesai!')
+      this.showNotification('Fitur Jadwal Pelayan Altar sedang dalam pengembangan', 'info')
     },
     
+    /**
+     * Menu Ganti Password
+     * Saat ini masih dalam pengembangan
+     */
     goToPasswordChange() {
-      alert('🔒 Fitur Ganti Password akan tersedia setelah development selesai!')
+      this.showNotification('Fitur Ganti Password sedang dalam pengembangan', 'info')
     },
     
+    /**
+     * Menu Laporan dan Bantuan
+     * Saat ini masih dalam pengembangan
+     */
     goToReportsHelp() {
-      alert('📊 Fitur Laporan dan Bantuan akan tersedia setelah development selesai!')
+      this.showNotification('Fitur Laporan dan Bantuan sedang dalam pengembangan', 'info')
     },
 
-    // Logout functions
+    // === LOGOUT METHODS ===
+    
+    /**
+     * Menampilkan modal konfirmasi logout
+     */
     showLogoutModal() {
       this.showLogoutConfirm = true
     },
     
+    /**
+     * Menyembunyikan modal logout dan reset state
+     */
     hideLogoutModal() {
       this.showLogoutConfirm = false
       this.isLoggingOut = false
     },
     
+    /**
+     * Proses logout sesungguhnya
+     * Menghapus data user dan kembali ke halaman login
+     */
     async confirmLogout() {
+      // Prevent double click saat proses logout
       if (this.isLoggingOut) return
       
       try {
+        // Set state loading
         this.isLoggingOut = true
+        
+        // Panggil fungsi logout dari store (hapus data user)
         this.userStore.logout()
+        
+        // Tutup modal
         this.hideLogoutModal()
+        
+        // Redirect ke halaman login
         await this.$router.replace('/')
+        
       } catch (error) {
-        console.error('Logout error:', error)
+        // Jika ada error, tetap logout dan redirect
         this.userStore.logout()
         await this.$router.replace('/')
       } finally {
+        // Reset loading state
         this.isLoggingOut = false
       }
+    },
+
+    // === UTILITY METHODS ===
+    
+    /**
+     * Menampilkan notifikasi ke user
+     * @param {string} message - Pesan yang akan ditampilkan
+     * @param {string} type - Tipe notifikasi (info, error, success)
+     */
+    showNotification(message, type = 'info') {
+      // Untuk sementara pakai alert, nanti bisa diganti dengan toast component
+      const icons = {
+        error: '❌',
+        info: 'ℹ️',
+        success: '✅'
+      }
+      alert(`${icons[type]} ${message}`)
     }
   }
 }
 </script>
 
 <style scoped>
+/* === CONTAINER & LAYOUT === */
+
 .account-container {
   background: #fcfcf7;
   min-height: 100vh;
-  padding-bottom: 64px; /* Dikurangi dari 80px ke 64px sesuai navbar height */
-  box-sizing: border-box; /* Ensure padding included in height calculation */
+  padding-bottom: 64px;
+  box-sizing: border-box;
 }
 
 .account-wrapper {
@@ -207,7 +294,8 @@ export default {
   margin: 0 auto;
 }
 
-/* Header */
+/* === HEADER === */
+
 .account-header {
   text-align: center;
   padding: 20px 0;
@@ -221,7 +309,8 @@ export default {
   margin: 0;
 }
 
-/* User Info Section (Style Lama - Clickable) */
+/* === USER INFO SECTION === */
+
 .user-info-section {
   display: flex;
   align-items: center;
@@ -283,7 +372,8 @@ export default {
   flex-shrink: 0;
 }
 
-/* Pengurus Card (Style Colorful) */
+/* === PENGURUS CARD === */
+
 .pengurus-card {
   display: flex;
   align-items: center;
@@ -324,7 +414,8 @@ export default {
   flex-shrink: 0;
 }
 
-/* Menu Container (Style Simple dengan icon) */
+/* === MENU CONTAINER === */
+
 .menu-container {
   display: flex;
   flex-direction: column;
@@ -383,7 +474,8 @@ export default {
   flex-shrink: 0;
 }
 
-/* Modal Styles */
+/* === MODAL STYLES === */
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -491,14 +583,11 @@ export default {
   cursor: not-allowed;
 }
 
-/* Responsive */
+/* === RESPONSIVE === */
+
 @media (max-width: 360px) {
   .account-wrapper {
     padding: 12px;
-  }
-  
-  .profile-section {
-    padding: 16px 0;
   }
   
   .menu-item {

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { loginJemaat, logoutJemaat, getCurrentJemaat } from '@/services/auth'
+import { loginJemaat, logoutJemaat, getCurrentJemaat, getRememberedUser, autoLoginRememberedUser} from '@/services/auth'
 import { useStreakStore } from './streakStore'
 
 export const useUserStore = defineStore('user', {
@@ -110,16 +110,16 @@ export const useUserStore = defineStore('user', {
     /**
      * Logout current user
      */
-    logout() {
-      console.log('🚪 [UserStore] Logging out user...')
+    logout(forgetMe = false) {
+      console.log('🚪 [UserStore] Logging out user...', forgetMe ? '(forget me)' : '(respect remember me)')
       
       // Clear user-specific data
       if (this.user) {
         this.clearUserSpecificData(this.user.id || this.user.nama)
       }
       
-      // Call auth logout
-      logoutJemaat()
+      // Call enhanced auth logout
+      logoutJemaat(forgetMe)  // ← Pass forgetMe parameter
       
       // Clear store data
       this.clearUserData()
@@ -176,32 +176,44 @@ export const useUserStore = defineStore('user', {
      * Check and restore login status from localStorage
      * @returns {boolean} Login status
      */
-    checkLoginStatus() {
+    async checkLoginStatus() {
       try {
         console.log('🔍 [UserStore] Checking login status...')
         
+        // First check current session
         const savedUser = getCurrentJemaat()
         
         if (savedUser && savedUser.nama) {
           if (this.validateUserData(savedUser)) {
             this.setUser(savedUser)
-            console.log('✅ [UserStore] Login status restored')
+            console.log('✅ [UserStore] Current session restored')
             return true
-          } else {
-            console.log('⚠️ [UserStore] Invalid saved user data, clearing...')
-            this.clearUserData()
-            localStorage.removeItem('user')
-            return false
           }
-        } else {
-          console.log('ℹ️ [UserStore] No saved user data found')
-          this.clearUserData()
-          return false
         }
+        
+        // If no current session, check for remembered user
+        const rememberedUser = getRememberedUser()
+        
+        if (rememberedUser) {
+          try {
+            // Auto-login with remembered user
+            const autoLoginData = await autoLoginRememberedUser(rememberedUser)
+            this.setUser(autoLoginData)
+            console.log('✅ [UserStore] Auto-login successful with remembered user')
+            return true
+          } catch (error) {
+            console.error('❌ [UserStore] Auto-login failed:', error)
+          }
+        }
+        
+        // No valid session or remembered user
+        console.log('ℹ️ [UserStore] No valid user session found')
+        this.clearUserData()
+        return false
+        
       } catch (error) {
         console.error('❌ [UserStore] Error checking login status:', error)
         this.clearUserData()
-        localStorage.removeItem('user')
         return false
       }
     },

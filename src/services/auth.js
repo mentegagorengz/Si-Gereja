@@ -236,13 +236,110 @@ export async function loginJemaat(nama, password) {
  * Logout jemaat
  * @returns {Promise<boolean>} Success status
  */
-export async function logoutJemaat() {
+export async function logoutJemaat(forgetMe = false) {
   try {
+    const currentUser = localStorage.getItem('user')
+    
+    if (currentUser && !forgetMe) {
+      const userData = JSON.parse(currentUser)
+      
+      // Check if user wants to be remembered
+      if (userData.rememberMe) {
+        console.log('🔄 [Auth] User has Remember Me enabled, preserving for auto-login')
+        
+        // Move current user data to remembered user
+        const rememberedUserData = {
+          ...userData,
+          isRemembered: true,
+          loggedOutAt: new Date().getTime()
+        }
+        
+        localStorage.setItem('rememberedUser', JSON.stringify(rememberedUserData))
+        console.log('✅ [Auth] User data saved for auto-login')
+      }
+    }
+    
+    // Always clear current session
     localStorage.removeItem('user')
+    
+    // If forgetMe is true, also clear remembered user
+    if (forgetMe) {
+      localStorage.removeItem('rememberedUser')
+      console.log('🗑️ [Auth] All user data cleared (forget me)')
+    }
+    
     return true
   } catch (error) {
-    console.error('Error logging out:', error)
+    console.error('❌ [Auth] Error during logout:', error)
+    // Fallback: clear everything on error
+    localStorage.removeItem('user')
+    localStorage.removeItem('rememberedUser')
     return false
+  }
+}
+
+/**
+ * Check if there's a remembered user for auto-login
+ * @returns {Object|null} Remembered user data or null
+ */
+export function getRememberedUser() {
+  try {
+    const rememberedUser = localStorage.getItem('rememberedUser')
+    if (!rememberedUser) return null
+    
+    const userData = JSON.parse(rememberedUser)
+    
+    // Check if remember period is still valid
+    const now = new Date().getTime()
+    if (userData.rememberExpiry && now < userData.rememberExpiry) {
+      console.log('✅ [Auth] Found valid remembered user:', userData.nama)
+      return userData
+    } else {
+      // Remember period expired
+      console.log('⏰ [Auth] Remember period expired, clearing data')
+      localStorage.removeItem('rememberedUser')
+      return null
+    }
+  } catch (error) {
+    console.error('❌ [Auth] Error getting remembered user:', error)
+    localStorage.removeItem('rememberedUser')
+    return null
+  }
+}
+
+/**
+ * Clear remembered user (for manual forget)
+ */
+export function forgetRememberedUser() {
+  localStorage.removeItem('rememberedUser')
+  console.log('🗑️ [Auth] Remembered user cleared')
+}
+
+/**
+ * Auto-login with remembered user
+ * @param {Object} rememberedUser - Remembered user data
+ * @returns {Promise<Object>} User data
+ */
+export async function autoLoginRememberedUser(rememberedUser) {
+  try {
+    console.log('🔄 [Auth] Auto-login with remembered user:', rememberedUser.nama)
+    
+    // Restore user session
+    const loginData = {
+      ...rememberedUser,
+      autoLoggedIn: true,
+      autoLoginAt: new Date().getTime()
+    }
+    
+    // Save to current session
+    localStorage.setItem('user', JSON.stringify(loginData))
+    
+    return loginData
+  } catch (error) {
+    console.error('❌ [Auth] Auto-login failed:', error)
+    // Clear remembered user on auto-login failure
+    localStorage.removeItem('rememberedUser')
+    throw error
   }
 }
 
