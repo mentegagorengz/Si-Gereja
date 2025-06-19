@@ -4,7 +4,8 @@
     <div class="mobile-layout">
       <div class="content-wrapper">
         <img src="@/assets/logos/logo-MyRajawali.png" alt="Logo MyRajawali" class="logo-img" />
-        <h2>Welcome to MyRajawali{{ userName ? `, ${userName}` : '' }}!</h2>
+        <h2>Welcome to MyRajawali<br />
+          {{ userName ? `, ${userName}` : '' }}!</h2>
         <p class="desc-text">
           Akun MyRajawali Anda telah <strong>BERHASIL</strong> dibuat.<br />
           Klik lanjutkan untuk jelajahi aplikasi MyRajawali.<br />
