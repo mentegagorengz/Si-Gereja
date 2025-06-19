@@ -7,9 +7,9 @@
     </router-link>
     
     <!-- Kalender/Jadwal -->
-    <router-link to="/jadwal" class="nav-item" aria-label="Kalender">
-      <Calendar :class="iconClasses('/jadwal')" />
-      <span :class="textClasses('/jadwal')">Kalender</span>
+    <router-link to="/calendar" class="nav-item" aria-label="Kalender">
+      <Calendar :class="iconClasses('/calendar')" />
+      <span :class="textClasses('/calendar')">Kalender</span>
     </router-link>
     
     <!-- Notifikasi -->

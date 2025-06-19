@@ -1,39 +1,120 @@
-// src/views/HomePage.vue - ROBUST STREAK HANDLING
+<!-- HomePage.vue - Clean & Optimized Responsive Layout -->
 <template>
-  <div class="home-container">
-    <div class="home-wrapper">
+  <div class="home-page">
+    
+    <!-- === DESKTOP LAYOUT (≥769px) === -->
+    <div class="desktop-layout">
+      
+      <!-- Top Navigation Bar -->
+      <nav class="top-navbar">
+        <div class="navbar-content">
+          <div class="navbar-brand">
+            <img src="@/assets/logos/logo-MyRajawali.png" alt="MyRajawali" class="navbar-logo"/>
+            <span class="brand-text">MyRajawali</span>
+          </div>
+          
+          <div class="navbar-menu">
+            <router-link to="/home" class="nav-link" exact>Home</router-link>
+            <router-link to="/jadwal" class="nav-link">Kalender</router-link>
+            <router-link to="/notifikasi" class="nav-link">Notifikasi</router-link>
+            <router-link to="/account" class="nav-link">Profile</router-link>
+          </div>
+        </div>
+      </nav>
 
-      <!-- ⭐ ROBUST: Header dengan streak yang preserved -->
-      <HeaderHome :namaUser="namaUser" :streakCount="streakCount" />
+      <!-- Main Content Container -->
+      <div class="main-content">
+        <div class="content-container">
+          
+          <!-- Welcome Hero Section -->
+          <section class="welcome-section">
+            <div class="welcome-left">
+              <h1 class="welcome-title">Selamat datang, {{ namaUser }}!</h1>
+              <p class="welcome-subtitle">Semoga hari Anda diberkati</p>
+              <div class="streak-display">
+                <span class="streak-label">Streak login:</span>
+                <span class="streak-count">{{ streakCount }} hari</span>
+              </div>
+            </div>
+            <div class="welcome-right">
+              <div class="daily-verse-desktop">
+                <img :src="ayatGambar" alt="Ayat Hari Ini" class="verse-image"/>
+              </div>
+            </div>
+          </section>
 
-      <!-- Ayat Hari Ini -->
-      <DailyVerse :ayatGambar="ayatGambar" />
+          <!-- Features Grid Section -->
+          <section class="feature-section">
+            <h2 class="section-title">Fitur Aplikasi</h2>
+            <div class="feature-grid-desktop">
+              <FeatureBox
+                v-for="feature in featureList"
+                :key="`desktop-${feature.name}`"
+                :name="feature.name"
+                :iconName="feature.icon"
+                class="feature-box-desktop"
+                @click="navigateToFeature(feature)"
+              />
+            </div>
+          </section>
 
-      <!-- Menu Fitur -->
-      <div class="feature-grid">
-        <FeatureBox
-          v-for="feature in featureList"
-          :key="feature.name"
-          :name="feature.name"
-          :iconName="feature.icon"
-        />
+          <!-- Announcements Section -->
+          <section class="announcement-section">
+            <h2 class="section-title">Pengumuman Terbaru</h2>
+            <div class="announcement-grid">
+              <AnnouncementCard
+                v-for="(item, index) in announcementList" 
+                :key="`desktop-${index}`"
+                :title="item.title"
+                :desc="item.desc"
+                :icon="item.icon"
+                :category="item.category"
+                class="announcement-card-desktop"
+              />
+            </div>
+          </section>
+
+        </div>
       </div>
+    </div>
 
-      <!-- Title untuk Announcement -->
-      <h2 class="section-title">Announcements</h2>
+    <!-- === MOBILE LAYOUT (≤768px) === -->
+    <div class="mobile-layout">
+      <div class="home-wrapper">
 
-      <!-- Announcement Cards -->
-      <AnnouncementCard
-        v-for="(item, index) in announcementList"
-        :key="index"
-        :title="item.title"
-        :desc="item.desc"
-        :icon="item.icon"
-        :category="item.category"
-      />
+        <!-- Mobile Header with User Info -->
+        <HeaderHome :namaUser="namaUser" :streakCount="streakCount" />
 
-      <!-- Bottom Navbar -->
-      <BottomNavbar />
+        <!-- Daily Bible Verse -->
+        <DailyVerse :ayatGambar="ayatGambar" />
+
+        <!-- Mobile Features Grid -->
+        <div class="feature-grid">
+          <FeatureBox
+            v-for="feature in featureList"
+            :key="`mobile-${feature.name}`"
+            :name="feature.name"
+            :iconName="feature.icon"
+            @click="navigateToFeature(feature)"
+          />
+        </div>
+
+        <!-- Mobile Announcements Title -->
+        <h2 class="section-title-mobile">Announcements</h2>
+
+        <!-- Mobile Announcements List -->
+        <AnnouncementCard
+          v-for="(item, index) in announcementList"
+          :key="`mobile-${index}`"
+          :title="item.title"
+          :desc="item.desc"
+          :icon="item.icon"
+          :category="item.category"
+        />
+
+        <!-- Bottom Navigation Bar -->
+        <BottomNavbar />
+      </div>
     </div>
   </div>
 </template>
@@ -51,6 +132,7 @@ import { getAnnouncements } from '@/services/announcements'
 
 export default {
   name: 'HomePage',
+  
   components: {
     HeaderHome,
     DailyVerse,
@@ -58,11 +140,13 @@ export default {
     BottomNavbar,
     AnnouncementCard
   },
+  
   data() {
     return {
       namaUser: 'Jemaat',
       streakCount: 0,
       ayatGambar: null,
+      // 📋 Static feature list configuration
       featureList: [
         { name: "News", icon: "news" },
         { name: "Jadwal", icon: "jadwal" },
@@ -77,102 +161,93 @@ export default {
   },
 
   async created() {
-    await this.initializeUserData()
-    this.loadDailyVerse()
-    this.loadExistingUserStreak() // ⭐ CHANGED: Load existing, bukan recalculate
-    this.fetchAnnouncements()
+    await this.initializePageData()
   },
+
   methods: {
-    async initializeUserData() {
-      console.log('🔍 [HomePage] === INITIALIZING USER DATA ===');
-      
+    /**
+     * 🚀 Initialize all page data on component creation
+     * Centralized initialization for better error handling
+     */
+    async initializePageData() {
       try {
-        const userStore = useUserStore();
-        
-        if (userStore.isLoggedIn && userStore.user?.nama) {
-          this.namaUser = userStore.user.nama;
-          this.currentUserId = userStore.user.id || userStore.user.nama;
-          console.log('✅ [HomePage] Using userStore data:', this.namaUser, 'ID:', this.currentUserId);
-          return;
-        }
-        
-        console.log('🔍 [HomePage] UserStore empty, checking localStorage...');
-        const savedUser = getCurrentJemaat();
-        
-        if (savedUser && savedUser.nama) {
-          this.namaUser = savedUser.nama;
-          this.currentUserId = savedUser.id || savedUser.nama;
-          console.log('✅ [HomePage] Using localStorage data:', this.namaUser, 'ID:', this.currentUserId);
-          
-          userStore.setUser(savedUser);
-          return;
-        }
-        
-        console.log('⚠️ [HomePage] No valid user data found');
-        this.namaUser = 'Jemaat';
-        this.$router.push('/');
-        
+        await this.loadUserData()
+        this.loadDailyVerse()
+        this.loadUserStreak()
+        await this.loadAnnouncements()
       } catch (error) {
-        console.error('❌ [HomePage] Error in initializeUserData:', error);
-        this.namaUser = 'Jemaat';
-        localStorage.removeItem('user');
-        this.$router.push('/');
+        console.error('❌ [HomePage] Failed to initialize page data:', error)
       }
     },
 
-    // ⭐ NEW: Load existing streak (jangan recalculate otomatis!)
-    loadExistingUserStreak() {
+    /**
+     * 👤 Load current user information
+     * Tries userStore first, then getCurrentJemaat service
+     */
+    async loadUserData() {
+      try {
+        const userStore = useUserStore()
+        
+        if (userStore.nama) {
+          this.namaUser = userStore.nama
+          this.currentUserId = userStore.id
+          return
+        }
+
+        const currentUser = await getCurrentJemaat()
+        if (currentUser?.id) {
+          this.namaUser = currentUser.nama || 'Jemaat'
+          this.currentUserId = currentUser.id
+        }
+      } catch (error) {
+        console.error('❌ [HomePage] Error loading user data:', error)
+      }
+    },
+
+    /**
+     * 📖 Load daily Bible verse image
+     * Uses utility function to get today's verse URL
+     */
+    loadDailyVerse() {
+      this.ayatGambar = getDailyVerseUrl()
+    },
+
+    /**
+     * 🔥 Load user's login streak from localStorage
+     * Initializes streak if none exists
+     */
+    loadUserStreak() {
       if (!this.currentUserId) {
-        console.log('⚠️ [HomePage] No user ID, using default streak = 1');
-        this.streakCount = 1;
-        return;
+        this.streakCount = 1
+        return
       }
 
-      console.log('📊 [HomePage] === LOADING EXISTING USER STREAK ===');
-      console.log('🔍 [HomePage] User ID:', this.currentUserId);
-      
       try {
-        const userStreakKey = `streakData_${this.currentUserId}`;
-        const saved = localStorage.getItem(userStreakKey);
+        const userStreakKey = `streakData_${this.currentUserId}`
+        const savedStreak = localStorage.getItem(userStreakKey)
         
-        console.log('🔍 [HomePage] Streak key:', userStreakKey);
-        console.log('🔍 [HomePage] Saved data:', saved);
-        
-        if (saved) {
-          const streakData = JSON.parse(saved);
-          this.streakCount = streakData.streakCount || 1;
-          
-          console.log('✅ [HomePage] Loaded existing streak:', this.streakCount);
-          console.log('📊 [HomePage] Streak metadata:', {
-            lastLogin: streakData.lastLoginDate,
-            updatedAt: streakData.updatedAt,
-            updatedBy: streakData.updatedBy
-          });
-          
-          // ⭐ OPTIONAL: Show streak info untuk debugging
-          this.displayStreakInfo(streakData);
-          
+        if (savedStreak) {
+          const streakData = JSON.parse(savedStreak)
+          this.streakCount = streakData.streakCount || 1
         } else {
-          // ⭐ NO EXISTING STREAK: Initialize untuk first time
-          console.log('🎉 [HomePage] No existing streak, initializing = 1');
-          this.streakCount = 1;
-          this.initializeFirstTimeStreak();
+          this.streakCount = 1
+          this.initializeUserStreak()
         }
-        
       } catch (error) {
-        console.error('❌ [HomePage] Error loading streak:', error);
-        this.streakCount = 1;
+        console.error('❌ [HomePage] Error loading streak:', error)
+        this.streakCount = 1
       }
     },
 
-    // ⭐ NEW: Initialize first time streak (only if no existing data)
-    initializeFirstTimeStreak() {
-      if (!this.currentUserId) return;
-      
-      console.log('🎯 [HomePage] Initializing first time streak...');
-      
-      const today = new Date().toDateString();
-      const userStreakKey = `streakData_${this.currentUserId}`;
+    /**
+     * 🎯 Initialize first-time user streak
+     * Creates streak data in localStorage
+     */
+    initializeUserStreak() {
+      if (!this.currentUserId) return
+
+      const today = new Date().toDateString()
+      const userStreakKey = `streakData_${this.currentUserId}`
       
       const streakData = {
         lastLoginDate: today,
@@ -180,195 +255,42 @@ export default {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         updatedBy: 'HomePage_FirstTime'
-      };
-      
-      localStorage.setItem(userStreakKey, JSON.stringify(streakData));
-      console.log('✅ [HomePage] First time streak initialized:', streakData);
-    },
-
-    // ⭐ NEW: Display streak info untuk debugging
-    displayStreakInfo(streakData) {
-      if (process.env.NODE_ENV !== 'development') return;
-      
-      const today = new Date().toDateString();
-      const daysDiff = this.calculateDaysDifference(streakData.lastLoginDate, today);
-      
-      console.log('📊 [HomePage] === STREAK INFO ===');
-      console.log('👤 User:', this.namaUser);
-      console.log('🔥 Current Streak:', this.streakCount);
-      console.log('📅 Last Login:', streakData.lastLoginDate);
-      console.log('📅 Today:', today);
-      console.log('📊 Days Difference:', daysDiff);
-      console.log('🎯 Status:', 
-        daysDiff === 0 ? 'Same Day' :
-        daysDiff === 1 ? 'Consecutive' :
-        `Gap of ${daysDiff} days`
-      );
-      
-      if (daysDiff > 1) {
-        console.log('⚠️ [HomePage] WARNING: Gap detected but streak not updated');
-        console.log('💡 [HomePage] Streak should be updated by LoginPage');
       }
+      
+      localStorage.setItem(userStreakKey, JSON.stringify(streakData))
     },
 
-    // ⭐ HELPER: Calculate days difference (same as LoginPage)
-    calculateDaysDifference(lastLoginDateStr, todayStr) {
+    /**
+     * 📢 Load announcements from API
+     * Limits to 6 items for performance
+     */
+    async loadAnnouncements() {
       try {
-        const lastLogin = new Date(lastLoginDateStr);
-        const today = new Date(todayStr);
-        
-        lastLogin.setHours(0, 0, 0, 0);
-        today.setHours(0, 0, 0, 0);
-        
-        const timeDifference = today.getTime() - lastLogin.getTime();
-        const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-        
-        return daysDifference;
-        
+        const announcements = await getAnnouncements()
+        this.announcementList = announcements.slice(0, 6)
       } catch (error) {
-        console.error('❌ [HomePage] Error calculating days difference:', error);
-        return 999;
+        console.error('❌ [HomePage] Error loading announcements:', error)
+        this.announcementList = []
       }
     },
 
-    // ⭐ NEW: Force streak recalculation (manual trigger)
-    forceStreakRecalculation() {
-      if (!this.currentUserId) {
-        console.log('⚠️ [HomePage] No user ID for recalculation');
-        return;
-      }
-
-      console.log('🔄 [HomePage] === FORCE STREAK RECALCULATION ===');
-      
-      const today = new Date().toDateString();
-      const userStreakKey = `streakData_${this.currentUserId}`;
-      const saved = localStorage.getItem(userStreakKey);
-      
-      if (!saved) {
-        console.log('❌ [HomePage] No existing streak data to recalculate');
-        return;
+    /**
+     * 🧭 Navigate to feature page
+     * Maps feature names to route paths
+     */
+    navigateToFeature(feature) {
+      const routeMap = {
+        'News': '/news',
+        'Jadwal': '/jadwal',
+        'Giving': '/giving',
+        'Tentang Gereja': '/tentang-gereja',
+        'Renungan': '/renungan',
+        'Prayer Request': '/prayer-request'
       }
       
-      const streakData = JSON.parse(saved);
-      const daysDiff = this.calculateDaysDifference(streakData.lastLoginDate, today);
-      
-      let newStreakCount;
-      if (daysDiff === 0) {
-        newStreakCount = streakData.streakCount;
-      } else if (daysDiff === 1) {
-        newStreakCount = streakData.streakCount + 1;
-      } else {
-        newStreakCount = 1;
-      }
-      
-      console.log('🔄 [HomePage] Recalculation result:', {
-        oldStreak: streakData.streakCount,
-        newStreak: newStreakCount,
-        daysDiff: daysDiff
-      });
-      
-      // Update component state
-      this.streakCount = newStreakCount;
-      
-      // Save updated data
-      const updatedData = {
-        ...streakData,
-        lastLoginDate: today,
-        streakCount: newStreakCount,
-        updatedAt: new Date().toISOString(),
-        updatedBy: 'HomePage_ForceRecalc'
-      };
-      
-      localStorage.setItem(userStreakKey, JSON.stringify(updatedData));
-      console.log('✅ [HomePage] Streak forcefully recalculated and saved');
-    },
-
-    // ⭐ DEBUG: Enhanced debugging dengan streak validation
-    debugUserStreakComplete() {
-      console.log('🧪 [HomePage] === COMPLETE STREAK DEBUG ===');
-      
-      const userStore = useUserStore();
-      const localStorageUser = localStorage.getItem('user');
-      
-      console.log('UserStore:', {
-        isLoggedIn: userStore.isLoggedIn,
-        user: userStore.user
-      });
-      
-      console.log('localStorage user:', localStorageUser);
-      
-      if (this.currentUserId) {
-        const userStreakKey = `streakData_${this.currentUserId}`;
-        const streakData = localStorage.getItem(userStreakKey);
-        
-        console.log('User streak data:', streakData);
-        
-        if (streakData) {
-          const parsed = JSON.parse(streakData);
-          this.displayStreakInfo(parsed);
-        }
-      }
-      
-      console.log('Component state:', {
-        namaUser: this.namaUser,
-        currentUserId: this.currentUserId,
-        streakCount: this.streakCount
-      });
-      
-      // List all streak data
-      console.log('All streak data:');
-      Object.keys(localStorage)
-        .filter(key => key.startsWith('streakData_'))
-        .forEach(key => {
-          const data = JSON.parse(localStorage.getItem(key));
-          const userId = key.replace('streakData_', '');
-          console.log(`  ${userId}: Streak ${data.streakCount} (${data.lastLoginDate})`);
-        });
-    },
-
-    loadDailyVerse() {
-      try {
-        const ayatUrl = getDailyVerseUrl()
-        this.ayatGambar = ayatUrl
-      } catch (error) {
-        console.error('❌ [HomePage] Failed to load daily verse:', error.message)
-        this.ayatGambar = null
-      }
-    },
-    
-    async fetchAnnouncements() {
-      try {
-        this.announcementList = await getAnnouncements(5);
-      } catch (error) {
-        console.error("Error fetching announcements:", error);
-        this.announcementList = [
-          {
-            title: 'Happy Birthday, Kak Irene!',
-            desc: '09 Agustus – Tuhan berkati selalu!',
-            icon: 'cake.png',
-            category: 'birthday'
-          },
-          {
-            title: 'Ibadah PELPRAP',
-            desc: 'Pukul 17.00 WITA – Gedung Gereja',
-            icon: 'ibadah.png',
-            category: 'pelprap'
-          }
-        ];
-      }
-    },
-
-    // ⭐ EXPOSE: Enhanced debug functions
-    mounted() {
-      if (process.env.NODE_ENV === 'development') {
-        window.debugHomePage = () => this.debugUserStreakComplete();
-        window.forceStreakRecalc = () => this.forceStreakRecalculation();
-        window.loadExistingStreak = () => this.loadExistingUserStreak();
-        
-        console.log('🔧 [HomePage] Enhanced debug functions:');
-        console.log('   - window.debugHomePage() // Complete debug');
-        console.log('   - window.forceStreakRecalc() // Force recalculation');
-        console.log('   - window.loadExistingStreak() // Reload streak data');
+      const route = routeMap[feature.name]
+      if (route) {
+        this.$router.push(route)
       }
     }
   }
@@ -376,36 +298,325 @@ export default {
 </script>
 
 <style scoped>
-.home-container {
-  padding: 16px;
+/* ========================================
+   BASE STYLES
+========================================= */
+.home-page {
   background: #fcfcf7;
   min-height: 100vh;
-  box-sizing: border-box;
-  padding-bottom: 80px;
-  overflow-x: hidden;
 }
 
-.home-wrapper {
-  width: 100%;
-  max-width: 360px;
-  margin: 0 auto;
+/* Default: Show mobile, hide desktop */
+.desktop-layout {
+  display: none;
 }
 
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  text-align: center;
-  margin: 24px 0;
+.mobile-layout {
+  display: block;
 }
 
-.section-title {
-  font-family: 'Inter';
-  font-size: 18px;
-  font-weight: 600;
-  color: #41442A;
-  margin-top: 24px;
-  margin-bottom: 12px;
-  text-align: left;
-  width: 100%;
+/* ========================================
+   DESKTOP LAYOUT (≥769px)
+========================================= */
+@media (min-width: 769px) {
+  .desktop-layout {
+    display: block;
+    min-height: 100vh;
+    background: #fcfcf7;
+  }
+  
+  .mobile-layout {
+    display: none;
+  }
+
+  /* === TOP NAVIGATION === */
+  .top-navbar {
+    background: white;
+    border-bottom: 1px solid #f0f0f0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .navbar-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .navbar-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+  }
+
+  .brand-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #41442A;
+  }
+
+  .navbar-menu {
+    display: flex;
+    gap: 32px;
+  }
+
+  .nav-link {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #666;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: #41442A;
+    background: rgba(65, 68, 42, 0.05);
+  }
+
+  .nav-link.router-link-active {
+    color: #41442A;
+    background: rgba(65, 68, 42, 0.1);
+    font-weight: 600;
+  }
+
+  /* === MAIN CONTENT === */
+  .main-content {
+    padding: 40px;
+  }
+
+  .content-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* === WELCOME HERO === */
+  .welcome-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+    margin-bottom: 48px;
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .welcome-left {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .welcome-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #41442A;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .welcome-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    color: #666;
+    margin: 0;
+  }
+
+  .streak-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #41442A, #5a5e3d);
+    border-radius: 12px;
+    color: white;
+    width: fit-content;
+  }
+
+  .streak-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .streak-count {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .welcome-right {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .daily-verse-desktop {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .verse-image {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* === FEATURES GRID === */
+  .feature-section {
+    margin-bottom: 48px;
+  }
+
+  .section-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: #41442A;
+    margin: 0 0 24px 0;
+  }
+
+  .feature-grid-desktop {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 20px;
+    margin: 0 -20px;
+  }
+
+  .feature-box-desktop {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    transform: scale(1.2);
+  }
+
+  .feature-box-desktop:hover {
+    transform: scale(1.25) translateY(-2px);
+  }
+
+  /* === ANNOUNCEMENTS GRID === */
+  .announcement-section {
+    margin-bottom: 48px;
+  }
+
+  .announcement-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+  }
+
+  .announcement-card-desktop {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .announcement-card-desktop:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* ========================================
+   MOBILE LAYOUT (≤768px)
+========================================= */
+@media (max-width: 768px) {
+  .home-wrapper {
+    padding: 16px;
+    max-width: 360px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .section-title-mobile {
+    font-family: 'Inter';
+    font-size: 18px;
+    font-weight: 600;
+    color: #41442A;
+    margin: 24px 0 16px 0;
+  }
+}
+
+/* ========================================
+   TABLET RESPONSIVE (769px - 1024px)
+========================================= */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .navbar-content {
+    padding: 0 24px;
+  }
+
+  .main-content {
+    padding: 24px;
+  }
+
+  .welcome-section {
+    padding: 24px;
+    gap: 24px;
+  }
+
+  .welcome-title {
+    font-size: 28px;
+  }
+
+  .feature-grid-desktop {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 0 -10px;
+  }
+
+  .feature-box-desktop {
+    transform: scale(1.1);
+  }
+
+  .feature-box-desktop:hover {
+    transform: scale(1.15) translateY(-2px);
+  }
+
+  .announcement-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+}
+
+/* ========================================
+   SMALL DESKTOP (769px - 950px)
+========================================= */
+@media (max-width: 950px) and (min-width: 769px) {
+  .feature-grid-desktop {
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0;
+  }
+
+  .feature-box-desktop {
+    transform: scale(1.05);
+  }
+
+  .feature-box-desktop:hover {
+    transform: scale(1.1) translateY(-2px);
+  }
 }
 </style>
