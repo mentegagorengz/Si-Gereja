@@ -1,18 +1,124 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="id">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="MyRajawali">
+    <meta name="apple-mobile-web-app-title" content="MyRajawali">
+    <meta name="description" content="Aplikasi Gereja Rajawali - Melayani dengan Kasih Kristus">
+    <meta name="theme-color" content="#41442A">
+    <meta name="msapplication-TileColor" content="#41442A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Icons -->
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
-    <title>MyRajawali</title>
+    <link rel="apple-touch-icon" href="<%= BASE_URL %>icons/icon-192.png">
+    <link rel="mask-icon" href="<%= BASE_URL %>icons/icon-192.png" color="#41442A">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="<%= BASE_URL %>manifest.json">
+    
+    <!-- PWA Theme Color untuk browser bar -->
+    <meta name="theme-color" content="#41442A">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Title -->
+    <title>MyRajawali - Aplikasi Gereja</title>
+    
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="<%= BASE_URL %>icons/icon-192.png" as="image">
+    
+    <!-- Microsoft Edge/IE -->
+    <meta name="msapplication-config" content="<%= BASE_URL %>browserconfig.xml">
+    
+    <!-- Open Graph untuk sharing -->
+    <meta property="og:title" content="MyRajawali - Aplikasi Gereja">
+    <meta property="og:description" content="Melayani dengan Kasih Kristus">
+    <meta property="og:image" content="<%= BASE_URL %>icons/icon-512.png">
+    <meta property="og:url" content="https://myrajawali-app.web.app">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MyRajawali - Aplikasi Gereja">
+    <meta name="twitter:description" content="Melayani dengan Kasih Kristus">
+    <meta name="twitter:image" content="<%= BASE_URL %>icons/icon-512.png">
   </head>
   <body>
     <noscript>
-      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+      <div style="text-align: center; padding: 40px; font-family: Inter, sans-serif;">
+        <h3>🚫 JavaScript Diperlukan</h3>
+        <p>MyRajawali memerlukan JavaScript untuk berfungsi dengan baik.</p>
+        <p>Silakan aktifkan JavaScript di browser Anda.</p>
+      </div>
     </noscript>
+    
+    <!-- App Container -->
     <div id="app"></div>
-    <!-- built files will be auto injected -->
+    
+    <!-- PWA Install Prompt (akan ditambahkan via JS) -->
+    <div id="pwa-install-prompt" style="display: none;"></div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      // Register Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('✅ SW registered successfully:', registration.scope);
+              
+              // Check for updates
+              registration.addEventListener('updatefound', () => {
+                console.log('🔄 SW update found');
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('🆕 New SW ready, please refresh');
+                    // Optional: Show refresh prompt to user
+                  }
+                });
+              });
+            })
+            .catch(error => {
+              console.error('❌ SW registration failed:', error);
+            });
+        });
+      }
+
+      // PWA Install Prompt
+      let deferredPrompt;
+      
+      window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('💾 PWA install prompt triggered');
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Show custom install button (optional)
+        // showInstallPrompt();
+      });
+      
+      // Track PWA install
+      window.addEventListener('appinstalled', (e) => {
+        console.log('🎉 PWA was installed successfully');
+        deferredPrompt = null;
+      });
+      
+      // Check if running as PWA
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        console.log('📱 Running as PWA');
+        document.body.classList.add('pwa-mode');
+      }
+    </script>
+    
+    <!-- Built files will be auto injected here -->
   </body>
 </html>
