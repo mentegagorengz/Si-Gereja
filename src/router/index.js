@@ -21,97 +21,126 @@ import TentangGereja from '../views/TentangGereja.vue'
 import PrayerRequest from '../views/PrayerRequest.vue'
 import AddPrayerReq from '../views/AddPrayerReq.vue'
 import PrayerDetail from '../views/PrayerDetail.vue'
-
+import KelolaJadwal from '../views/KelolaJadwal.vue'
+import DetailJadwaltest from '@/views/DetailJadwaltest.vue'
+import TambahJadwal from '@/views/TambahJadwal.vue'
 
 const routes = [
   // Public routes
-  { 
-    path: '/', 
+  {
+    path: '/',
     name: 'LoginPage',
-    component: LoginPage
+    component: LoginPage,
   },
   {
     path: '/register',
     name: 'RegisterPage',
-    component: RegisterPage
+    component: RegisterPage,
   },
   {
     path: '/success-register',
     name: 'SuccessRegister',
-    component: SuccessRegister
+    component: SuccessRegister,
   },
-  
+
   // Protected routes
   {
     path: '/home',
     name: 'HomePage',
     component: HomePage,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
     path: '/account',
     name: 'AccountPage',
     component: AccountPage,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
-  
+
   // Pengurus routes
   {
     path: '/pengurus/mode',
     name: 'PengurusMode',
     component: PengurusMode,
-    meta: { 
+    meta: {
       requiresAuth: true,
-      requiresPengurus: true 
-    }
+      requiresPengurus: true,
+    },
   },
-  
+
   // Jadwal routes
   {
     path: '/jadwal',
     name: 'JadwalPage',
     component: JadwalPage,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/kelola-jadwal',
+    name: 'KelolaJadwal',
+    component: KelolaJadwal,
+    meta: {
+      requiresAuth: true,
+      requiresPengurus: true,
+    },
+  },
+  {
+    path: '/detailjadwaltest',
+    name: 'DetailJadwaltest',
+    component: DetailJadwaltest,
+    meta: {
+      requiresAuth: true,
+      requiresPengurus: true,
+    },
+  },
+  {
+    path: '/TambahJadwal',
+    name: 'TambahJadwal',
+    component: TambahJadwal,
+    meta: {
+      requiresAuth: true,
+      requiresPengurus: true,
+    },
   },
   {
     path: '/jadwal/:id',
     name: 'DetailJadwal',
     component: DetailJadwal,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
-  
+
   // News routes
   {
     path: '/news',
     name: 'NewsPage',
     component: NewsPage,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
     path: '/news/:id',
     name: 'DetailNews',
     component: DetailNews,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
-  
+
   // Renungan routes
   {
     path: '/renungan',
     name: 'RenunganPage',
     component: RenunganPage,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
     path: '/renungan/bookmarks',
     name: 'BookmarksPage',
     component: BookmarksPage,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
     path: '/renungan/:id',
     name: 'DetailRenungan',
     component: DetailRenungan,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
 
   // Prayer Detail Route
@@ -119,19 +148,19 @@ const routes = [
     path: '/prayer-request',
     name: 'PrayerRequest',
     component: PrayerRequest,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
     path: '/prayer-request/add',
-    name: 'AddPrayerReq', 
+    name: 'AddPrayerReq',
     component: AddPrayerReq,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
     path: '/prayer-request/:id',
     name: 'PrayerDetail',
     component: PrayerDetail,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
 
   // Other routes
@@ -139,26 +168,26 @@ const routes = [
     path: '/notifikasi',
     name: 'NotifikasiPage',
     component: () => import('../views/NotifikasiPage.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
     path: '/firebase-test',
     name: 'FirebaseTestPage',
     component: FirebaseTestPage,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
-  path: '/detail-profile',
-  name: 'DetailProfile',
-  component: DetailProfile,
-  meta: { requiresAuth: true }
+    path: '/detail-profile',
+    name: 'DetailProfile',
+    component: DetailProfile,
+    meta: { requiresAuth: true },
   },
   {
     path: '/tentang-gereja',
     name: 'TentangGereja',
     component: TentangGereja,
-    meta: { requiresAuth: true }
-  }
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = createRouter({

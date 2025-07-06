@@ -96,7 +96,7 @@
       },
   
       goToManageSchedule() {
-        alert('📅 Fitur Kelola Jadwal akan tersedia setelah development selesai!')
+        this.$router.push('/kelola-jadwal')
       },
   
       goToManageDevotionals() {
