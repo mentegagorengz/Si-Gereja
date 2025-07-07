@@ -158,6 +158,11 @@ const routes = [
     name: 'TentangGereja',
     component: TentangGereja,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/update-structure',
+    name: 'UpdateStructure', 
+    component: () => import('@/views/UpdateStructurePage.vue')
   }
 ]
 

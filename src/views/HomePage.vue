@@ -1,4 +1,4 @@
-<!-- HomePage.vue - Clean & Optimized Responsive Layout -->
+<!-- HomePage.vue - Clean & Optimized Responsive Layout dengan Unified Announcement System -->
 <template>
   <div class="home-page">
     
@@ -45,7 +45,6 @@
 
           <!-- Features Grid Section -->
           <section class="feature-section">
-            <h2 class="section-title">Fitur Aplikasi</h2>
             <div class="feature-grid-desktop">
               <FeatureBox
                 v-for="feature in featureList"
@@ -60,7 +59,7 @@
 
           <!-- Announcements Section -->
           <section class="announcement-section">
-            <h2 class="section-title">Pengumuman Terbaru</h2>
+            <h2 class="section-title">Pengumuman Hari Ini</h2>
             <div class="announcement-grid">
               <AnnouncementCard
                 v-for="(item, index) in announcementList" 
@@ -69,7 +68,9 @@
                 :desc="item.desc"
                 :icon="item.icon"
                 :category="item.category"
+                :clickable="true"
                 class="announcement-card-desktop"
+                @click="navigateToAnnouncement(item)"
               />
             </div>
           </section>
@@ -100,7 +101,7 @@
         </div>
 
         <!-- Mobile Announcements Title -->
-        <h2 class="section-title-mobile">Announcements</h2>
+        <h2 class="section-title-mobile">Pengumuman Terbaru</h2>
 
         <!-- Mobile Announcements List -->
         <AnnouncementCard
@@ -110,6 +111,8 @@
           :desc="item.desc"
           :icon="item.icon"
           :category="item.category"
+          :clickable="true"
+          @click="navigateToAnnouncement(item)"
         />
 
         <!-- Bottom Navigation Bar -->
@@ -128,7 +131,8 @@ import AnnouncementCard from '@/components/AnnouncementCard.vue'
 import { useUserStore } from '@/stores/userStore'
 import { getDailyVerseUrl } from '@/utils/imageUtils'
 import { getCurrentJemaat } from '@/services/auth'
-import { getAnnouncements } from '@/services/announcements'
+// Import unified announcement system
+import { getUnifiedAnnouncements } from '@/services/announcements'
 
 export default {
   name: 'HomePage',
@@ -174,7 +178,7 @@ export default {
         await this.loadUserData()
         this.loadDailyVerse()
         this.loadUserStreak()
-        await this.loadAnnouncements()
+        await this.loadUnifiedAnnouncements()
       } catch (error) {
         console.error('❌ [HomePage] Failed to initialize page data:', error)
       }
@@ -261,17 +265,62 @@ export default {
     },
 
     /**
-     * 📢 Load announcements from API
+     * 📢 Load unified announcements from new system
+     * Combines news, schedule, and announcements as preview cards
      * Limits to 6 items for performance
      */
-    async loadAnnouncements() {
+    async loadUnifiedAnnouncements() {
       try {
-        const announcements = await getAnnouncements()
-        this.announcementList = announcements.slice(0, 6)
+        console.log('🔍 [HomePage] Loading unified announcements...')
+        const announcements = await getUnifiedAnnouncements(6)
+        
+        console.log('✅ [HomePage] Unified announcements loaded:', announcements.length)
+        this.announcementList = announcements
       } catch (error) {
-        console.error('❌ [HomePage] Error loading announcements:', error)
+        console.error('❌ [HomePage] Error loading unified announcements:', error)
         this.announcementList = []
+        
+        // Fallback: Load data dummy jika API error
+        this.loadDummyAnnouncements()
       }
+    },
+
+    /**
+     * 🎭 Load dummy announcements as fallback
+     * Provides sample data when API fails
+     */
+    loadDummyAnnouncements() {
+      console.log('🎭 [HomePage] Loading dummy announcements as fallback...')
+      
+      this.announcementList = [
+        {
+          id: 'news_Z6NtgDMXfZ8RL01jaZ0P',
+          originalId: 'Z6NtgDMXfZ8RL01jaZ0P', // ID yang benar tanpa prefix
+          title: 'Perkemahan Favored Camp 2025',
+          desc: 'Perkemahan Rohani Pemuda dan Remaja kembali hadir tahun ini dengan tema "Favored..."',
+          category: 'event',
+          type: 'news',
+          sourceCollection: 'news'
+        },
+        {
+          id: 'announcement_birthday_123',
+          originalId: 'birthday_123',
+          title: 'Selamat Ulang Tahun Gembala!',
+          desc: 'Hari ini adalah hari spesial untuk Bapak Gembala. Mari kita doakan semoga diberkati...',
+          category: 'birthday',
+          type: 'announcement',
+          sourceCollection: 'announcements'
+        },
+        {
+          id: 'schedule_pelprap_456',
+          originalId: 'pelprap_456',
+          title: 'Undangan Ibadah PELPRAP Wilayah LX',
+          desc: 'Undangan untuk seluruh ibu-ibu GPdI Rajawali Kanonang dari Komisi Pelayanan Wanita...',
+          category: 'ibadah',
+          type: 'schedule',
+          sourceCollection: 'schedules'
+        }
+      ]
     },
 
     /**
@@ -291,6 +340,57 @@ export default {
       const route = routeMap[feature.name]
       if (route) {
         this.$router.push(route)
+      }
+    },
+
+    /**
+     * 🎯 Navigate to announcement detail page
+     * Routes to different pages based on announcement source
+     */
+    /**
+ * 🎯 Navigate to announcement detail page
+ * Routes to different pages based on announcement source
+ */
+    navigateToAnnouncement(item) {
+      console.log('🎯 [HomePage] Navigating to announcement:', item)
+      
+      try {
+        // Debug info untuk troubleshooting
+        console.log('📋 [HomePage] Item details:', {
+          id: item.id,                    // ID dengan prefix
+          originalId: item.originalId,    // ID tanpa prefix
+          sourceCollection: item.sourceCollection,
+          type: item.type
+        })
+        
+        // 🔧 REAL FIX: Pakai originalId, BUKAN item.id!
+        const cleanId = item.originalId || item.id.replace(/^(news_|schedule_|announcement_)/, '')
+        console.log('🧹 [HomePage] Clean ID untuk navigation:', cleanId)
+        
+        // Determine target route based on source collection and type
+        let targetRoute = ''
+        
+        if (item.sourceCollection === 'news' || item.type === 'news') {
+          // 🎯 FIXED: Pakai cleanId (tanpa prefix)
+          targetRoute = `/news/${cleanId}`
+        } else if (item.sourceCollection === 'schedules' || item.type === 'schedule') {
+          // 🎯 FIXED: Pakai cleanId (tanpa prefix)
+          targetRoute = `/jadwal/${cleanId}`
+        } else if (item.sourceCollection === 'announcements' || item.type === 'announcement') {
+          // Navigate to announcement detail
+          targetRoute = `/news?category=announcements&id=${cleanId}`
+        } else {
+          // Default fallback to news page
+          targetRoute = '/news'
+        }
+        
+        console.log('🧭 [HomePage] Navigating to:', targetRoute)
+        this.$router.push(targetRoute)
+        
+      } catch (error) {
+        console.error('❌ [HomePage] Error navigating to announcement:', error)
+        // Fallback navigation
+        this.$router.push('/news')
       }
     }
   }
@@ -526,6 +626,7 @@ export default {
 
   .announcement-card-desktop {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
   }
 
   .announcement-card-desktop:hover {

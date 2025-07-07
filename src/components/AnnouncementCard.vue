@@ -1,28 +1,38 @@
+<!-- AnnouncementCard.vue - Modern Elevated Design dengan Kategori Warna -->
 <template>
-  <div class="announcement-card" :class="cardClass" @click="handleClick">
-    <!-- Icon -->
-    <div class="card-icon" :class="{ 'error': iconError }">
-      <img 
-        v-if="iconSrc && !iconError"
-        :src="iconSrc" 
-        :alt="category" 
-        class="icon-img" 
-        @error="onIconError"
-      />
-      <span v-else class="icon-fallback">{{ iconFallback }}</span>
+  <div class="announcement-card elevated-card" :class="cardTheme" @click="handleClick">
+    <!-- Category Badge -->
+    <div class="card-category" :style="{ background: categoryGradient }">
+      {{ getCategoryLabel }}
     </div>
     
-    <!-- Content -->
+    <!-- Card Content -->
     <div class="card-content">
+      <!-- Title -->
       <h3 class="card-title">{{ title }}</h3>
+      
+      <!-- Description -->
       <p class="card-desc">{{ desc }}</p>
+      
+      <!-- Footer with Meta Info -->
+      <div class="card-footer">
+        <div class="card-meta">
+          <span v-if="formattedDate">📅 {{ formattedDate }}</span>
+          <span v-if="time">🕘 {{ time }}</span>
+          <span v-if="location">📍 {{ location }}</span>
+        </div>
+        <div class="read-more">
+          Selengkapnya →
+        </div>
+      </div>
     </div>
+
+    <!-- Shimmer Effect -->
+    <div class="shimmer-overlay"></div>
   </div>
 </template>
 
 <script>
-import { getAnnouncementIconUrl } from '@/utils/imageUtils'
-
 export default {
   name: 'AnnouncementCard',
   
@@ -46,85 +56,144 @@ export default {
     clickable: {
       type: Boolean,
       default: false
+    },
+    time: {
+      type: String,
+      default: ''
+    },
+    date: {
+      type: String,
+      default: ''
+    },
+    location: {
+      type: String,
+      default: ''
     }
   },
   
   emits: ['click'],
   
-  data() {
-    return {
-      iconError: false
-    }
-  },
-  
   computed: {
-    // ⭐ Dynamic card class based on category
-    cardClass() {
-      const classMap = {
-        'pengumuman': 'pengumuman-card',
-        'birthday': 'birthday-card',
-        'ibadah': 'ibadah-card',
-        'event': 'event-card',
-        'announcement': 'pengumuman-card',
-        'service': 'ibadah-card',
-        'pelprap': 'ibadah-card',
-        'worship': 'ibadah-card',
-        'ultah': 'birthday-card',
-        'ulang_tahun': 'birthday-card',
-        'acara': 'event-card',
-        'pelatar': 'event-card',
-        'default': 'pengumuman-card'
+    /**
+     * 🎨 Get gradient color berdasarkan kategori
+     */
+    categoryGradient() {
+      const gradients = {
+        // === KATEGORI JADWAL (High Contrast) ===
+        'minggu raya': 'linear-gradient(135deg, #4c51bf 0%, #553c9a 100%)',        // Deep blue-purple
+        'pelprap': 'linear-gradient(135deg, #e53e3e 0%, #d53f8c 100%)',           // Deep red-pink
+        'sektor tesalonika': 'linear-gradient(135deg, #2b6cb0 0%, #1e40af 100%)', // Deep blue
+        'sektor anugerah': 'linear-gradient(135deg, #047857 0%, #059669 100%)',   // Deep green
+        'pelnap': 'linear-gradient(135deg, #dc2626 0%, #ea580c 100%)',            // Deep red-orange
+        'pendalaman alkitab': 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)', // Deep purple
+        'doa dan puasa': 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)',     // Deep cyan
+        'pelwap': 'linear-gradient(135deg, #be185d 0%, #be123c 100%)',            // Deep pink-red
+        'pelprip': 'linear-gradient(135deg, #92400e 0%, #a16207 100%)',           // Deep brown-yellow
+        'doa membangunkan fajar': 'linear-gradient(135deg, #7c2d12 0%, #9a3412 100%)', // Deep orange-red
+        
+        // === KATEGORI NEWS (High Contrast) ===
+        'undangan': 'linear-gradient(135deg, #4c51bf 0%, #553c9a 100%)',          // Deep blue-purple
+        'birthday': 'linear-gradient(135deg, #dc2626 0%, #ea580c 100%)',          // Deep red-orange
+        'event': 'linear-gradient(135deg, #db2777 0%, #be185d 100%)',             // Deep pink
+        'pengumuman': 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)',        // Deep cyan
+        'kegiatan': 'linear-gradient(135deg, #059669 0%, #047857 100%)',          // Deep green
+        'ibadah': 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)',            // Deep purple
+        
+        // === FALLBACKS ===
+        'schedule': 'linear-gradient(135deg, #4c51bf 0%, #553c9a 100%)',
+        'news': 'linear-gradient(135deg, #2b6cb0 0%, #1e40af 100%)',
+        'announcement': 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)',
+        'default': 'linear-gradient(135deg, #4c51bf 0%, #553c9a 100%)'
       }
       
-      const baseClass = classMap[this.category?.toLowerCase()] || classMap['default']
-      
-      return [
-        baseClass,
-        { 'clickable': this.clickable }
-      ]
+      const categoryKey = this.category?.toLowerCase() || 'default'
+      return gradients[categoryKey] || gradients['default']
     },
-    
-    // ⭐ Get icon source URL
-    iconSrc() {
-      if (this.iconError) return null
+
+    /**
+     * 🏷️ Get category label untuk display
+     */
+    getCategoryLabel() {
+      const labels = {
+        // === KATEGORI JADWAL ===
+        'minggu raya': 'Minggu Raya',
+        'pelprap': 'PELPRAP',
+        'sektor tesalonika': 'Sektor Tesalonika',
+        'sektor anugerah': 'Sektor Anugerah', 
+        'pelnap': 'PELNAP',
+        'pendalaman alkitab': 'Pendalaman Alkitab',
+        'doa dan puasa': 'Doa dan Puasa',
+        'pelwap': 'PELWAP',
+        'pelprip': 'PELPRIP',
+        'doa membangunkan fajar': 'Doa Membangunkan Fajar',
+        
+        // === KATEGORI NEWS ===
+        'undangan': 'Undangan',
+        'birthday': 'Ulang Tahun',
+        'event': 'Event',
+        'pengumuman': 'Pengumuman',
+        'kegiatan': 'Kegiatan',
+        'ibadah': 'Ibadah',
+        
+        // === FALLBACKS ===
+        'schedule': 'Jadwal',
+        'news': 'Berita',
+        'announcement': 'Pengumuman',
+        'default': 'Info'
+      }
+      
+      const categoryKey = this.category?.toLowerCase() || 'default'
+      return labels[categoryKey] || labels['default']
+    },
+
+    /**
+     * 📅 Format tanggal untuk display
+     */
+    formattedDate() {
+      if (!this.date) return ''
       
       try {
-        const iconKey = this.category || this.icon || 'default'
-        return getAnnouncementIconUrl(iconKey)
+        const dateObj = new Date(this.date)
+        const options = { 
+          day: 'numeric', 
+          month: 'short'
+        }
+        return dateObj.toLocaleDateString('id-ID', options)
       } catch (error) {
-        return null
+        return this.date
       }
     },
-    
-    // ⭐ Fallback emoji icon
-    iconFallback() {
-      const emojiMap = {
-        'pengumuman': '📢',
-        'birthday': '🎂',
-        'ibadah': '⛪',
-        'event': '✨',
-        'announcement': '📢',
-        'service': '⛪',
-        'pelprap': '🙏',
-        'worship': '⛪',
-        'ultah': '🎂',
-        'ulang_tahun': '🎂',
-        'acara': '🎉',
-        'pelatar': '🎓',
-        'default': '📢'
+
+    /**
+     * 🎨 Card theme based on category type
+     */
+    cardTheme() {
+      const jadwalCategories = [
+        'minggu raya', 'pelprap', 'sektor tesalonika', 'sektor anugerah',
+        'pelnap', 'pendalaman alkitab', 'doa dan puasa', 'pelwap', 
+        'pelprip', 'doa membangunkan fajar'
+      ]
+      
+      const newsCategories = [
+        'undangan', 'birthday', 'event', 'pengumuman', 'kegiatan', 'ibadah'
+      ]
+      
+      const categoryKey = this.category?.toLowerCase() || 'default'
+      
+      if (jadwalCategories.includes(categoryKey)) {
+        return 'schedule-theme'
+      } else if (newsCategories.includes(categoryKey)) {
+        return 'news-theme'
       }
       
-      return emojiMap[this.category?.toLowerCase()] || emojiMap['default']
+      return 'default-theme'
     }
   },
   
   methods: {
-    // ⭐ Handle icon load error
-    onIconError() {
-      this.iconError = true
-    },
-    
-    // ⭐ Handle card click
+    /**
+     * 🎯 Handle card click
+     */
     handleClick() {
       if (this.clickable) {
         this.$emit('click', {
@@ -139,181 +208,237 @@ export default {
 </script>
 
 <style scoped>
-/* ⭐ CARD BASE */
-.announcement-card {
-  display: flex;
-  align-items: center;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* ===== BASE ELEVATED CARD STYLES ===== */
+.elevated-card {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.05), 
+    0 10px 15px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   overflow: hidden;
-  cursor: default;
+  margin-bottom: 16px;
 }
 
-.announcement-card.clickable {
-  cursor: pointer;
+/* ===== HOVER EFFECTS ===== */
+.elevated-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 
+    0 12px 24px rgba(0, 0, 0, 0.15), 
+    0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
-.announcement-card:active {
-  transform: scale(0.98);
+/* ===== SHIMMER EFFECT ===== */
+.shimmer-overlay {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transition: left 0.6s ease;
+  pointer-events: none;
 }
 
-/* ⭐ ICON SECTION */
-.card-icon {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.25);
-  margin-right: 14px;
-  transition: transform 0.2s ease;
+.elevated-card:hover .shimmer-overlay {
+  left: 100%;
 }
 
-.card-icon.error {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px dashed rgba(255, 255, 255, 0.5);
+/* ===== CATEGORY BADGE ===== */
+.card-category {
+  display: inline-block;
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.icon-img {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  transition: transform 0.2s ease;
-}
-
-.announcement-card:hover .icon-img {
-  transform: scale(1.1);
-}
-
-.icon-fallback {
-  font-size: 24px;
-  line-height: 1;
-}
-
-/* ⭐ CONTENT SECTION */
+/* ===== CONTENT AREA ===== */
 .card-content {
-  flex: 1;
-  min-width: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .card-title {
+  color: #1a202c;
   font-size: 16px;
-  font-weight: 600;
-  margin: 0 0 4px 0;
-  color: #fff;
+  font-weight: 700;
+  margin-bottom: 10px;
+  line-height: 1.4;
   font-family: 'Inter', sans-serif;
-  line-height: 1.3;
-  overflow: hidden;
+  
+  /* Text truncation */
   display: -webkit-box;
-  -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
+  overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .card-desc {
+  color: #4a5568;
   font-size: 13px;
-  margin: 0;
-  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  margin-bottom: 16px;
   font-family: 'Inter', sans-serif;
-  line-height: 1.4;
-  overflow: hidden;
+  
+  /* Text truncation */
   display: -webkit-box;
-  -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
+  overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ⭐ CATEGORY STYLES */
-.pengumuman-card {
-  background: linear-gradient(135deg, #261b76, #2156a6);
+/* ===== FOOTER AREA ===== */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #f7fafc;
 }
 
-.birthday-card {
-  background: linear-gradient(135deg, #aa1a64, #b93283);
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: #a0aec0;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  flex-wrap: wrap;
 }
 
-.ibadah-card {
-  background: linear-gradient(135deg, #825900, #c7640e);
+.card-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
 }
 
-.event-card {
-  background: linear-gradient(135deg, #7c6b1d, #e0be00);
+.read-more {
+  color: #667eea;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s ease;
 }
 
-/* ⭐ HOVER EFFECTS */
-.pengumuman-card:hover {
-  background: linear-gradient(135deg, #312e81, #3b82f6);
-  box-shadow: 0 6px 20px rgba(38, 27, 118, 0.3);
+.elevated-card:hover .read-more {
+  color: #5a67d8;
+  transform: translateX(2px);
 }
 
-.birthday-card:hover {
-  background: linear-gradient(135deg, #c21e7a, #d946a6);
-  box-shadow: 0 6px 20px rgba(170, 26, 100, 0.3);
+/* ===== THEME VARIATIONS ===== */
+.schedule-theme {
+  border-left: 4px solid #667eea;
 }
 
-.ibadah-card:hover {
-  background: linear-gradient(135deg, #a66b00, #f59e0b);
-  box-shadow: 0 6px 20px rgba(130, 89, 0, 0.3);
+.news-theme {
+  border-left: 4px solid #4facfe;
 }
 
-.event-card:hover {
-  background: linear-gradient(135deg, #9a7c1a, #facc15);
-  box-shadow: 0 6px 20px rgba(124, 107, 29, 0.3);
+.default-theme {
+  border-left: 4px solid #a0aec0;
 }
 
-/* ⭐ RESPONSIVE DESIGN */
-@media (max-width: 360px) {
-  .announcement-card {
-    padding: 12px;
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 480px) {
+  .elevated-card {
+    padding: 16px;
+    border-radius: 16px;
+    margin-bottom: 12px;
   }
   
-  .card-icon {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    margin-right: 12px;
-  }
-  
-  .icon-img {
-    width: 24px;
-    height: 24px;
-  }
-  
-  .icon-fallback {
-    font-size: 20px;
+  .card-category {
+    font-size: 10px;
+    padding: 5px 12px;
+    margin-bottom: 12px;
   }
   
   .card-title {
-    font-size: 14px;
+    font-size: 15px;
+    margin-bottom: 8px;
   }
   
   .card-desc {
     font-size: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .card-footer {
+    margin-top: 12px;
+    padding-top: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .card-meta {
+    font-size: 10px;
+    gap: 8px;
+  }
+  
+  .read-more {
+    font-size: 10px;
+    align-self: flex-end;
   }
 }
 
-/* ⭐ ACCESSIBILITY - Reduced motion */
+@media (max-width: 360px) {
+  .card-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
 @media (prefers-reduced-motion: reduce) {
-  .announcement-card,
-  .card-icon,
-  .icon-img {
+  .elevated-card,
+  .shimmer-overlay,
+  .read-more {
     transition: none;
   }
   
-  .announcement-card:hover {
+  .elevated-card:hover {
     transform: none;
   }
   
-  .announcement-card:hover .icon-img {
-    transform: none;
+  .elevated-card:hover .shimmer-overlay {
+    left: -100%;
+  }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .elevated-card {
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
+    break-inside: avoid;
+  }
+  
+  .shimmer-overlay {
+    display: none;
   }
 }
 </style>
