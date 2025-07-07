@@ -45,6 +45,7 @@
 
           <!-- Features Grid Section -->
           <section class="feature-section">
+            <h2 class="section-title">Fitur Aplikasi</h2>
             <div class="feature-grid-desktop">
               <FeatureBox
                 v-for="feature in featureList"
@@ -59,7 +60,7 @@
 
           <!-- Announcements Section -->
           <section class="announcement-section">
-            <h2 class="section-title">Pengumuman Hari Ini</h2>
+            <h2 class="section-title">Pengumuman Terbaru</h2>
             <div class="announcement-grid">
               <AnnouncementCard
                 v-for="(item, index) in announcementList" 
@@ -68,6 +69,9 @@
                 :desc="item.desc"
                 :icon="item.icon"
                 :category="item.category"
+                :time="item.time"
+                :date="item.date"
+                :location="item.location"
                 :clickable="true"
                 class="announcement-card-desktop"
                 @click="navigateToAnnouncement(item)"
@@ -111,6 +115,9 @@
           :desc="item.desc"
           :icon="item.icon"
           :category="item.category"
+          :time="item.time"
+          :date="item.date"
+          :location="item.location"
           :clickable="true"
           @click="navigateToAnnouncement(item)"
         />
@@ -347,44 +354,34 @@ export default {
      * 🎯 Navigate to announcement detail page
      * Routes to different pages based on announcement source
      */
-    /**
- * 🎯 Navigate to announcement detail page
- * Routes to different pages based on announcement source
- */
+    // ✅ PERBAIKAN untuk function navigateToAnnouncement di HomePage.vue
+
     navigateToAnnouncement(item) {
       console.log('🎯 [HomePage] Navigating to announcement:', item)
       
       try {
-        // Debug info untuk troubleshooting
-        console.log('📋 [HomePage] Item details:', {
-          id: item.id,                    // ID dengan prefix
-          originalId: item.originalId,    // ID tanpa prefix
-          sourceCollection: item.sourceCollection,
-          type: item.type
-        })
+        // ⭐ GUNAKAN originalId yang TANPA PREFIX untuk navigasi
+        const actualId = item.originalId || item.id.replace(/^(news_|schedule_|announcement_)/, '')
         
-        // 🔧 REAL FIX: Pakai originalId, BUKAN item.id!
-        const cleanId = item.originalId || item.id.replace(/^(news_|schedule_|announcement_)/, '')
-        console.log('🧹 [HomePage] Clean ID untuk navigation:', cleanId)
-        
-        // Determine target route based on source collection and type
         let targetRoute = ''
         
         if (item.sourceCollection === 'news' || item.type === 'news') {
-          // 🎯 FIXED: Pakai cleanId (tanpa prefix)
-          targetRoute = `/news/${cleanId}`
+          // ✅ Navigate ke news detail dengan ID asli (tanpa prefix)
+          targetRoute = `/news/${actualId}`
         } else if (item.sourceCollection === 'schedules' || item.type === 'schedule') {
-          // 🎯 FIXED: Pakai cleanId (tanpa prefix)
-          targetRoute = `/jadwal/${cleanId}`
+          // ✅ Navigate ke schedule detail dengan ID asli (tanpa prefix)
+          targetRoute = `/jadwal/${actualId}`
         } else if (item.sourceCollection === 'announcements' || item.type === 'announcement') {
-          // Navigate to announcement detail
-          targetRoute = `/news?category=announcements&id=${cleanId}`
+          // ✅ Navigate ke announcement detail
+          targetRoute = `/news?category=announcements&id=${actualId}`
         } else {
-          // Default fallback to news page
+          // Default fallback
           targetRoute = '/news'
         }
         
         console.log('🧭 [HomePage] Navigating to:', targetRoute)
+        console.log('🔍 [HomePage] Using ID:', actualId)
+        
         this.$router.push(targetRoute)
         
       } catch (error) {
@@ -526,7 +523,7 @@ export default {
 
   .welcome-title {
     font-family: 'Inter', sans-serif;
-    font-size: 32px;
+    font-size: 24px;
     font-weight: 700;
     color: #41442A;
     margin: 0;
@@ -535,7 +532,7 @@ export default {
 
   .welcome-subtitle {
     font-family: 'Inter', sans-serif;
-    font-size: 18px;
+    font-size: 14px;
     color: #666;
     margin: 0;
   }
@@ -544,7 +541,7 @@ export default {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 20px;
+    padding: 8px 16px;
     background: linear-gradient(135deg, #41442A, #5a5e3d);
     border-radius: 12px;
     color: white;
@@ -553,13 +550,13 @@ export default {
 
   .streak-label {
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
   }
 
   .streak-count {
     font-family: 'Inter', sans-serif;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
   }
 
@@ -590,10 +587,10 @@ export default {
 
   .section-title {
     font-family: 'Inter', sans-serif;
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 600;
     color: #41442A;
-    margin: 0 0 24px 0;
+    margin: 0 0 20px 0;
   }
 
   .feature-grid-desktop {
@@ -620,7 +617,7 @@ export default {
 
   .announcement-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 24px;
   }
 
@@ -680,7 +677,11 @@ export default {
   }
 
   .welcome-title {
-    font-size: 28px;
+    font-size: 20px;
+  }
+
+  .welcome-subtitle {
+    font-size: 13px;
   }
 
   .feature-grid-desktop {
@@ -697,16 +698,22 @@ export default {
     transform: scale(1.15) translateY(-2px);
   }
 
+  /* Keep 3 columns for announcements on tablet */
   .announcement-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
   }
 }
 
 /* ========================================
-   SMALL DESKTOP (769px - 950px)
+   SMALL DESKTOP (769px - 1200px)
 ========================================= */
-@media (max-width: 950px) and (min-width: 769px) {
+@media (max-width: 1200px) and (min-width: 769px) {
+  .announcement-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  
   .feature-grid-desktop {
     grid-template-columns: repeat(3, 1fr);
     margin: 0;

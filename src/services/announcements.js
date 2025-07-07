@@ -86,7 +86,11 @@ export async function getUnifiedAnnouncements(limitCount = 8) {
       desc: truncateText(news.summary || news.content || '', 100),
       subtitle: formatNewsSubtitle(news),
       preview: truncateText(news.summary || news.content || '', 80),
-      date: news.eventDate || news.activityDate || news.scheduleDate,
+      
+      // ✅ FIX: Map semua field date, time, location dari database
+      date: news.date || news.eventDate || news.activityDate || news.scheduleDate,
+      time: news.time,           // ← TAMBAH field time
+      location: news.location,   // ← TAMBAH field location
       category: news.category || 'berita',
       
       // Navigation data

@@ -1,9 +1,14 @@
 <!-- AnnouncementCard.vue - Modern Elevated Design dengan Kategori Warna -->
 <template>
   <div class="announcement-card elevated-card" :class="cardTheme" @click="handleClick">
-    <!-- Category Badge -->
-    <div class="card-category" :style="{ background: categoryGradient }">
-      {{ getCategoryLabel }}
+    <!-- Header: Category Badge + Read More -->
+    <div class="card-header">
+      <div class="card-category" :style="{ background: categoryGradient }">
+        {{ getCategoryLabel }}
+      </div>
+      <div class="read-more">
+        Selengkapnya →
+      </div>
     </div>
     
     <!-- Card Content -->
@@ -14,16 +19,11 @@
       <!-- Description -->
       <p class="card-desc">{{ desc }}</p>
       
-      <!-- Footer with Meta Info -->
-      <div class="card-footer">
-        <div class="card-meta">
-          <span v-if="formattedDate">📅 {{ formattedDate }}</span>
-          <span v-if="time">🕘 {{ time }}</span>
-          <span v-if="location">📍 {{ location }}</span>
-        </div>
-        <div class="read-more">
-          Selengkapnya →
-        </div>
+      <!-- Meta Info (Date, Time, Location) -->
+      <div class="card-meta">
+        <span v-if="formattedDate">📅 {{ formattedDate }}</span>
+        <span v-if="time">🕘 {{ time }}</span>
+        <span v-if="location">📍 {{ location }}</span>
       </div>
     </div>
 
@@ -252,18 +252,48 @@ export default {
   left: 100%;
 }
 
+/* ===== HEADER AREA ===== */
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
 /* ===== CATEGORY BADGE ===== */
 .card-category {
   display: inline-block;
   color: white;
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 9px;
   font-weight: 700;
-  margin-bottom: 16px;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.5px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== READ MORE (TOP RIGHT) ===== */
+.read-more {
+  color: #667eea;
+  font-size: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.elevated-card:hover .read-more {
+  color: #5a67d8;
+  background: rgba(90, 103, 216, 0.15);
+  transform: translateX(2px);
 }
 
 /* ===== CONTENT AREA ===== */
@@ -274,9 +304,9 @@ export default {
 
 .card-title {
   color: #1a202c;
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
   line-height: 1.4;
   font-family: 'Inter', sans-serif;
   
@@ -290,9 +320,9 @@ export default {
 
 .card-desc {
   color: #4a5568;
-  font-size: 13px;
-  line-height: 1.6;
-  margin-bottom: 16px;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 14px;
   font-family: 'Inter', sans-serif;
   
   /* Text truncation */
@@ -303,25 +333,18 @@ export default {
   text-overflow: ellipsis;
 }
 
-/* ===== FOOTER AREA ===== */
-.card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid #f7fafc;
-}
-
+/* ===== META INFO (DATE, TIME, LOCATION) ===== */
 .card-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 11px;
+  gap: 10px;
+  font-size: 10px;
   color: #a0aec0;
   font-family: 'Inter', sans-serif;
   font-weight: 500;
   flex-wrap: wrap;
+  padding-top: 10px;
+  border-top: 1px solid #f7fafc;
 }
 
 .card-meta span {
@@ -329,23 +352,6 @@ export default {
   align-items: center;
   gap: 4px;
   white-space: nowrap;
-}
-
-.read-more {
-  color: #667eea;
-  font-size: 11px;
-  font-weight: 700;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-family: 'Inter', sans-serif;
-  transition: all 0.2s ease;
-}
-
-.elevated-card:hover .read-more {
-  color: #5a67d8;
-  transform: translateX(2px);
 }
 
 /* ===== THEME VARIATIONS ===== */
@@ -369,10 +375,18 @@ export default {
     margin-bottom: 12px;
   }
   
+  .card-header {
+    margin-bottom: 12px;
+  }
+  
   .card-category {
     font-size: 10px;
     padding: 5px 12px;
-    margin-bottom: 12px;
+  }
+  
+  .read-more {
+    font-size: 10px;
+    padding: 3px 6px;
   }
   
   .card-title {
@@ -385,26 +399,24 @@ export default {
     margin-bottom: 12px;
   }
   
-  .card-footer {
-    margin-top: 12px;
+  .card-meta {
+    font-size: 10px;
+    gap: 8px;
     padding-top: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .card-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
   
-  .card-meta {
-    font-size: 10px;
-    gap: 8px;
-  }
-  
   .read-more {
-    font-size: 10px;
     align-self: flex-end;
   }
-}
-
-@media (max-width: 360px) {
+  
   .card-meta {
     flex-direction: column;
     align-items: flex-start;
