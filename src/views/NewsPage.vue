@@ -38,41 +38,14 @@
 
         <!-- News Grid -->
         <div v-else-if="news.length > 0" class="news-grid">
-          <article 
+          <ContentCard
             v-for="newsItem in news" 
             :key="newsItem.id"
-            @click="goToDetail(newsItem)"
-            class="news-card"
-          >
-            <!-- News Thumbnail -->
-            <div class="news-thumbnail">
-              <img 
-                :src="getThumbnailUrl(newsItem)" 
-                :alt="newsItem.title"
-                @error="handleImageError"
-              />
-              <span class="news-category" :class="`category-${newsItem.category || 'general'}`">
-                {{ getCategoryLabel(newsItem.category) }}
-              </span>
-            </div>
-
-            <!-- News Content -->
-            <div class="news-body">
-              <h3 class="news-title">{{ newsItem.title }}</h3>
-              <p class="news-preview">{{ getPreviewText(newsItem.content || newsItem.desc) }}</p>
-              
-              <!-- News Meta -->
-              <div class="news-meta">
-                <span class="news-date">
-                  <Calendar class="meta-icon" />
-                  {{ formatDate(newsItem.createdAt || newsItem.date) }}
-                </span>
-                <button class="read-more">
-                  Baca Selengkapnya <ArrowRight />
-                </button>
-              </div>
-            </div>
-          </article>
+            :item="newsItem"
+            content-type="news"
+            layout="desktop-grid"
+            size="large"
+          />
         </div>
 
         <!-- Empty state -->
@@ -108,12 +81,15 @@
 
         <!-- Content ketika ada data -->
         <div v-else-if="news.length > 0" class="news-content">  
-          <!-- Daftar news pakai ScheduleCard (REUSE!) -->
+          <!-- ✅ GANTI KE CONTENTCARD -->
           <div class="news-list">
-            <ScheduleCard 
+            <ContentCard
               v-for="newsItem in news" 
               :key="newsItem.id"
-              :schedule="newsItem"
+              :item="newsItem"
+              content-type="news"
+              layout="mobile-list"
+              size="small"
             />
           </div>
         </div>
@@ -134,34 +110,29 @@
 
 <script>
 import HeaderWithBack from '@/components/layout/HeaderWithBack.vue'
-import ScheduleCard from '@/components/ScheduleCard.vue'
 import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
 // ✅ TAMBAH IMPORT COMPONENT
 import DesktopNavbar from '@/components/layout/DesktopNavbar.vue'
 import BreadcrumbDesktop from '@/components/common/BreadcrumbDesktop.vue'
+import ContentCard from '@/components/common/ContentCard.vue'
 import { 
   Newspaper,
   RefreshCw, 
   AlertCircle, 
-  Calendar,
-  ArrowRight 
 } from 'lucide-vue-next'
-import { getNews } from '@/services/news'
-import { getNewsThumbnail } from '@/utils/imageUtils'
+import { getNews } from '@/services/news' 
 
 export default {
   name: 'NewsPage',
   components: {
     HeaderWithBack,
-    ScheduleCard,
     ButtonPrimary,
     DesktopNavbar, // ✅ DAFTAR COMPONENT
     BreadcrumbDesktop, // ✅ BREADCRUMB COMPONENT
+    ContentCard, // ✅ NEW UNIVERSAL CARD
     Newspaper,
     RefreshCw,
-    AlertCircle,
-    Calendar,
-    ArrowRight
+    AlertCircle
   },
   data() {
     return {
@@ -197,79 +168,6 @@ export default {
         this.error = 'Gagal memuat berita. Pastikan koneksi internet Anda stabil.'
       } finally {
         this.loading = false
-      }
-    },
-
-    goToDetail(newsItem) {
-      this.$router.push(`/news/${newsItem.id}`)
-    },
-
-    getThumbnailUrl(newsItem) {
-      // Use the utility function to get proper thumbnail URL
-      return getNewsThumbnail(newsItem.thumbnail)
-    },
-
-    handleImageError(e) {
-      // Fallback to default image on error
-      e.target.src = getNewsThumbnail()
-    },
-
-    getCategoryLabel(category) {
-      const labels = {
-        'general': 'Umum',
-        'event': 'Acara',
-        'undangan': 'Undangan',
-        'penting': 'Penting',
-        'info': 'Info'
-      }
-      return labels[category?.toLowerCase()] || 'Info'
-    },
-
-    getPreviewText(content) {
-      if (!content) return 'Klik untuk membaca selengkapnya...'
-      // Remove HTML tags
-      const plainText = content.replace(/<[^>]*>/g, '')
-      return plainText.length > 120 
-        ? plainText.substring(0, 120) + '...' 
-        : plainText
-    },
-
-    formatDate(dateValue) {
-      if (!dateValue) return 'Tanggal tidak tersedia'
-      
-      try {
-        let date
-        
-        // Handle Firebase Timestamp
-        if (dateValue && typeof dateValue === 'object' && dateValue.seconds) {
-          date = new Date(dateValue.seconds * 1000)
-        } 
-        // Handle ISO string or regular date string
-        else if (typeof dateValue === 'string') {
-          date = new Date(dateValue)
-        }
-        // Handle Date object
-        else if (dateValue instanceof Date) {
-          date = dateValue
-        }
-        else {
-          return 'Tanggal tidak tersedia'
-        }
-
-        // Check if date is valid
-        if (isNaN(date.getTime())) {
-          return 'Tanggal tidak tersedia'
-        }
-
-        const months = [
-          'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-          'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
-        ]
-        
-        return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`
-      } catch (error) {
-        console.error('Error formatting date:', error)
-        return 'Tanggal tidak tersedia'
       }
     }
   }
@@ -375,138 +273,6 @@ export default {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 24px;
-  }
-
-  .news-card {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .news-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-  }
-
-  /* === NEWS THUMBNAIL === */
-  .news-thumbnail {
-    position: relative;
-    width: 100%;
-    height: 200px;
-    background: #f5f5f5;
-    overflow: hidden;
-  }
-
-  .news-thumbnail img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-  }
-
-  .news-card:hover .news-thumbnail img {
-    transform: scale(1.05);
-  }
-
-  .news-category {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    background: rgba(65, 68, 42, 0.9);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  /* Category color variations */
-  .category-event { background: rgba(76, 175, 80, 0.9); }
-  .category-undangan { background: rgba(255, 152, 0, 0.9); }
-  .category-penting { background: rgba(244, 67, 54, 0.9); }
-  .category-info { background: rgba(33, 150, 243, 0.9); }
-
-  /* === NEWS BODY === */
-  .news-body {
-    padding: 20px;
-  }
-
-  .news-title {
-    font-family: 'Inter', sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    color: #41442A;
-    margin: 0 0 12px 0;
-    line-height: 1.3;
-    display: -webkit-box;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .news-preview {
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    color: #666;
-    line-height: 1.5;
-    margin: 0 0 16px 0;
-    display: -webkit-box;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* === NEWS META === */
-  .news-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 12px;
-    border-top: 1px solid #f0f0f0;
-  }
-
-  .news-date {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    color: #999;
-  }
-
-  .meta-icon {
-    width: 14px;
-    height: 14px;
-    color: #999;
-  }
-
-  .read-more {
-    background: none;
-    border: none;
-    color: #41442A;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.2s ease;
-  }
-
-  .read-more:hover {
-    color: #5a5e3d;
-    transform: translateX(2px);
-  }
-
-  .read-more svg {
-    width: 14px;
-    height: 14px;
   }
 
   /* === LOADING STATE === */
@@ -686,40 +452,12 @@ export default {
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 20px;
     }
-
-    .news-title {
-      font-size: 15px;
-    }
-
-    .news-preview {
-      font-size: 13px;
-    }
   }
 
   /* === SMALL DESKTOP (769px - 950px) === */
   @media (max-width: 950px) and (min-width: 769px) {
     .page-title {
       font-size: 20px;
-    }
-
-    .news-title {
-      font-size: 14px;
-    }
-
-    .news-preview {
-      font-size: 12px;
-    }
-
-    .news-category {
-      font-size: 10px;
-    }
-
-    .news-date {
-      font-size: 11px;
-    }
-
-    .read-more {
-      font-size: 11px;
     }
   }
 }
