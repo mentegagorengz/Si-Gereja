@@ -1,26 +1,11 @@
-<!-- HomePage.vue - Clean & Optimized Responsive Layout dengan Unified Announcement System -->
 <template>
   <div class="home-page">
     
     <!-- === DESKTOP LAYOUT (≥769px) === -->
     <div class="desktop-layout">
       
-      <!-- Top Navigation Bar -->
-      <nav class="top-navbar">
-        <div class="navbar-content">
-          <div class="navbar-brand">
-            <img src="@/assets/logos/logo-MyRajawali.png" alt="MyRajawali" class="navbar-logo"/>
-            <span class="brand-text">MyRajawali</span>
-          </div>
-          
-          <div class="navbar-menu">
-            <router-link to="/home" class="nav-link" exact>Home</router-link>
-            <router-link to="/jadwal" class="nav-link">Kalender</router-link>
-            <router-link to="/notifikasi" class="nav-link">Notifikasi</router-link>
-            <router-link to="/account" class="nav-link">Profile</router-link>
-          </div>
-        </div>
-      </nav>
+      <!-- ✅ GUNAKAN COMPONENT NAVBAR -->
+      <DesktopNavbar />
 
       <!-- Main Content Container -->
       <div class="main-content">
@@ -130,6 +115,7 @@
 </template>
 
 <script>
+import DesktopNavbar from '@/components/layout/DesktopNavbar.vue'
 import HeaderHome from '@/components/layout/HeaderHome.vue'
 import DailyVerse from '@/components/DailyVerse.vue'
 import FeatureBox from '@/components/FeatureBox.vue'
@@ -138,13 +124,13 @@ import AnnouncementCard from '@/components/AnnouncementCard.vue'
 import { useUserStore } from '@/stores/userStore'
 import { getDailyVerseUrl } from '@/utils/imageUtils'
 import { getCurrentJemaat } from '@/services/auth'
-// Import unified announcement system
 import { getUnifiedAnnouncements } from '@/services/announcements'
 
 export default {
   name: 'HomePage',
   
   components: {
+    DesktopNavbar, // ✅ TAMBAH COMPONENT
     HeaderHome,
     DailyVerse,
     FeatureBox,
@@ -157,7 +143,6 @@ export default {
       namaUser: 'Jemaat',
       streakCount: 0,
       ayatGambar: null,
-      // 📋 Static feature list configuration
       featureList: [
         { name: "News", icon: "news" },
         { name: "Jadwal", icon: "jadwal" },
@@ -176,10 +161,6 @@ export default {
   },
 
   methods: {
-    /**
-     * 🚀 Initialize all page data on component creation
-     * Centralized initialization for better error handling
-     */
     async initializePageData() {
       try {
         await this.loadUserData()
@@ -191,10 +172,6 @@ export default {
       }
     },
 
-    /**
-     * 👤 Load current user information
-     * Tries userStore first, then getCurrentJemaat service
-     */
     async loadUserData() {
       try {
         const userStore = useUserStore()
@@ -215,18 +192,10 @@ export default {
       }
     },
 
-    /**
-     * 📖 Load daily Bible verse image
-     * Uses utility function to get today's verse URL
-     */
     loadDailyVerse() {
       this.ayatGambar = getDailyVerseUrl()
     },
 
-    /**
-     * 🔥 Load user's login streak from localStorage
-     * Initializes streak if none exists
-     */
     loadUserStreak() {
       if (!this.currentUserId) {
         this.streakCount = 1
@@ -250,10 +219,6 @@ export default {
       }
     },
 
-    /**
-     * 🎯 Initialize first-time user streak
-     * Creates streak data in localStorage
-     */
     initializeUserStreak() {
       if (!this.currentUserId) return
 
@@ -271,11 +236,6 @@ export default {
       localStorage.setItem(userStreakKey, JSON.stringify(streakData))
     },
 
-    /**
-     * 📢 Load unified announcements from new system
-     * Combines news, schedule, and announcements as preview cards
-     * Limits to 6 items for performance
-     */
     async loadUnifiedAnnouncements() {
       try {
         console.log('🔍 [HomePage] Loading unified announcements...')
@@ -286,23 +246,17 @@ export default {
       } catch (error) {
         console.error('❌ [HomePage] Error loading unified announcements:', error)
         this.announcementList = []
-        
-        // Fallback: Load data dummy jika API error
         this.loadDummyAnnouncements()
       }
     },
 
-    /**
-     * 🎭 Load dummy announcements as fallback
-     * Provides sample data when API fails
-     */
     loadDummyAnnouncements() {
       console.log('🎭 [HomePage] Loading dummy announcements as fallback...')
       
       this.announcementList = [
         {
           id: 'news_Z6NtgDMXfZ8RL01jaZ0P',
-          originalId: 'Z6NtgDMXfZ8RL01jaZ0P', // ID yang benar tanpa prefix
+          originalId: 'Z6NtgDMXfZ8RL01jaZ0P',
           title: 'Perkemahan Favored Camp 2025',
           desc: 'Perkemahan Rohani Pemuda dan Remaja kembali hadir tahun ini dengan tema "Favored..."',
           category: 'event',
@@ -330,10 +284,6 @@ export default {
       ]
     },
 
-    /**
-     * 🧭 Navigate to feature page
-     * Maps feature names to route paths
-     */
     navigateToFeature(feature) {
       const routeMap = {
         'News': '/news',
@@ -350,32 +300,21 @@ export default {
       }
     },
 
-    /**
-     * 🎯 Navigate to announcement detail page
-     * Routes to different pages based on announcement source
-     */
-    // ✅ PERBAIKAN untuk function navigateToAnnouncement di HomePage.vue
-
     navigateToAnnouncement(item) {
       console.log('🎯 [HomePage] Navigating to announcement:', item)
       
       try {
-        // ⭐ GUNAKAN originalId yang TANPA PREFIX untuk navigasi
         const actualId = item.originalId || item.id.replace(/^(news_|schedule_|announcement_)/, '')
         
         let targetRoute = ''
         
         if (item.sourceCollection === 'news' || item.type === 'news') {
-          // ✅ Navigate ke news detail dengan ID asli (tanpa prefix)
           targetRoute = `/news/${actualId}`
         } else if (item.sourceCollection === 'schedules' || item.type === 'schedule') {
-          // ✅ Navigate ke schedule detail dengan ID asli (tanpa prefix)
           targetRoute = `/jadwal/${actualId}`
         } else if (item.sourceCollection === 'announcements' || item.type === 'announcement') {
-          // ✅ Navigate ke announcement detail
           targetRoute = `/news?category=announcements&id=${actualId}`
         } else {
-          // Default fallback
           targetRoute = '/news'
         }
         
@@ -386,7 +325,6 @@ export default {
         
       } catch (error) {
         console.error('❌ [HomePage] Error navigating to announcement:', error)
-        // Fallback navigation
         this.$router.push('/news')
       }
     }
@@ -413,7 +351,8 @@ export default {
 }
 
 /* ========================================
-   DESKTOP LAYOUT (≥769px)
+   DESKTOP LAYOUT (≥769px) - CONTENT ONLY
+   NAVBAR STYLES SUDAH DI COMPONENT
 ========================================= */
 @media (min-width: 769px) {
   .desktop-layout {
@@ -424,72 +363,6 @@ export default {
   
   .mobile-layout {
     display: none;
-  }
-
-  /* === TOP NAVIGATION === */
-  .top-navbar {
-    background: white;
-    border-bottom: 1px solid #f0f0f0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .navbar-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 64px;
-  }
-
-  .navbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .navbar-logo {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
-  }
-
-  .brand-text {
-    font-family: 'Inter', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: #41442A;
-  }
-
-  .navbar-menu {
-    display: flex;
-    gap: 32px;
-  }
-
-  .nav-link {
-    font-family: 'Inter', sans-serif;
-    font-size: 16px;
-    font-weight: 500;
-    color: #666;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-  }
-
-  .nav-link:hover {
-    color: #41442A;
-    background: rgba(65, 68, 42, 0.05);
-  }
-
-  .nav-link.router-link-active {
-    color: #41442A;
-    background: rgba(65, 68, 42, 0.1);
-    font-weight: 600;
   }
 
   /* === MAIN CONTENT === */
@@ -523,7 +396,7 @@ export default {
 
   .welcome-title {
     font-family: 'Inter', sans-serif;
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 700;
     color: #41442A;
     margin: 0;
@@ -532,7 +405,7 @@ export default {
 
   .welcome-subtitle {
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     color: #666;
     margin: 0;
   }
@@ -541,7 +414,7 @@ export default {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
+    padding: 12px 20px;
     background: linear-gradient(135deg, #41442A, #5a5e3d);
     border-radius: 12px;
     color: white;
@@ -550,13 +423,13 @@ export default {
 
   .streak-label {
     font-family: 'Inter', sans-serif;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
   }
 
   .streak-count {
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
   }
 
@@ -587,10 +460,10 @@ export default {
 
   .section-title {
     font-family: 'Inter', sans-serif;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 600;
     color: #41442A;
-    margin: 0 0 20px 0;
+    margin: 0 0 24px 0;
   }
 
   .feature-grid-desktop {
@@ -617,7 +490,7 @@ export default {
 
   .announcement-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 24px;
   }
 
@@ -629,6 +502,76 @@ export default {
   .announcement-card-desktop:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  /* === RESPONSIVE ADJUSTMENTS === */
+  @media (max-width: 1024px) and (min-width: 769px) {
+    .main-content {
+      padding: 24px;
+    }
+
+    .welcome-section {
+      padding: 24px;
+      gap: 24px;
+    }
+
+    .welcome-title {
+      font-size: 26px;
+    }
+
+    .welcome-subtitle {
+      font-size: 15px;
+    }
+
+    .section-title {
+      font-size: 19px;
+    }
+
+    .feature-grid-desktop {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 0 -10px;
+    }
+
+    .feature-box-desktop {
+      transform: scale(1.1);
+    }
+
+    .feature-box-desktop:hover {
+      transform: scale(1.15) translateY(-2px);
+    }
+
+    .announcement-grid {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+  }
+
+  @media (max-width: 950px) and (min-width: 769px) {
+    .welcome-title {
+      font-size: 24px;
+    }
+
+    .welcome-subtitle {
+      font-size: 14px;
+    }
+
+    .section-title {
+      font-size: 18px;
+    }
+
+    .feature-grid-desktop {
+      grid-template-columns: repeat(3, 1fr);
+      margin: 0;
+    }
+
+    .feature-box-desktop {
+      transform: scale(1.05);
+    }
+
+    .feature-box-desktop:hover {
+      transform: scale(1.1) translateY(-2px);
+    }
   }
 }
 
@@ -656,75 +599,6 @@ export default {
     font-weight: 600;
     color: #41442A;
     margin: 24px 0 16px 0;
-  }
-}
-
-/* ========================================
-   TABLET RESPONSIVE (769px - 1024px)
-========================================= */
-@media (max-width: 1024px) and (min-width: 769px) {
-  .navbar-content {
-    padding: 0 24px;
-  }
-
-  .main-content {
-    padding: 24px;
-  }
-
-  .welcome-section {
-    padding: 24px;
-    gap: 24px;
-  }
-
-  .welcome-title {
-    font-size: 20px;
-  }
-
-  .welcome-subtitle {
-    font-size: 13px;
-  }
-
-  .feature-grid-desktop {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin: 0 -10px;
-  }
-
-  .feature-box-desktop {
-    transform: scale(1.1);
-  }
-
-  .feature-box-desktop:hover {
-    transform: scale(1.15) translateY(-2px);
-  }
-
-  /* Keep 3 columns for announcements on tablet */
-  .announcement-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-}
-
-/* ========================================
-   SMALL DESKTOP (769px - 1200px)
-========================================= */
-@media (max-width: 1200px) and (min-width: 769px) {
-  .announcement-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-  }
-  
-  .feature-grid-desktop {
-    grid-template-columns: repeat(3, 1fr);
-    margin: 0;
-  }
-
-  .feature-box-desktop {
-    transform: scale(1.05);
-  }
-
-  .feature-box-desktop:hover {
-    transform: scale(1.1) translateY(-2px);
   }
 }
 </style>

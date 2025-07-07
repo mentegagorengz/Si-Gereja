@@ -2,23 +2,8 @@
   <div class="news-container">
     <!-- Desktop Layout -->
     <div class="desktop-layout">
-      <!-- Desktop Header - Same as HomePage -->
-      <nav class="top-navbar">
-        <div class="navbar-content">
-          <div class="navbar-brand">
-            <img src="@/assets/logos/logo-MyRajawali.png" alt="MyRajawali" class="navbar-logo"/>
-            <span class="brand-text">MyRajawali</span>
-          </div>
-          
-          <div class="navbar-menu">
-            <router-link to="/home" class="nav-link">Home</router-link>
-            <router-link to="/jadwal" class="nav-link">Kalender</router-link>
-            <router-link to="/news" class="nav-link" exact>News</router-link>
-            <router-link to="/notifikasi" class="nav-link">Notifikasi</router-link>
-            <router-link to="/account" class="nav-link">Profile</router-link>
-          </div>
-        </div>
-      </nav>
+      <!-- ✅ GUNAKAN COMPONENT - GANTI SELURUH NAVBAR -->
+      <DesktopNavbar />
 
       <!-- Desktop Content -->
       <main class="desktop-content">
@@ -148,6 +133,8 @@
 import HeaderWithBack from '@/components/layout/HeaderWithBack.vue'
 import ScheduleCard from '@/components/ScheduleCard.vue'
 import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
+// ✅ TAMBAH IMPORT COMPONENT
+import DesktopNavbar from '@/components/layout/DesktopNavbar.vue'
 import { 
   Newspaper,
   RefreshCw, 
@@ -164,6 +151,7 @@ export default {
     HeaderWithBack,
     ScheduleCard,
     ButtonPrimary,
+    DesktopNavbar, // ✅ DAFTAR COMPONENT
     Newspaper,
     RefreshCw,
     AlertCircle,
@@ -284,96 +272,39 @@ export default {
   min-height: 100vh;
 }
 
-/* === DESKTOP STYLES === */
+/* Default: Show mobile, hide desktop */
 .desktop-layout {
   display: none;
 }
 
+.mobile-layout {
+  display: block;
+}
+
+/* ========================================
+   DESKTOP LAYOUT (≥769px) - NAVBAR CSS DIHAPUS
+========================================= */
+
 @media (min-width: 769px) {
+  /* === DESKTOP LAYOUT BASE === */
   .desktop-layout {
     display: block;
     min-height: 100vh;
     background: #fcfcf7;
   }
-
+  
   .mobile-layout {
     display: none;
   }
 
-  /* === TOP NAVIGATION (Same as HomePage) === */
-  .top-navbar {
-    background: white;
-    border-bottom: 1px solid #f0f0f0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .navbar-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 64px;
-  }
-
-  .navbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .navbar-logo {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
-  }
-
-  .brand-text {
-    font-family: 'Inter', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: #41442A;
-  }
-
-  .navbar-menu {
-    display: flex;
-    gap: 32px;
-  }
-
-  .nav-link {
-    font-family: 'Inter', sans-serif;
-    font-size: 16px;
-    font-weight: 500;
-    color: #666;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-  }
-
-  .nav-link:hover {
-    color: #41442A;
-    background: rgba(65, 68, 42, 0.05);
-  }
-
-  .nav-link.router-link-active {
-    color: #41442A;
-    background: rgba(65, 68, 42, 0.1);
-    font-weight: 600;
-  }
-
-  /* Desktop Content */
+  /* === DESKTOP CONTENT === */
   .desktop-content {
     max-width: 1200px;
     margin: 0 auto;
     padding: 40px;
   }
 
-  /* Page Header */
+  /* === PAGE HEADER === */
   .page-header {
     display: flex;
     justify-content: space-between;
@@ -383,8 +314,8 @@ export default {
 
   .page-title {
     font-family: 'Inter', sans-serif;
-    font-size: 32px;
-    font-weight: 700;
+    font-size: 24px;
+    font-weight: 600;
     color: #41442A;
     margin: 0;
   }
@@ -395,7 +326,7 @@ export default {
     border: none;
     padding: 10px 20px;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     display: flex;
     align-items: center;
@@ -428,7 +359,7 @@ export default {
     to { transform: rotate(360deg); }
   }
 
-  /* News Grid */
+  /* === NEWS GRID === */
   .news-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -446,15 +377,16 @@ export default {
 
   .news-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
   }
 
+  /* === NEWS THUMBNAIL === */
   .news-thumbnail {
     position: relative;
     width: 100%;
     height: 200px;
+    background: #f5f5f5;
     overflow: hidden;
-    background: #f0f0f0;
   }
 
   .news-thumbnail img {
@@ -470,104 +402,103 @@ export default {
 
   .news-category {
     position: absolute;
-    top: 16px;
-    left: 16px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
+    top: 12px;
+    left: 12px;
+    background: rgba(65, 68, 42, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
 
-  .category-general,
-  .category-info {
-    background: rgba(33, 150, 243, 0.9);
-    color: white;
-  }
+  /* Category color variations */
+  .category-event { background: rgba(76, 175, 80, 0.9); }
+  .category-undangan { background: rgba(255, 152, 0, 0.9); }
+  .category-penting { background: rgba(244, 67, 54, 0.9); }
+  .category-info { background: rgba(33, 150, 243, 0.9); }
 
-  .category-event,
-  .category-acara {
-    background: rgba(76, 175, 80, 0.9);
-    color: white;
-  }
-
-  .category-undangan {
-    background: rgba(255, 193, 7, 0.9);
-    color: #333;
-  }
-
-  .category-penting {
-    background: rgba(244, 67, 54, 0.9);
-    color: white;
-  }
-
+  /* === NEWS BODY === */
   .news-body {
-    padding: 24px;
+    padding: 20px;
   }
 
   .news-title {
     font-family: 'Inter', sans-serif;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: #41442A;
     margin: 0 0 12px 0;
-    line-height: 1.4;
+    line-height: 1.3;
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .news-preview {
     font-family: 'Inter', sans-serif;
     font-size: 14px;
     color: #666;
-    line-height: 1.6;
-    margin: 0 0 20px 0;
+    line-height: 1.5;
+    margin: 0 0 16px 0;
+    display: -webkit-box;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
+  /* === NEWS META === */
   .news-meta {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-top: 16px;
-    border-top: 1px solid #eee;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
   }
 
   .news-date {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
     color: #999;
   }
 
   .meta-icon {
     width: 14px;
     height: 14px;
+    color: #999;
   }
 
   .read-more {
     background: none;
     border: none;
-    color: #8B7355;
-    font-size: 14px;
-    font-weight: 500;
+    color: #41442A;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
+    gap: 4px;
+    transition: all 0.2s ease;
   }
 
   .read-more:hover {
-    color: #41442A;
-    gap: 10px;
+    color: #5a5e3d;
+    transform: translateX(2px);
   }
 
   .read-more svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
 
-  /* Desktop Loading */
+  /* === LOADING STATE === */
   .desktop-loading {
     display: flex;
     flex-direction: column;
@@ -575,6 +506,13 @@ export default {
     justify-content: center;
     min-height: 400px;
     gap: 16px;
+  }
+
+  .desktop-loading p {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #666;
+    margin: 0;
   }
 
   .loading-spinner {
@@ -590,7 +528,7 @@ export default {
     to { transform: rotate(360deg); }
   }
 
-  /* Desktop Error */
+  /* === ERROR STATE === */
   .desktop-error {
     display: flex;
     align-items: center;
@@ -615,12 +553,16 @@ export default {
   }
 
   .error-card h3 {
-    font-size: 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
     color: #333;
     margin: 0 0 8px 0;
   }
 
   .error-card .error-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
     color: #666;
     margin: 0 0 24px 0;
   }
@@ -631,7 +573,7 @@ export default {
     border: none;
     padding: 12px 24px;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     display: inline-flex;
     align-items: center;
@@ -650,7 +592,7 @@ export default {
     height: 16px;
   }
 
-  /* Desktop Empty */
+  /* === EMPTY STATE === */
   .desktop-empty {
     display: flex;
     align-items: center;
@@ -667,7 +609,7 @@ export default {
     box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   }
 
-  .empty-card .empty-icon {
+  .empty-icon {
     width: 80px;
     height: 80px;
     color: #ddd;
@@ -675,12 +617,16 @@ export default {
   }
 
   .empty-card h3 {
-    font-size: 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
     color: #41442A;
     margin: 0 0 8px 0;
   }
 
   .empty-card p {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
     color: #666;
     margin: 0 0 24px 0;
   }
@@ -691,7 +637,7 @@ export default {
     border: none;
     padding: 12px 24px;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     display: inline-flex;
     align-items: center;
@@ -710,128 +656,160 @@ export default {
     height: 16px;
   }
 
-  /* Responsive adjustments */
+  /* === RESPONSIVE ADJUSTMENTS === */
   @media (max-width: 1024px) and (min-width: 769px) {
-    .navbar-content {
-      padding: 0 24px;
-    }
-
     .desktop-content {
       padding: 24px;
     }
 
     .page-title {
-      font-size: 28px;
+      font-size: 22px;
+    }
+
+    .refresh-button {
+      font-size: 11px;
+      padding: 8px 16px;
     }
 
     .news-grid {
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 20px;
     }
+
+    .news-title {
+      font-size: 15px;
+    }
+
+    .news-preview {
+      font-size: 13px;
+    }
+  }
+
+  /* === SMALL DESKTOP (769px - 950px) === */
+  @media (max-width: 950px) and (min-width: 769px) {
+    .page-title {
+      font-size: 20px;
+    }
+
+    .news-title {
+      font-size: 14px;
+    }
+
+    .news-preview {
+      font-size: 12px;
+    }
+
+    .news-category {
+      font-size: 10px;
+    }
+
+    .news-date {
+      font-size: 11px;
+    }
+
+    .read-more {
+      font-size: 11px;
+    }
   }
 }
 
-/* === MOBILE STYLES (existing) === */
-.mobile-layout {
-  display: block;
-}
-
-@media (min-width: 769px) {
-  .mobile-layout {
-    display: none;
-  }
-}
-
-.news-wrapper {
-  padding: 16px;
-  max-width: 360px;
-  margin: 0 auto;
-}
-
-/* Loading state */
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-  font-family: 'Inter';
-  color: #666;
-}
-
-/* Error state */
-.error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 32px 16px;
-  text-align: center;
-}
-
-.error-text {
-  color: #d32f2f;
-  font-family: 'Inter';
-  font-size: 14px;
-  margin: 0;
-}
-
-/* Content area */
-.news-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.news-list {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Empty state */
-.empty-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
-  padding: 32px 16px;
-}
-
-.empty-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  text-align: center;
-  max-width: 280px;
-}
-
-.empty-icon {
-  width: 64px;
-  height: 64px;
-  color: #ccc;
-  margin-bottom: 8px;
-}
-
-.empty-content h3 {
-  font-family: 'Inter';
-  font-size: 18px;
-  font-weight: 600;
-  color: #41442A;
-  margin: 0;
-}
-
-.empty-content p {
-  font-family: 'Inter';
-  font-size: 14px;
-  color: #666;
-  line-height: 1.4;
-  margin: 0;
-}
-
-/* Responsive */
-@media (max-width: 360px) {
+/* ========================================
+   MOBILE LAYOUT STYLES (≤768px) - TETAP SAMA
+========================================= */
+@media (max-width: 768px) {
   .news-wrapper {
-    padding: 12px;
+    padding: 16px;
+    max-width: 360px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+  }
+
+  /* Loading state */
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    font-family: 'Inter';
+    color: #666;
+    font-size: 14px;
+  }
+
+  /* Error state */
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 32px 16px;
+    text-align: center;
+  }
+
+  .error-text {
+    color: #d32f2f;
+    font-family: 'Inter';
+    font-size: 14px;
+    margin: 0;
+  }
+
+  /* Content area */
+  .news-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .news-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Empty state */
+  .empty-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+    padding: 32px 16px;
+  }
+
+  .empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+    max-width: 280px;
+  }
+
+  .empty-icon {
+    width: 64px;
+    height: 64px;
+    color: #ccc;
+    margin-bottom: 8px;
+  }
+
+  .empty-content h3 {
+    font-family: 'Inter';
+    font-size: 18px;
+    font-weight: 600;
+    color: #41442A;
+    margin: 0;
+  }
+
+  .empty-content p {
+    font-family: 'Inter';
+    font-size: 14px;
+    color: #666;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 360px) {
+    .news-wrapper {
+      padding: 12px;
+    }
   }
 }
 </style>
