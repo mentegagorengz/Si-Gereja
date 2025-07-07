@@ -7,6 +7,9 @@
 
       <!-- Desktop Content -->
       <main class="desktop-content">
+        <!-- ✅ TAMBAH BREADCRUMB -->
+        <BreadcrumbDesktop :items="breadcrumbItems" />
+        
         <div class="page-header">
           <h1 class="page-title">Berita & Pengumuman</h1>
           <button @click="fetchNews" class="refresh-button" :disabled="loading">
@@ -135,6 +138,7 @@ import ScheduleCard from '@/components/ScheduleCard.vue'
 import ButtonPrimary from '@/components/common/ButtonPrimary.vue'
 // ✅ TAMBAH IMPORT COMPONENT
 import DesktopNavbar from '@/components/layout/DesktopNavbar.vue'
+import BreadcrumbDesktop from '@/components/common/BreadcrumbDesktop.vue'
 import { 
   Newspaper,
   RefreshCw, 
@@ -152,6 +156,7 @@ export default {
     ScheduleCard,
     ButtonPrimary,
     DesktopNavbar, // ✅ DAFTAR COMPONENT
+    BreadcrumbDesktop, // ✅ BREADCRUMB COMPONENT
     Newspaper,
     RefreshCw,
     AlertCircle,
@@ -162,7 +167,13 @@ export default {
     return {
       news: [],
       loading: true,
-      error: null
+      error: null,
+      // ✅ BREADCRUMB DATA
+      breadcrumbItems: [
+        {
+          text: 'Berita & Pengumuman'
+        }
+      ]
     }
   },
   async created() {
