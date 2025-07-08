@@ -1,13 +1,14 @@
+// src/utils/imageUtils.js - PRODUCTION VERSION
 // Image utilities for handling thumbnails, icons, and media assets
-// Supports news, schedules, devotionals, features, and announcements
 
-// ⭐ NEWS THUMBNAILS - dari assets/thumbnails/news/
+// ⭐ NEWS THUMBNAILS
 export const getNewsThumbnail = (news, size = 'large') => {
   const extensions = ['png', 'jpg', 'jpeg', 'webp']
   const sizeFolder = size === 'small' ? 'small' : 'large'
   
-  // STEP 1: PRIORITAS - Coba berdasarkan thumbnail field dulu (jika ADA)
+  // STEP 1: Try thumbnail field first
   if (news?.thumbnail && news.thumbnail.trim() !== '') {
+    // Try dynamic require for thumbnail files
     for (const ext of extensions) {
       try {
         const thumbnailPath = require(`@/assets/thumbnails/news/${sizeFolder}/${news.thumbnail}.${ext}`)
@@ -16,9 +17,19 @@ export const getNewsThumbnail = (news, size = 'large') => {
         continue
       }
     }
+    
+    // Static imports for known files
+    try {
+      if (news.thumbnail === 'favoredcamp') {
+        return require('@/assets/thumbnails/news/large/favoredcamp.png')
+      }
+      // Add more static imports here as needed
+    } catch (error) {
+      // Continue to next fallback
+    }
   }
   
-  // STEP 2: FALLBACK - Coba berdasarkan CATEGORY (kalau thumbnail kosong atau tidak ditemukan)
+  // STEP 2: Try category-based thumbnails
   if (news?.category && news.category.trim() !== '') {
     for (const ext of extensions) {
       try {
@@ -30,10 +41,10 @@ export const getNewsThumbnail = (news, size = 'large') => {
     }
   }
   
-  // STEP 3: PLACEHOLDER berdasarkan category
-  const category = news?.category || 'news'
-  const width = size === 'small' ? 80 : 200
-  const height = size === 'small' ? 80 : 200
+  // STEP 3: Return placeholder
+  const category = news?.category || news?.thumbnail || 'news'
+  const width = size === 'small' ? 80 : 400
+  const height = size === 'small' ? 80 : 300
   
   return createPlaceholderDataUrl(
     getCategoryText(category, 'NEWS'), 
@@ -43,12 +54,12 @@ export const getNewsThumbnail = (news, size = 'large') => {
   )
 }
 
-// ⭐ SCHEDULE/JADWAL THUMBNAILS - dari assets/thumbnails/jadwal/
+// ⭐ SCHEDULE/JADWAL THUMBNAILS
 export const getScheduleThumbnail = (schedule, size = 'large') => {
   const extensions = ['png', 'jpg', 'jpeg', 'webp']
   const sizeFolder = size === 'small' ? 'small' : 'large'
   
-  // STEP 1: PRIORITAS - Coba berdasarkan CATEGORY dulu
+  // Try category first
   if (schedule?.category) {
     for (const ext of extensions) {
       try {
@@ -60,7 +71,7 @@ export const getScheduleThumbnail = (schedule, size = 'large') => {
     }
   }
   
-  // STEP 2: FALLBACK - Coba berdasarkan thumbnail field dari database
+  // Try thumbnail field
   if (schedule?.thumbnail) {
     for (const ext of extensions) {
       try {
@@ -72,10 +83,10 @@ export const getScheduleThumbnail = (schedule, size = 'large') => {
     }
   }
   
-  // STEP 3: PLACEHOLDER berdasarkan category
+  // Return placeholder
   const category = schedule?.category || 'jadwal'
-  const width = size === 'small' ? 80 : 200
-  const height = size === 'small' ? 80 : 200
+  const width = size === 'small' ? 80 : 400
+  const height = size === 'small' ? 80 : 300
   
   return createPlaceholderDataUrl(
     getCategoryText(category, 'JADWAL'), 
@@ -85,12 +96,12 @@ export const getScheduleThumbnail = (schedule, size = 'large') => {
   )
 }
 
-// ⭐ DEVOTIONAL/RENUNGAN THUMBNAILS - dari assets/thumbnails/devotionals/
+// ⭐ DEVOTIONAL/RENUNGAN THUMBNAILS
 export const getDevotionalThumbnail = (devotional, size = 'large') => {
   const extensions = ['png', 'jpg', 'jpeg', 'webp']
   const sizeFolder = size === 'small' ? 'small' : 'large'
   
-  // STEP 1: PRIORITAS - Coba berdasarkan CATEGORY dulu
+  // Try category first
   if (devotional?.category) {
     for (const ext of extensions) {
       try {
@@ -102,7 +113,7 @@ export const getDevotionalThumbnail = (devotional, size = 'large') => {
     }
   }
   
-  // STEP 2: FALLBACK - Coba berdasarkan thumbnail field dari database
+  // Try thumbnail field
   if (devotional?.thumbnail) {
     for (const ext of extensions) {
       try {
@@ -114,10 +125,10 @@ export const getDevotionalThumbnail = (devotional, size = 'large') => {
     }
   }
   
-  // STEP 3: PLACEHOLDER berdasarkan category
+  // Return placeholder
   const category = devotional?.category || 'renungan'
-  const width = size === 'small' ? 80 : 200
-  const height = size === 'small' ? 80 : 200
+  const width = size === 'small' ? 80 : 400
+  const height = size === 'small' ? 80 : 300
   
   return createPlaceholderDataUrl(
     getCategoryText(category, 'RENUNGAN'), 
@@ -127,7 +138,7 @@ export const getDevotionalThumbnail = (devotional, size = 'large') => {
   )
 }
 
-// ⭐ FEATURE ICONS - dari assets/icons/features/
+// ⭐ FEATURE ICONS
 export const getFeatureIconUrl = (iconName) => {
   const iconMapping = {
     'News': 'news',
@@ -151,42 +162,6 @@ export const getFeatureIconUrl = (iconName) => {
   }
   
   return createEmojiDataUrl(getEmojiForFeature(iconName), 40)
-}
-
-// ⭐ ANNOUNCEMENT ICONS - dari assets/icons/announcements/
-export const getAnnouncementIconUrl = (category) => {
-  const getCategoryIconFile = (cat) => {
-    const categoryMap = {
-      'pengumuman': 'megaphone',
-      'birthday': 'birthday',       
-      'ibadah': 'ibadah',          
-      'event': 'event',            
-      'announcement': 'megaphone',
-      'service': 'ibadah',
-      'pelprap': 'ibadah', 
-      'worship': 'ibadah',
-      'ultah': 'birthday',
-      'ulang_tahun': 'birthday',
-      'acara': 'event',
-      'pelatar': 'event',
-      'default': 'megaphone'
-    }
-    return categoryMap[cat?.toLowerCase()] || categoryMap['default']
-  }
-  
-  const iconFile = getCategoryIconFile(category)
-  const extensions = ['png', 'jpg', 'jpeg', 'svg', 'webp']
-  
-  for (const ext of extensions) {
-    try {
-      const iconPath = require(`@/assets/icons/announcements/${iconFile}.${ext}`)
-      return iconPath
-    } catch (error) {
-      continue
-    }
-  }
-  
-  return createEmojiDataUrl(getEmojiForAnnouncement(category), 28)
 }
 
 // ⭐ DAILY VERSE
@@ -213,7 +188,7 @@ export const getDailyVerseUrl = (ayatNumber = null) => {
         continue
       }
     }
-    throw new Error(`No daily verse files found! Please add ayat1.png to ayat5.png in assets/daily-verse/`)
+    return createPlaceholderDataUrl('AYAT', 300, 200, '#7c3aed')
   }
 }
 
@@ -241,23 +216,14 @@ const getEmojiForFeature = (iconName) => {
   return emojiMap[iconName] || emojiMap[iconName?.toLowerCase()] || '❓'
 }
 
-const getEmojiForAnnouncement = (category) => {
-  const emojiMap = {
-    'pengumuman': '📢', 'birthday': '🎂', 'ibadah': '⛪', 'event': '✨',
-    'announcement': '📢', 'service': '⛪', 'pelprap': '🙏', 'worship': '⛪',
-    'ultah': '🎂', 'ulang_tahun': '🎂', 'acara': '🎉', 'pelatar': '🎓',
-    'default': '📢'
-  }
-  return emojiMap[category?.toLowerCase()] || emojiMap['default']
-}
-
 const getCategoryText = (category, defaultText) => {
   const textMap = {
     'birthday': 'ULTAH', 'service': 'IBADAH', 'ibadah': 'IBADAH',
     'pelprap': 'PELPRAP', 'event': 'EVENT', 'pelatar': 'PELATAR',
     'pengumuman': 'INFO', 'kasih': 'KASIH', 'iman': 'IMAN',
     'pengharapan': 'HARAPAN', 'doa': 'DOA', 'news': 'NEWS',
-    'jadwal': 'JADWAL', 'renungan': 'RENUNGAN', 'undangan': 'UNDANGAN'
+    'jadwal': 'JADWAL', 'renungan': 'RENUNGAN', 'undangan': 'UNDANGAN',
+    'favoredcamp': 'CAMP', 'camp': 'CAMP', 'perkemahan': 'CAMP'
   }
   return textMap[category?.toLowerCase()] || defaultText
 }
@@ -266,9 +232,10 @@ const getCategoryColor = (category, defaultColor) => {
   const colorMap = {
     'birthday': '#ec4899', 'service': '#f59e0b', 'ibadah': '#f59e0b', 
     'pelprap': '#10b981', 'event': '#3b82f6', 'pelatar': '#8b5cf6',
-    'pengumuman': '6366f1', 'kasih': '#f43f5e', 'iman': '#06b6d4',
+    'pengumuman': '#6366f1', 'kasih': '#f43f5e', 'iman': '#06b6d4',
     'pengharapan': '#84cc16', 'doa': '#a855f7', 'news': '#2563eb',
-    'jadwal': '#41442A', 'renungan': '#7c3aed', 'undangan': '#8b5cf6'
+    'jadwal': '#41442A', 'renungan': '#7c3aed', 'undangan': '#8b5cf6',
+    'favoredcamp': '#41442A', 'camp': '#41442A', 'perkemahan': '#41442A'
   }
   return colorMap[category?.toLowerCase()] || defaultColor
 }
@@ -302,47 +269,22 @@ const createPlaceholderDataUrl = (text, width, height, bgColor = '#41442A', text
     canvas.height = height
     const ctx = canvas.getContext('2d')
     
+    // Background
     ctx.fillStyle = bgColor
     ctx.fillRect(0, 0, width, height)
     
+    // Text
+    const fontSize = Math.min(width, height) / 8
+    ctx.font = `bold ${fontSize}px 'Inter', Arial, sans-serif`
     ctx.fillStyle = textColor
-    const fontSize = Math.min(width, height) * 0.12
-    ctx.font = `bold ${fontSize}px Inter, Arial, sans-serif`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    
-    const maxWidth = width * 0.8
-    const lines = wrapText(ctx, text, maxWidth)
-    const lineHeight = fontSize * 1.2
-    const totalHeight = lines.length * lineHeight
-    const startY = (height - totalHeight) / 2 + lineHeight / 2
-    
-    lines.forEach((line, index) => {
-      ctx.fillText(line, width / 2, startY + index * lineHeight)
-    })
+    ctx.fillText(text, width / 2, height / 2)
     
     return canvas.toDataURL('image/png')
   } catch (error) {
-    console.error('Error creating placeholder data URL:', error)
-    return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+    console.error('Error creating placeholder:', error)
+    // Ultimate fallback
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiM0MTQ0MkEiLz48dGV4dCB4PSIyMDAiIHk9IjE1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LWIxZLci0iZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5FV1M8L3RleHQ+PC9zdmc+'
   }
-}
-
-const wrapText = (ctx, text, maxWidth) => {
-  const words = text.split(' ')
-  const lines = []
-  let currentLine = words[0]
-
-  for (let i = 1; i < words.length; i++) {
-    const word = words[i]
-    const width = ctx.measureText(currentLine + ' ' + word).width
-    if (width < maxWidth) {
-      currentLine += ' ' + word
-    } else {
-      lines.push(currentLine)
-      currentLine = word
-    }
-  }
-  lines.push(currentLine)
-  return lines
 }

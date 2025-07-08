@@ -202,6 +202,13 @@ export default {
         // Navigate to home
         await this.$router.push('/home')
         
+        // ✨ SOLUSI UNTUK MASALAH CACHE ✨
+        // Tunggu sebentar lalu refresh otomatis untuk tampilan fresh
+        setTimeout(() => {
+          console.log('🔄 Auto refresh untuk tampilan fresh...')
+          window.location.reload()
+        }, 500)
+        
       } catch (error) {
         this.handleLoginError(error)
       } finally {

@@ -26,11 +26,19 @@ export default {
     backLabel: {
       type: String,
       default: 'Kembali'
+    },
+    customBackAction: {
+      type: Function,
+      default: null
     }
   },
   methods: {
     goBack() {
-      this.$router.go(-1)
+      if (this.customBackAction) {
+        this.customBackAction()
+      } else {
+        this.$router.go(-1)
+      }
     }
   }
 }
@@ -39,7 +47,7 @@ export default {
 <style scoped>
 .header-container {
   width: 100%;
-  max-width: 360px;
+  /* ⭐ HAPUS max-width supaya memenuhi layar penuh */
   margin-bottom: 18px;
 }
 
@@ -49,6 +57,8 @@ export default {
   justify-content: space-between;
   position: relative;
   min-height: 32px;
+  /* ⭐ TAMBAH padding kiri kanan untuk mobile */
+  padding: 0 16px;
 }
 
 .back-button {
@@ -88,11 +98,11 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   
-  /* Center positioning */
+  /* ⭐ PERBAIKI CENTER POSITIONING */
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  max-width: calc(100% - 80px); /* Ruang untuk back button dan spacer */
+  max-width: calc(100% - 96px); /* Ruang untuk back button dan spacer + padding */
 }
 
 .spacer {
@@ -103,16 +113,24 @@ export default {
 
 /* ⭐ MEDIA QUERY UNTUK MOBILE */
 @media (max-width: 360px) {
+  .header-inner {
+    padding: 0 12px;
+  }
+  
   .header-title {
     font-size: 16px;
-    max-width: calc(100% - 64px);
+    max-width: calc(100% - 88px);
   }
 }
 
 @media (max-width: 320px) {
+  .header-inner {
+    padding: 0 8px;
+  }
+  
   .header-title {
     font-size: 14px;
-    max-width: calc(100% - 60px);
+    max-width: calc(100% - 80px);
   }
 }
 </style>
